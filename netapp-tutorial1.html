@@ -1,0 +1,2217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetApp Storage Fundamentals — Tutorial 1 | Enterprise Storage Tutorial</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-card: #1c2230;
+    --bg-sidebar: #111827;
+    --accent-blue: #3b82f6;
+    --accent-cyan: #06b6d4;
+    --accent-green: #10b981;
+    --accent-amber: #f59e0b;
+    --accent-red: #ef4444;
+    --accent-purple: #8b5cf6;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border-color: #2d3748;
+    --border-bright: #374151;
+    --sidebar-width: 280px;
+    --header-height: 64px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    display: flex;
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* ── Sidebar ─────────────────────────────── */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-logo {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .sidebar-logo .brand {
+    font-family: 'Sora', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-cyan);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .sidebar-logo .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+
+  .toc-title {
+    padding: 16px 20px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .toc-list { list-style: none; padding: 0 8px 20px; }
+
+  .toc-list li a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 400;
+    transition: all 0.2s;
+  }
+
+  .toc-list li a:hover,
+  .toc-list li a.active {
+    background: rgba(59,130,246,0.12);
+    color: var(--accent-blue);
+  }
+
+  .toc-list li a .icon { font-size: 14px; width: 18px; flex-shrink: 0; }
+  .toc-list li a .num {
+    font-size: 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--text-muted);
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .toc-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 8px 20px;
+  }
+
+  /* ── Main Content ────────────────────────── */
+  .main-content {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    min-height: 100vh;
+  }
+
+  /* Top header bar */
+  .page-header {
+    background: linear-gradient(135deg, #0f1f3d 0%, #0d1a2e 50%, #081525 100%);
+    border-bottom: 1px solid var(--border-color);
+    padding: 56px 60px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page-header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .page-header::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: 200px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(6,182,212,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(59,130,246,0.15);
+    border: 1px solid rgba(59,130,246,0.3);
+    color: var(--accent-blue);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+
+  .page-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+
+  .page-title span { color: var(--accent-cyan); }
+
+  .page-subtitle {
+    font-size: 16px;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin-bottom: 28px;
+  }
+
+  .header-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tag {
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .tag-blue { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
+  .tag-cyan { background: rgba(6,182,212,0.12); color: #22d3ee; border: 1px solid rgba(6,182,212,0.25); }
+  .tag-green { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+  .tag-amber { background: rgba(245,158,11,0.12); color: #fcd34d; border: 1px solid rgba(245,158,11,0.25); }
+
+  /* Content area */
+  .content-wrap {
+    max-width: 900px;
+    padding: 48px 60px 80px;
+  }
+
+  /* Section headings */
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(6,182,212,0.08);
+    border: 1px solid rgba(6,182,212,0.2);
+    color: var(--accent-cyan);
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  h2.section-heading {
+    font-family: 'Sora', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+    padding-top: 4px;
+  }
+
+  .section-intro {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-bottom: 28px;
+    max-width: 700px;
+  }
+
+  h3 {
+    font-family: 'Sora', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin: 28px 0 12px;
+  }
+
+  h4 {
+    font-family: 'Sora', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #cbd5e1;
+    margin: 20px 0 8px;
+  }
+
+  p { margin-bottom: 14px; color: var(--text-secondary); }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Product grid */
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+
+  .product-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 20px;
+    transition: border-color 0.2s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .product-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .product-card.blue::before { background: var(--accent-blue); }
+  .product-card.cyan::before { background: var(--accent-cyan); }
+  .product-card.green::before { background: var(--accent-green); }
+  .product-card.amber::before { background: var(--accent-amber); }
+  .product-card.purple::before { background: var(--accent-purple); }
+  .product-card.red::before { background: var(--accent-red); }
+
+  .product-card:hover {
+    border-color: var(--border-bright);
+    transform: translateY(-2px);
+  }
+
+  .product-card .pname {
+    font-family: 'Sora', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .product-card .pfull {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-bottom: 10px;
+  }
+
+  .product-card .pbadge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .product-card .pdesc { font-size: 13px; color: var(--text-secondary); margin: 0; }
+  .product-card .pos { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+
+  .badge-unified { background: rgba(16,185,129,0.15); color: #34d399; }
+  .badge-san { background: rgba(245,158,11,0.15); color: #fcd34d; }
+  .badge-nas { background: rgba(59,130,246,0.15); color: #93c5fd; }
+  .badge-object { background: rgba(139,92,246,0.15); color: #c4b5fd; }
+  .badge-sw { background: rgba(6,182,212,0.15); color: #67e8f9; }
+
+  /* Callout boxes */
+  .callout {
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    display: flex;
+    gap: 14px;
+  }
+
+  .callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+
+  .callout-body { flex: 1; }
+  .callout-title { font-weight: 600; font-size: 13px; margin-bottom: 5px; }
+  .callout-text { font-size: 13.5px; margin: 0; line-height: 1.6; }
+
+  .callout.tip { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); }
+  .callout.tip .callout-title { color: #34d399; }
+  .callout.tip .callout-text { color: #a7f3d0; }
+
+  .callout.warning { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); }
+  .callout.warning .callout-title { color: #fcd34d; }
+  .callout.warning .callout-text { color: #fde68a; }
+
+  .callout.info { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.25); }
+  .callout.info .callout-title { color: #93c5fd; }
+  .callout.info .callout-text { color: #bfdbfe; }
+
+  .callout.exam { background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.25); }
+  .callout.exam .callout-title { color: #c4b5fd; }
+  .callout.exam .callout-text { color: #ddd6fe; }
+
+  .callout.note { background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.2); }
+  .callout.note .callout-title { color: #67e8f9; }
+  .callout.note .callout-text { color: #cffafe; }
+
+  /* Code blocks */
+  pre, code {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  pre {
+    background: #0a0f1a;
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--accent-blue);
+    border-radius: 6px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    font-size: 13px;
+    color: #a5d8ff;
+    margin: 14px 0;
+    line-height: 1.6;
+  }
+
+  code {
+    background: rgba(59,130,246,0.1);
+    color: #93c5fd;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+
+  pre code { background: none; color: inherit; padding: 0; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px;
+    font-size: 14px;
+  }
+
+  thead th {
+    background: var(--bg-secondary);
+    color: var(--accent-cyan);
+    font-family: 'Sora', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    border-bottom: 2px solid var(--border-color);
+    text-align: left;
+  }
+
+  tbody td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  tbody tr:hover td { background: rgba(59,130,246,0.04); }
+
+  tbody td:first-child { color: #e2e8f0; font-weight: 500; }
+
+  /* Section separator */
+  .section-sep {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 52px 0 44px;
+  }
+
+  /* Vendor pill row */
+  .vendor-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 18px 0 24px;
+  }
+
+  .vendor-pill {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .vendor-pill.top { border-color: var(--accent-blue); color: var(--accent-blue); }
+
+  /* ONTAP history timeline */
+  .timeline {
+    position: relative;
+    padding-left: 24px;
+    margin: 20px 0;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px; top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent-blue), var(--accent-cyan), var(--accent-green));
+    border-radius: 2px;
+  }
+
+  .tl-item {
+    position: relative;
+    margin-bottom: 18px;
+  }
+
+  .tl-item::before {
+    content: '';
+    position: absolute;
+    left: -20px; top: 8px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    border: 2px solid var(--bg-primary);
+  }
+
+  .tl-item.active::before { background: var(--accent-green); }
+  .tl-item.deprecated::before { background: var(--text-muted); }
+
+  .tl-version {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-cyan);
+  }
+
+  .tl-desc { font-size: 13px; color: var(--text-secondary); }
+
+  /* HA Pair comparison */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+
+  .compare-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .compare-card.danger { border-color: rgba(239,68,68,0.3); }
+  .compare-card.success { border-color: rgba(16,185,129,0.3); }
+
+  .compare-card h4 { margin-top: 0; }
+
+  .compare-card ul {
+    list-style: none;
+    margin-top: 10px;
+  }
+
+  .compare-card ul li {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .compare-card ul li:last-child { border-bottom: none; }
+  .compare-card ul li::before { content: ''; flex-shrink: 0; }
+
+  .compare-card.danger ul li::before { content: '✗'; color: var(--accent-red); }
+  .compare-card.success ul li::before { content: '✓'; color: var(--accent-green); }
+
+  /* Steps */
+  .steps-list {
+    counter-reset: step-counter;
+    list-style: none;
+    margin: 16px 0;
+  }
+
+  .steps-list li {
+    counter-increment: step-counter;
+    display: flex;
+    gap: 14px;
+    margin-bottom: 14px;
+    align-items: flex-start;
+  }
+
+  .steps-list li::before {
+    content: counter(step-counter);
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+    color: #fff;
+    font-weight: 700;
+    font-size: 12px;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .steps-list li span { font-size: 14px; color: var(--text-secondary); }
+
+  /* Mermaid */
+  .mermaid-wrap {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 24px;
+    margin: 20px 0;
+    overflow-x: auto;
+  }
+
+  .mermaid-caption {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    font-style: italic;
+  }
+
+  /* ══ Mermaid: comprehensive dark-theme fix — all diagram types ══ */
+  /* TEXT COLOR: #86efac (light green) everywhere, no exceptions      */
+
+  /* ── 1. Every SVG text/tspan element ─────────────────────────── */
+  .mermaid svg text,
+  .mermaid svg tspan {
+    fill: #86efac !important;
+    color: #86efac !important;
+    stroke: none !important;
+  }
+
+  /* ── 2. Named text roles ──────────────────────────────────────── */
+  .mermaid svg .label,
+  .mermaid svg .label text,
+  .mermaid svg .label tspan,
+  .mermaid svg .nodeLabel,
+  .mermaid svg .nodeLabel text,
+  .mermaid svg .edgeLabel,
+  .mermaid svg .edgeLabel text,
+  .mermaid svg .edgeLabel tspan,
+  .mermaid svg .messageText,
+  .mermaid svg .loopText,
+  .mermaid svg .loopText tspan,
+  .mermaid svg .noteText,
+  .mermaid svg .noteText tspan,
+  .mermaid svg .actor text,
+  .mermaid svg .actor tspan,
+  .mermaid svg .labelText,
+  .mermaid svg .labelText tspan,
+  .mermaid svg .cluster-label text,
+  .mermaid svg .cluster-label tspan,
+  .mermaid svg .titleText,
+  .mermaid svg .sectionTitle,
+  .mermaid svg .taskText,
+  .mermaid svg .taskTextOutsideRight,
+  .mermaid svg .taskTextOutsideLeft,
+  .mermaid svg .task-state-text,
+  .mermaid svg .statediagramLabel text {
+    fill: #86efac !important;
+    color: #86efac !important;
+    stroke: none !important;
+  }
+
+  /* ── 3. foreignObject HTML labels (flowchart node text) ──────── */
+  .mermaid foreignObject div,
+  .mermaid foreignObject span,
+  .mermaid foreignObject p,
+  .mermaid foreignObject label,
+  .mermaid foreignObject .nodeLabel,
+  .mermaid foreignObject .label,
+  .mermaid foreignObject .edgeLabel {
+    color: #86efac !important;
+    background: transparent !important;
+  }
+
+  /* ── 4. Edge label wrapper ────────────────────────────────────── */
+  .mermaid svg .edgeLabel rect,
+  .mermaid svg .edgeLabel foreignObject {
+    fill: #162d4a !important;
+    background: #162d4a !important;
+  }
+  .mermaid svg .edgeLabel span,
+  .mermaid svg .edgeLabel p {
+    background: #162d4a !important;
+    color: #86efac !important;
+  }
+
+  /* ── 5. Flowchart node shapes ─────────────────────────────────── */
+  .mermaid svg .node rect,
+  .mermaid svg .node circle,
+  .mermaid svg .node ellipse,
+  .mermaid svg .node polygon,
+  .mermaid svg .node path {
+    fill: #1e4080 !important;
+    stroke: #60a5fa !important;
+    stroke-width: 1.5px !important;
+  }
+
+  /* ── 6. Subgraph / cluster backgrounds ───────────────────────── */
+  .mermaid svg .cluster rect,
+  .mermaid svg .cluster polygon,
+  .mermaid svg .subgraph rect {
+    fill: #0d1e35 !important;
+    stroke: #3b82f6 !important;
+    stroke-width: 1px !important;
+  }
+
+  /* ── 7. Timeline diagram — section bars & task boxes ─────────── */
+  /* Override ALL colored fills mermaid generates for timeline       */
+  .mermaid svg rect,
+  .mermaid svg polygon {
+    /* only override fills that look like colored section bars       */
+  }
+  .mermaid svg .timeline-section,
+  .mermaid svg .section,
+  .mermaid svg rect.section,
+  .mermaid svg .mermaid-timeline rect,
+  .mermaid svg .period rect,
+  .mermaid svg [class*="section0"],
+  .mermaid svg [class*="section1"],
+  .mermaid svg [class*="section2"],
+  .mermaid svg [class*="section3"],
+  .mermaid svg [class*="section4"],
+  .mermaid svg [class*="section5"],
+  .mermaid svg .cScale0 rect,
+  .mermaid svg .cScale1 rect,
+  .mermaid svg .cScale2 rect,
+  .mermaid svg .cScale3 rect,
+  .mermaid svg .cScale4 rect,
+  .mermaid svg .cScale5 rect,
+  .mermaid svg .cScale6 rect,
+  .mermaid svg .cScale7 rect {
+    fill: #1e4080 !important;
+    stroke: #60a5fa !important;
+  }
+  /* Timeline label text specifically */
+  .mermaid svg .cScale0 text,
+  .mermaid svg .cScale1 text,
+  .mermaid svg .cScale2 text,
+  .mermaid svg .cScale3 text,
+  .mermaid svg .cScale4 text,
+  .mermaid svg .cScale5 text,
+  .mermaid svg .cScale6 text,
+  .mermaid svg .cScale7 text,
+  .mermaid svg [class*="section"] text,
+  .mermaid svg [class*="section"] tspan {
+    fill: #86efac !important;
+    color: #86efac !important;
+  }
+
+  /* ── 8. Actor boxes (sequence diagrams) ──────────────────────── */
+  .mermaid svg .actor {
+    fill: #1e4080 !important;
+    stroke: #60a5fa !important;
+  }
+
+  /* ── 9. Note boxes ────────────────────────────────────────────── */
+  .mermaid svg .note,
+  .mermaid svg rect.note {
+    fill: #0f3a5a !important;
+    stroke: #06b6d4 !important;
+  }
+
+  /* ── 10. Connector lines ─────────────────────────────────────── */
+  .mermaid svg .edge-pattern-solid,
+  .mermaid svg .edge-pattern-dotted,
+  .mermaid svg .flowchart-link,
+  .mermaid svg .messageLine0,
+  .mermaid svg .messageLine1,
+  .mermaid svg line.actor,
+  .mermaid svg line {
+    stroke: #94a3b8 !important;
+  }
+
+  /* ── 11. Edge paths — stroke only, never fill ────────────────── */
+  .mermaid svg path.edge-pattern-solid,
+  .mermaid svg path.flowchart-link,
+  .mermaid svg path[class*="edge"],
+  .mermaid svg path[class*="arrow"],
+  .mermaid svg path[class*="path"] {
+    stroke: #94a3b8 !important;
+    fill: none !important;
+  }
+
+  /* ── 12. Arrowhead markers ───────────────────────────────────── */
+  .mermaid svg marker path,
+  .mermaid svg marker polygon,
+  .mermaid svg .arrowMarkerPath,
+  .mermaid svg defs marker path,
+  .mermaid svg defs marker polygon {
+    fill: #94a3b8 !important;
+    stroke: #94a3b8 !important;
+  }
+
+  /* Interview Q&A */
+  .qa-list { margin: 16px 0; }
+
+  .qa-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+  }
+
+  .qa-q {
+    font-weight: 600;
+    color: #e2e8f0;
+    font-size: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .qa-q::before { content: 'Q'; background: var(--accent-blue); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 3px; font-family: 'Sora', sans-serif; flex-shrink: 0; margin-top: 2px; }
+
+  .qa-a {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    padding-left: 28px;
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  /* About author */
+  .author-section {
+    background: linear-gradient(135deg, #0f1f3d 0%, #0d1a2e 100%);
+    border: 1px solid rgba(59,130,246,0.25);
+    border-radius: 12px;
+    padding: 32px;
+    margin-top: 56px;
+  }
+
+  .author-header {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+
+  .author-avatar {
+    width: 70px; height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+
+  .author-meta h3 { margin: 0 0 4px; font-size: 20px; color: #fff; }
+  .author-meta .role { font-size: 13px; color: var(--accent-cyan); margin-bottom: 8px; }
+  .author-meta p { font-size: 14px; color: var(--text-secondary); margin: 0; }
+
+  .tech-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0;
+  }
+
+  .tech-badge {
+    background: rgba(59,130,246,0.12);
+    border: 1px solid rgba(59,130,246,0.25);
+    color: #93c5fd;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .email-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(6,182,212,0.08);
+    border: 1px solid rgba(6,182,212,0.25);
+    padding: 10px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--accent-cyan);
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.2s;
+    margin-top: 8px;
+  }
+
+  .email-card:hover { background: rgba(6,182,212,0.14); }
+
+  .disclaimer-box {
+    background: rgba(245,158,11,0.06);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-top: 20px;
+    font-size: 12.5px;
+    color: #fde68a;
+    line-height: 1.6;
+  }
+
+  .disclaimer-box strong { color: #fcd34d; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main-content { margin-left: 0; }
+    .page-header { padding: 36px 24px 32px; }
+    .content-wrap { padding: 32px 24px 60px; }
+    .page-title { font-size: 26px; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .product-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Highlight */
+  .highlight { color: var(--accent-cyan); font-weight: 600; }
+
+  ul.bullet-list {
+    list-style: none;
+    margin: 10px 0;
+  }
+
+  ul.bullet-list li {
+    font-size: 14px;
+    color: var(--text-secondary);
+    padding: 5px 0;
+    padding-left: 18px;
+    position: relative;
+  }
+
+  ul.bullet-list li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--accent-cyan);
+    font-size: 12px;
+  }
+
+  .inline-flex { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  .page-section { scroll-margin-top: 24px; }
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══════════════════════════════════════════════════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand">🗄️ NetApp Tutorials</div>
+    <div class="subtitle">Products · ONTAP · HA Architecture Tutorial 1</div>
+  </div>
+
+  <div class="toc-title">Table of Contents</div>
+  <ul class="toc-list">
+    <li><a href="#landscape"><span class="icon">🌐</span> Storage Landscape <span class="num">01</span></a></li>
+    <li><a href="#products"><span class="icon">📦</span> NetApp Product Portfolio <span class="num">02</span></a></li>
+    <div class="toc-divider"></div>
+    <li><a href="#fas-models"><span class="icon">🖥️</span> FAS / AFF Model Range <span class="num">03</span></a></li>
+    <li><a href="#ontap-history"><span class="icon">📜</span> ONTAP History & Versions <span class="num">04</span></a></li>
+    <div class="toc-divider"></div>
+    <li><a href="#controllers"><span class="icon">⚙️</span> Controllers & Terminology <span class="num">05</span></a></li>
+    <li><a href="#standalone"><span class="icon">🔲</span> Standalone Configuration <span class="num">06</span></a></li>
+    <li><a href="#hapair"><span class="icon">🔁</span> High Availability Pair <span class="num">07</span></a></li>
+    <div class="toc-divider"></div>
+    <li><a href="#san-nas"><span class="icon">🔐</span> SAN vs NAS Deep Dive <span class="num">08</span></a></li>
+    <li><a href="#hba"><span class="icon">🔌</span> HBA & Data Security <span class="num">09</span></a></li>
+    <div class="toc-divider"></div>
+    <li><a href="#interview"><span class="icon">💼</span> Interview Q&amp;A <span class="num">10</span></a></li>
+    <li><a href="#about"><span class="icon">👤</span> About the Author <span class="num">11</span></a></li>
+  </ul>
+</nav>
+
+<!-- ═══ MAIN CONTENT ══════════════════════════════════════════════════════ -->
+<main class="main-content">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-badge">🗄️ Enterprise Storage Tutorial Series</div>
+    <h1 class="page-title">NetApp Storage Fundamentals<br><span>Products · ONTAP · HA Architecture — Tutorial 1</span></h1>
+    <p class="page-subtitle">A comprehensive guide to NetApp's product portfolio, ONTAP operating system history, controller connectivity modes, and SAN vs NAS fundamentals — designed for storage engineers and IT professionals.</p>
+    <div class="header-tags">
+      <span class="tag tag-blue">Platform: NetApp FAS / AFF</span>
+      <span class="tag tag-cyan">Level: Beginner → L1</span>
+      <span class="tag tag-green">ONTAP Deep Dive</span>
+      <span class="tag tag-amber">Interview Prep Included</span>
+    </div>
+  </div>
+
+  <div class="content-wrap">
+
+    <!-- ══ SECTION 01: Storage Landscape ══════════════════════════════════ -->
+    <section id="landscape" class="page-section">
+      <div class="section-label">📍 Section 01</div>
+      <h2 class="section-heading">Enterprise Storage Landscape</h2>
+      <p class="section-intro">Before diving into NetApp specifics, it is essential to understand the competitive landscape of enterprise storage and why NetApp occupies a leading position among global vendors.</p>
+
+      <h3>Leading Storage Vendors</h3>
+      <p>While approximately 30+ manufacturers produce storage systems globally, enterprise deployments are dominated by a handful of established vendors. Each offers a distinct portfolio, but the following six account for the majority of enterprise storage deployments worldwide:</p>
+
+      <div class="vendor-row">
+        <div class="vendor-pill top">🥇 NetApp</div>
+        <div class="vendor-pill top">⚡ Dell EMC</div>
+        <div class="vendor-pill">🔷 HPE</div>
+        <div class="vendor-pill">🟠 Hitachi Vantara</div>
+        <div class="vendor-pill">💻 IBM</div>
+        <div class="vendor-pill">⚡ Pure Storage</div>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-icon">📈</div>
+        <div class="callout-body">
+          <div class="callout-title">Why NetApp Leads Today</div>
+          <p class="callout-text">NetApp has moved to the top position in enterprise storage market share, surpassing traditional leaders like Dell EMC. This growth is driven by its comprehensive product range, ONTAP operating system capabilities, deep cloud integrations (Azure NetApp Files, AWS FSx for NetApp ONTAP, Google Cloud NetApp Volumes), and its strong unified storage philosophy.</p>
+        </div>
+      </div>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+graph LR
+    subgraph StorageVendors["🏢 Enterprise Storage Vendor Landscape"]
+        A["🥇 NetApp<br/>(Market Leader)"] 
+        B["⚡ Dell EMC"]
+        C["🔷 HPE"]
+        D["🟠 Hitachi"]
+        E["💻 IBM"]
+        F["⚡ Pure Storage"]
+    end
+
+    subgraph NetAppEdge["NetApp Competitive Advantages"]
+        G["ONTAP OS<br/>Ecosystem"]
+        H["Cloud<br/>Integrations"]
+        I["Unified<br/>Storage (SAN+NAS)"]
+        J["Wide Product<br/>Range"]
+    end
+
+    A --> G
+    A --> H
+    A --> I
+    A --> J
+
+    style A fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style StorageVendors fill:#161b22,stroke:#2d3748,color:#94a3b8
+    style NetAppEdge fill:#0f2a1f,stroke:#10b981,color:#94a3b8
+        </div>
+        <p class="mermaid-caption">Figure 1 — Enterprise Storage Vendor Landscape and NetApp Competitive Advantages</p>
+      </div>
+    </section>
+
+    <hr class="section-sep">
+
+    <!-- ══ SECTION 02: NetApp Product Portfolio ════════════════════════════ -->
+    <section id="products" class="page-section">
+      <div class="section-label">📍 Section 02</div>
+      <h2 class="section-heading">NetApp Product Portfolio</h2>
+      <p class="section-intro">NetApp (full form: <strong>Network Appliance</strong>, founded 1992) offers a comprehensive portfolio spanning hardware storage arrays, software-defined solutions, and cloud-native services. Understanding these products is foundational for any storage professional.</p>
+
+      <div class="callout note">
+        <div class="callout-icon">💡</div>
+        <div class="callout-body">
+          <div class="callout-title">Key Concept — Unified Storage</div>
+          <p class="callout-text">Most NetApp products are described as <strong>unified</strong>, meaning they can serve storage over both <strong>SAN protocols</strong> (iSCSI, Fibre Channel) and <strong>NAS protocols</strong> (NFS, SMB/CIFS) from a single platform. This contrasts with SAN-only or NAS-only solutions that lock you into one access method.</p>
+        </div>
+      </div>
+
+      <h3>Hardware Storage Systems</h3>
+      <div class="product-grid">
+
+        <div class="product-card blue">
+          <div class="pname">FAS</div>
+          <div class="pfull">Fabric Attached Storage</div>
+          <span class="pbadge badge-unified">Unified (SAN + NAS)</span>
+          <p class="pdesc">The flagship hybrid storage array supporting mixed drive types (SAS, SATA, SSD). It is the workhorse of mid-range enterprise environments where cost efficiency and workload flexibility are priorities.</p>
+          <p class="pos">OS: <strong>ONTAP</strong></p>
+        </div>
+
+        <div class="product-card cyan">
+          <div class="pname">AFF</div>
+          <div class="pfull">All Flash FAS</div>
+          <span class="pbadge badge-unified">Unified (SAN + NAS)</span>
+          <p class="pdesc">An all-NVMe/SSD variant of the FAS platform delivering ultra-low latency and high throughput. Ideal for latency-sensitive workloads like databases, VDI, and business-critical applications.</p>
+          <p class="pos">OS: <strong>ONTAP</strong></p>
+        </div>
+
+        <div class="product-card amber">
+          <div class="pname">ASA</div>
+          <div class="pfull">All SAN Array</div>
+          <span class="pbadge badge-san">SAN Only</span>
+          <p class="pdesc">A purpose-built all-flash SAN array introduced to deliver maximum block-storage performance for mission-critical applications. Does not support NAS protocols — SAN-exclusive by design.</p>
+          <p class="pos">OS: <strong>ONTAP</strong></p>
+        </div>
+
+        <div class="product-card red">
+          <div class="pname">E-Series</div>
+          <div class="pfull">E-Series Storage Systems</div>
+          <span class="pbadge badge-san">SAN Only</span>
+          <p class="pdesc">A high-performance block storage system for data-intensive workloads such as big data analytics and high-performance computing (HPC). Managed by a completely different operating system.</p>
+          <p class="pos">OS: <strong>SANtricity</strong></p>
+        </div>
+
+        <div class="product-card purple">
+          <div class="pname">V-Series</div>
+          <div class="pfull">Virtualization Series</div>
+          <span class="pbadge badge-unified">Unified (SAN + NAS)</span>
+          <p class="pdesc">Acts as a front-end virtualization layer over third-party storage arrays (e.g., Dell EMC, IBM). Instead of owning disk shelves, V-Series pulls storage from external arrays and re-presents it to clients via ONTAP protocols.</p>
+          <p class="pos">OS: <strong>ONTAP</strong> (V-Series License)</p>
+        </div>
+
+        <div class="product-card green">
+          <div class="pname">SolidFire</div>
+          <div class="pfull">SolidFire (acquired by NetApp)</div>
+          <span class="pbadge badge-san">SAN / All Flash</span>
+          <p class="pdesc">Originally an independent company, acquired by NetApp. Optimized for VDI (Virtual Desktop Infrastructure) and cloud-scale block storage. Delivers predictable QoS guarantees per-volume.</p>
+          <p class="pos">OS: <strong>Element OS</strong></p>
+        </div>
+
+      </div>
+
+      <h3>Software &amp; Cloud Solutions</h3>
+      <div class="product-grid">
+
+        <div class="product-card cyan">
+          <div class="pname">ONTAP Select</div>
+          <div class="pfull">Software-Defined Storage</div>
+          <span class="pbadge badge-sw">Software Defined</span>
+          <p class="pdesc">Deploy ONTAP as software on commodity x86 server hardware (Dell, HPE, Cisco UCS). Ideal for remote offices and branch locations (ROBO) where purchasing a dedicated hardware array is cost-prohibitive. Supports RAID, unified protocols, and most ONTAP features.</p>
+        </div>
+
+        <div class="product-card purple">
+          <div class="pname">StorageGRID</div>
+          <div class="pfull">Object Storage Platform</div>
+          <span class="pbadge badge-object">Object Storage</span>
+          <p class="pdesc">A distributed, software-defined object storage solution supporting S3, Swift, and other object protocols. Designed for petabyte-scale unstructured data — similar in concept to AWS S3 but deployed on-premises.</p>
+        </div>
+
+        <div class="product-card blue">
+          <div class="pname">Azure NetApp Files</div>
+          <div class="pfull">ANF — Cloud NAS Service</div>
+          <span class="pbadge badge-nas">Cloud NAS</span>
+          <p class="pdesc">A fully managed, high-performance file storage service built on NetApp technology, available natively within Microsoft Azure. Used for enterprise file sharing, SAP HANA migrations, and high-performance cloud workloads requiring NFS/SMB in Azure.</p>
+        </div>
+
+      </div>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+graph TD
+    NetApp["🗄️ NetApp Product Portfolio"]
+    
+    NetApp --> HW["Hardware Arrays"]
+    NetApp --> SW["Software & Cloud"]
+    
+    HW --> FAS["FAS<br/>Hybrid · ONTAP<br/>Unified"]
+    HW --> AFF["AFF<br/>All Flash · ONTAP<br/>Unified"]
+    HW --> ASA["ASA<br/>All Flash · ONTAP<br/>SAN Only"]
+    HW --> ES["E-Series<br/>SANtricity<br/>SAN Only"]
+    HW --> VS["V-Series<br/>ONTAP License<br/>3rd-party backend"]
+    HW --> SF["SolidFire<br/>Element OS<br/>VDI / Cloud Scale"]
+    
+    SW --> OS_S["ONTAP Select<br/>Software-Defined<br/>x86 Server"]
+    SW --> SG["StorageGRID<br/>Object Storage<br/>S3 / Swift"]
+    SW --> ANF["Azure NetApp Files<br/>Cloud NAS<br/>Azure Native"]
+
+    style NetApp fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style HW fill:#1a2535,stroke:#2d3748,color:#94a3b8
+    style SW fill:#1a2535,stroke:#2d3748,color:#94a3b8
+    style FAS fill:#1c2230,stroke:#3b82f6,color:#e2e8f0
+    style AFF fill:#1c2230,stroke:#06b6d4,color:#e2e8f0
+    style ASA fill:#1c2230,stroke:#f59e0b,color:#e2e8f0
+    style ES fill:#1c2230,stroke:#ef4444,color:#e2e8f0
+    style VS fill:#1c2230,stroke:#8b5cf6,color:#e2e8f0
+    style SF fill:#1c2230,stroke:#10b981,color:#e2e8f0
+    style OS_S fill:#1c2230,stroke:#06b6d4,color:#e2e8f0
+    style SG fill:#1c2230,stroke:#8b5cf6,color:#e2e8f0
+    style ANF fill:#1c2230,stroke:#3b82f6,color:#e2e8f0
+        </div>
+        <p class="mermaid-caption">Figure 2 — NetApp Product Portfolio Overview: Hardware Arrays and Software/Cloud Solutions</p>
+      </div>
+
+      <h3>V-Series Use Case Explained</h3>
+      <p>The V-Series solves a common enterprise challenge: a company owns a legacy SAN array (e.g., a Dell EMC SAN-only system with unused capacity) but now needs NAS capabilities. Rather than purchasing a brand-new FAS system, they can deploy a V-Series in front of the existing array to extract the underutilized capacity and re-present it via NAS protocols using ONTAP's full feature set.</p>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart LR
+    Clients["💻 Clients &amp; Servers\n(NFS / SMB / iSCSI)"]
+    VSeries["V-Series\n(ONTAP License)\nFront-End Virtualization"]
+    EMC["Dell EMC SAN Array\n(Back-end Storage Pool)\nUnused Capacity"]
+    
+    Clients -- "NAS or SAN request" --> VSeries
+    VSeries -- "Pulls storage via SAN\n(FC / iSCSI)" --> EMC
+    EMC -- "Raw block storage" --> VSeries
+    VSeries -- "Presents as NFS/SMB/iSCSI" --> Clients
+
+    style Clients fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style VSeries fill:#1a2f3a,stroke:#06b6d4,color:#e2e8f0
+    style EMC fill:#1c2230,stroke:#64748b,color:#94a3b8
+        </div>
+        <p class="mermaid-caption">Figure 3 — V-Series Architecture: Virtualizing Third-Party Storage for ONTAP Protocol Presentation</p>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-icon">🏆</div>
+        <div class="callout-body">
+          <div class="callout-title">Best Practice — Product Selection</div>
+          <p class="callout-text">For 90%+ of enterprise deployments, the choice comes down to <strong>FAS</strong> (for mixed-workload, cost-sensitive environments) or <strong>AFF</strong> (for latency-critical, all-flash requirements). The ASA is the preferred choice for organizations running a pure SAN environment at scale who want simplified, optimized block storage operations.</p>
+        </div>
+      </div>
+
+      <h3>Quick Reference: Product Comparison</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Drive Types</th>
+            <th>Protocol Support</th>
+            <th>Operating System</th>
+            <th>Best For</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>FAS</td><td>SAS, SATA, SSD (mixed)</td><td>SAN + NAS (Unified)</td><td>ONTAP</td><td>Mixed workloads, general purpose</td></tr>
+          <tr><td>AFF</td><td>NVMe / SSD (flash only)</td><td>SAN + NAS (Unified)</td><td>ONTAP</td><td>High-performance, latency-sensitive</td></tr>
+          <tr><td>ASA</td><td>NVMe / SSD (flash only)</td><td>SAN only</td><td>ONTAP</td><td>Pure SAN, block storage at scale</td></tr>
+          <tr><td>E-Series</td><td>SAS, SSD</td><td>SAN only</td><td>SANtricity</td><td>Big data, HPC, analytics</td></tr>
+          <tr><td>V-Series</td><td>No local shelves (3rd-party)</td><td>SAN + NAS (Unified)</td><td>ONTAP (license)</td><td>Repurposing legacy arrays</td></tr>
+          <tr><td>ONTAP Select</td><td>Commodity server disks</td><td>SAN + NAS (Unified)</td><td>ONTAP</td><td>Remote offices, ROBO, test/dev</td></tr>
+          <tr><td>SolidFire</td><td>All flash</td><td>SAN (iSCSI / FC)</td><td>Element OS</td><td>VDI, cloud-scale block</td></tr>
+          <tr><td>StorageGRID</td><td>Commodity + object</td><td>S3, Swift</td><td>StorageGRID OS</td><td>Object/unstructured data</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr class="section-sep">
+
+    <!-- ══ SECTION 03: FAS / AFF Model Range ══════════════════════════════ -->
+    <section id="fas-models" class="page-section">
+      <div class="section-label">📍 Section 03</div>
+      <h2 class="section-heading">FAS &amp; AFF Hardware Model Range</h2>
+      <p class="section-intro">Within each product family, NetApp offers multiple hardware models segmented by performance tier. Understanding this tiering helps you match the right product to business requirements and budget constraints.</p>
+
+      <h3>FAS Product Generations</h3>
+      <p>NetApp has released several generations of FAS hardware. Each generation improves on processor speed, cache capacity, drive shelf connectivity, and maximum raw storage. Controllers within each generation follow a Low-End → Mid-Range → High-End → Enterprise progression:</p>
+
+      <table>
+        <thead>
+          <tr><th>Generation</th><th>Low-End</th><th>Mid-Range</th><th>High-End</th><th>Enterprise</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1st Gen</td><td>FAS 2000</td><td>FAS 3000</td><td>FAS 6000</td><td>—</td></tr>
+          <tr><td>2nd Gen</td><td>FAS 2200</td><td>FAS 3200</td><td>FAS 6200</td><td>—</td></tr>
+          <tr><td>3rd Gen</td><td>—</td><td>FAS 2500 / 2600 / 2700</td><td>FAS 8000 / 8200 / 8300</td><td>FAS 9000</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout note">
+        <div class="callout-icon">📝</div>
+        <div class="callout-body">
+          <div class="callout-title">Notes:</div>
+          <p class="callout-text">Hardware architecture and ONTAP features are essentially identical across FAS models. The differences are purely in <strong>processor type/speed</strong>, <strong>available cache</strong>, <strong>maximum disk shelf connectivity</strong>, and consequently <strong>maximum raw storage capacity</strong>. A FAS 9000 can scale to petabytes; a FAS 2700 suits smaller environments.</p>
+        </div>
+      </div>
+
+      <h3>AFF Product Range</h3>
+      <p>AFF follows a similar tiering strategy. Key models include:</p>
+      <ul class="bullet-list">
+        <li><strong>AFF C190 / AFF 200 / AFF 220</strong> — Entry-level all-flash for SMB and remote offices</li>
+        <li><strong>AFF A300 / AFF A400</strong> — Mid-range performance for departmental and mid-tier applications</li>
+        <li><strong>AFF A700 / AFF A800 / AFF A900</strong> — High-end and enterprise-grade, sustaining petabyte-scale all-flash workloads</li>
+      </ul>
+
+      <div class="callout tip">
+        <div class="callout-icon">🌐</div>
+        <div class="callout-body">
+          <div class="callout-title">Best Practice — Hardware Specification Reference</div>
+          <p class="callout-text">You do not need to memorize every model's specification. NetApp maintains the <strong>Hardware Universe</strong> at <code>hwu.netapp.com</code> (formerly <code>hw.netapp.com</code>), which provides full technical specifications, supported drive shelves, disk counts, and cabling diagrams for every current and legacy model. Always reference this site when sizing a deployment.</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-sep">
+
+    <!-- ══ SECTION 04: ONTAP History ══════════════════════════════════════ -->
+    <section id="ontap-history" class="page-section">
+      <div class="section-label">📍 Section 04</div>
+      <h2 class="section-heading">ONTAP — History &amp; Version Evolution</h2>
+      <p class="section-intro">ONTAP (formerly called Data ONTAP) is the operating system that powers NetApp's FAS, AFF, and ASA hardware. Understanding its version history provides important context for why modern ONTAP behaves the way it does and why certain architectural decisions were made.</p>
+
+      <h3>The Two Flavors of Data ONTAP</h3>
+      <p>Throughout its history, Data ONTAP existed in two distinct flavors — analogous to how Microsoft offers both desktop and server editions of Windows:</p>
+
+      <div class="compare-grid">
+        <div class="compare-card" style="border-color: rgba(245,158,11,0.3);">
+          <h4 style="color: #fcd34d;">⚠️ 7-Mode (Legacy)</h4>
+          <ul class="bullet-list">
+            <li>Introduced in ONTAP 7.0</li>
+            <li>Single-controller operating model</li>
+            <li>Supports SAN and NAS</li>
+            <li>Simpler to manage for small environments</li>
+            <li>No longer developed or supported from ONTAP 8.3+</li>
+            <li>Customers were required to migrate to C-Mode</li>
+          </ul>
+        </div>
+        <div class="compare-card" style="border-color: rgba(16,185,129,0.3);">
+          <h4 style="color: #34d399;">✅ Cluster Mode / C-Mode (Current)</h4>
+          <ul class="bullet-list">
+            <li>Based on the earlier GX distributed architecture</li>
+            <li>Scale-out cluster of up to 24 nodes per cluster</li>
+            <li>Supports SAN, NAS, and object (unified)</li>
+            <li>Non-disruptive operations (upgrades without downtime)</li>
+            <li>Far more features than 7-Mode</li>
+            <li>The only supported mode from ONTAP 8.3 onwards</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>ONTAP Version Timeline</h3>
+      <p>The following timeline outlines the major ONTAP releases and the significant architectural transitions:</p>
+
+      <div class="timeline">
+        <div class="tl-item deprecated">
+          <div class="tl-version">ONTAP 6.0 — 6.3</div>
+          <div class="tl-desc">Initial release as <strong>Data ONTAP GX</strong>. NAS-only support (NFS initially, SMB added later). Foundation of the cluster architecture that would later become C-Mode.</div>
+        </div>
+        <div class="tl-item deprecated">
+          <div class="tl-version">ONTAP 7.0 — 8.2</div>
+          <div class="tl-desc"><strong>7-Mode introduced.</strong> Added SAN protocol support (FC, iSCSI). GX continued in parallel in the background until 7.3. Most enterprises adopted 7-Mode for its simplicity and SAN capabilities.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-version">ONTAP 8.0 (Cluster Mode debut)</div>
+          <div class="tl-desc">NetApp rebranded Data ONTAP GX as <strong>Cluster Mode (C-Mode)</strong> and added SAN support to it. Both 7-Mode and C-Mode coexisted during this transition period.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-version">ONTAP 8.3</div>
+          <div class="tl-desc"><strong>7-Mode deprecated.</strong> NetApp officially discontinued new 7-Mode releases and required all customers to migrate to C-Mode. This was controversial initially but widely accepted after customers experienced C-Mode's advantages.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-version">ONTAP 9.x Series</div>
+          <div class="tl-desc">Modern ONTAP era. Rebranded from "Data ONTAP" to simply "ONTAP". Releases from 9.1 through 9.9+ added cloud tiering, NVMe/FC, S3 object access, Kubernetes integration, and ransomware protection features.</div>
+        </div>
+        <div class="tl-item active">
+          <div class="tl-version">ONTAP 9.8+ (Current Production)</div>
+          <div class="tl-desc">Latest production-ready branch. Includes ONTAP S3, autonomous ransomware protection, NVMe over TCP (NVMe/TCP), and enhanced cloud tiering to all major public cloud providers.</div>
+        </div>
+      </div>
+
+      <div class="mermaid-wrap">
+        <!-- Figure 4: Custom HTML Timeline replacing Mermaid (text/colour rendering fix) -->
+        <style>
+          .fig4-wrap {
+            font-family: 'Inter', sans-serif;
+            padding: 24px 16px 16px;
+            overflow-x: auto;
+          }
+          .fig4-title {
+            text-align: center;
+            font-family: 'Sora', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 20px;
+            letter-spacing: 0.04em;
+          }
+          /* ERA ROW */
+          .fig4-eras {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-bottom: 0;
+          }
+          .fig4-era {
+            background: #5b9bd5;
+            color: #fff;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 10px 8px;
+            border-radius: 6px 6px 0 0;
+            letter-spacing: 0.02em;
+          }
+          /* CONNECTOR STRIP */
+          .fig4-connector-row {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            position: relative;
+            height: 28px;
+            align-items: center;
+          }
+          .fig4-connector-row::before {
+            content: '';
+            position: absolute;
+            left: calc(100% / 14);
+            right: calc(100% / 14);
+            top: 50%;
+            height: 2px;
+            background: #5b9bd5;
+            z-index: 0;
+          }
+          /* VERSION ROW */
+          .fig4-versions {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            margin-bottom: 0;
+          }
+          .fig4-ver {
+            background: #aecce8;
+            color: #0d1117;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 8px 4px;
+            border-radius: 4px;
+          }
+          /* ARROW ROW */
+          .fig4-arrows {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            height: 36px;
+          }
+          .fig4-arrow-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+          }
+          .fig4-arrow-cell .vline {
+            width: 2px;
+            flex: 1;
+            background: #5b9bd5;
+          }
+          .fig4-arrow-cell .arrowhead {
+            width: 0; height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 7px solid #5b9bd5;
+          }
+          /* DETAIL BOX ROW */
+          .fig4-details {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+          }
+          .fig4-detail {
+            background: #d6e9f8;
+            border: 1px solid #5b9bd5;
+            border-radius: 6px;
+            padding: 8px 6px;
+            font-size: 11px;
+            color: #0d1a2e;
+            line-height: 1.5;
+          }
+          .fig4-detail-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 4px;
+            margin-bottom: 4px;
+          }
+          .fig4-detail-item:last-child { margin-bottom: 0; }
+          .fig4-detail-item .dot {
+            width: 5px; height: 5px;
+            background: #1a5fa8;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 5px;
+          }
+          /* HIGHLIGHT for C-Mode launch */
+          .fig4-ver.highlight {
+            background: #1a5fa8;
+            color: #fff;
+            outline: 2px solid #aecce8;
+          }
+          /* ERA SPAN helpers: era spans across multiple version columns */
+          /* We handle it via colspan-like merged cells using sub-grids */
+          .fig4-era-span-1 { grid-column: span 1; }
+          .fig4-era-span-2 { grid-column: span 2; }
+          .fig4-era-span-3 { grid-column: span 3; }
+        </style>
+
+        <div class="fig4-wrap">
+          <div class="fig4-title">ONTAP Version History &amp; Architecture Evolution</div>
+
+          <!-- ERA HEADERS (spans across version columns) -->
+          <div style="display:grid; grid-template-columns: 1fr 2fr 2fr 2fr; gap:6px; margin-bottom:6px;">
+            <div class="fig4-era">Early NAS Era</div>
+            <div class="fig4-era">SAN Introduction</div>
+            <div class="fig4-era">Cluster Mode Transition</div>
+            <div class="fig4-era">Modern ONTAP Era</div>
+          </div>
+
+          <!-- VERSION BUBBLES (7 versions) -->
+          <div class="fig4-versions">
+            <div class="fig4-ver">6.0</div>
+            <div class="fig4-ver">7.0</div>
+            <div class="fig4-ver">7.3</div>
+            <div class="fig4-ver highlight">8.0</div>
+            <div class="fig4-ver">8.3</div>
+            <div class="fig4-ver">9.x</div>
+            <div class="fig4-ver">9.8</div>
+          </div>
+
+          <!-- ARROWS -->
+          <div class="fig4-arrows">
+            <div class="fig4-arrow-cell"><div class="vline"></div><div class="arrowhead"></div></div>
+            <div class="fig4-arrow-cell"><div class="vline"></div><div class="arrowhead"></div></div>
+            <div class="fig4-arrow-cell"><div class="vline"></div><div class="arrowhead"></div></div>
+            <div class="fig4-arrow-cell"><div class="vline"></div><div class="arrowhead"></div></div>
+            <div class="fig4-arrow-cell"><div class="vline"></div><div class="arrowhead"></div></div>
+            <div class="fig4-arrow-cell"><div class="vline"></div><div class="arrowhead"></div></div>
+            <div class="fig4-arrow-cell"><div class="vline"></div><div class="arrowhead"></div></div>
+          </div>
+
+          <!-- DETAIL BOXES -->
+          <div class="fig4-details">
+            <!-- 6.0 -->
+            <div class="fig4-detail">
+              <div class="fig4-detail-item"><div class="dot"></div><span>Data ONTAP GX released</span></div>
+              <div class="fig4-detail-item"><div class="dot"></div><span>NAS-only (NFS, then SMB)</span></div>
+              <div class="fig4-detail-item"><div class="dot"></div><span>Distributed cluster foundation</span></div>
+            </div>
+            <!-- 7.0 -->
+            <div class="fig4-detail">
+              <div class="fig4-detail-item"><div class="dot"></div><span>7-Mode introduced</span></div>
+              <div class="fig4-detail-item"><div class="dot"></div><span>SAN support added (FC, iSCSI)</span></div>
+              <div class="fig4-detail-item"><div class="dot"></div><span>GX continues in parallel</span></div>
+            </div>
+            <!-- 7.3 -->
+            <div class="fig4-detail">
+              <div class="fig4-detail-item"><div class="dot"></div><span>GX officially retired</span></div>
+            </div>
+            <!-- 8.0 — C-Mode launch highlight -->
+            <div class="fig4-detail" style="border-color:#1a5fa8; background:#c2ddf5;">
+              <div class="fig4-detail-item"><div class="dot"></div><span><strong>C-Mode launched</strong> (based on GX)</span></div>
+              <div class="fig4-detail-item"><div class="dot"></div><span>SAN added to C-Mode</span></div>
+              <div class="fig4-detail-item"><div class="dot"></div><span>Both 7-Mode and C-Mode coexist</span></div>
+            </div>
+            <!-- 8.3 -->
+            <div class="fig4-detail">
+              <div class="fig4-detail-item"><div class="dot"></div><span>7-Mode deprecated</span></div>
+              <div class="fig4-detail-item"><div class="dot"></div><span>Forced migration to C-Mode</span></div>
+            </div>
+            <!-- 9.x -->
+            <div class="fig4-detail">
+              <div class="fig4-detail-item"><div class="dot"></div><span>Rebranded to "ONTAP"</span></div>
+              <div class="fig4-detail-item"><div class="dot"></div><span>Cloud tiering, NVMe, S3</span></div>
+              <div class="fig4-detail-item"><div class="dot"></div><span>Kubernetes, ransomware protection</span></div>
+            </div>
+            <!-- 9.8 -->
+            <div class="fig4-detail">
+              <div class="fig4-detail-item"><div class="dot"></div><span>Current production release</span></div>
+              <div class="fig4-detail-item"><div class="dot"></div><span>NVMe/TCP, ANR, full cloud integration</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- end fig4-wrap -->
+
+        <p class="mermaid-caption">Figure 4 — ONTAP Version Timeline and Architecture Evolution</p>
+      </div>
+
+      <div class="callout exam">
+        <div class="callout-icon">💼</div>
+        <div class="callout-body">
+          <div class="callout-title">Interview / Exam Tip — 7-Mode vs C-Mode</div>
+          <p class="callout-text">You may still encounter 7-Mode references in legacy enterprise environments. The key differences to know: <strong>7-Mode = single controller, simpler, no longer supported</strong>. <strong>C-Mode = cluster, scale-out, non-disruptive operations, more features, current standard</strong>. If a job description mentions 7-Mode, that is a legacy environment; C-Mode (ONTAP 9.x) is universal in modern deployments.</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-sep">
+
+    <!-- ══ SECTION 05: Controllers ════════════════════════════════════════ -->
+    <section id="controllers" class="page-section">
+      <div class="section-label">📍 Section 05</div>
+      <h2 class="section-heading">Controllers — Terminology &amp; Hardware Identity</h2>
+      <p class="section-intro">The core hardware unit in a NetApp FAS, AFF, or ASA system is referred to by multiple names depending on context. Familiarity with these terms is essential to avoid confusion in technical discussions and documentation.</p>
+
+      <h3>Controller Naming Conventions</h3>
+      <p>A single NetApp compute unit (the head unit that runs ONTAP and manages storage) can be called by any of the following names — they all refer to the same physical or logical entity:</p>
+
+      <div class="card">
+        <div class="card-title">🔖 Controller Terminology Reference</div>
+        <table>
+          <thead><tr><th>Term</th><th>Context</th><th>Usage</th></tr></thead>
+          <tbody>
+            <tr><td>Controller</td><td>General / Hardware</td><td>Most common technical term. "The controller needs to be rebooted."</td></tr>
+            <tr><td>Node</td><td>Cluster Mode</td><td>Used in C-Mode/ONTAP contexts. "Add a node to the cluster."</td></tr>
+            <tr><td>Filer</td><td>Legacy / NAS contexts</td><td>Older term from NetApp's NAS origins. Still occasionally used.</td></tr>
+            <tr><td>Head Unit</td><td>Physical hardware description</td><td>Distinguishes the compute unit from disk shelves.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <div class="callout-icon">📝</div>
+        <div class="callout-body">
+          <div class="callout-title">Notes:</div>
+          <p class="callout-text">When someone refers to a NetApp "box" as a controller, node, or filer — they are describing the same thing: the FAS/AFF/ASA compute unit running ONTAP. Context determines which term is used, but all are correct in their respective settings.</p>
+        </div>
+      </div>
+
+      <h3>Controller Connectivity Mechanisms</h3>
+      <p>NetApp supports two fundamental deployment configurations for connecting controllers to storage — both applicable in both 7-Mode and C-Mode environments:</p>
+
+      <ul class="bullet-list">
+        <li><strong>Standalone</strong> — A single controller managing all attached disk shelves</li>
+        <li><strong>HA Pair (High Availability Pair)</strong> — Two controllers working in tandem with automatic failover capability</li>
+      </ul>
+    </section>
+
+    <hr class="section-sep">
+
+    <!-- ══ SECTION 06: Standalone ══════════════════════════════════════════ -->
+    <section id="standalone" class="page-section">
+      <div class="section-label">📍 Section 06</div>
+      <h2 class="section-heading">Standalone Configuration</h2>
+      <p class="section-intro">The standalone configuration is the simplest NetApp deployment: a single controller connected to one or more disk shelves. While cost-effective, it introduces a critical availability limitation.</p>
+
+      <h3>Architecture Overview</h3>
+      <p>In a standalone deployment, a single controller (e.g., FAS 8020) is connected directly to all attached disk shelves. Clients access storage exclusively through this single controller. There is no secondary controller available to take over in case of failure.</p>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart TB
+    subgraph Clients["💻 Client Servers & Workstations"]
+        C1["App Server 01\n(172.16.10.21)"]
+        C2["DB Server 02\n(172.16.10.22)"]
+        C3["File Server 03\n(172.16.10.23)"]
+    end
+
+    subgraph StandaloneCtrl["⚙️ Standalone Controller"]
+        CTRL["NetApp FAS 8020\nONTAP 9.x\n(172.16.10.10)\n\n❌ Single Point of Failure"]
+    end
+
+    subgraph DiskShelves["💾 Disk Shelves"]
+        DS1["Disk Shelf 01\nDS212C — 12 drives"]
+        DS2["Disk Shelf 02\nDS224C — 24 drives"]
+        DS3["Disk Shelf 03\nDS224C — 24 drives"]
+    end
+
+    C1 --> CTRL
+    C2 --> CTRL
+    C3 --> CTRL
+    CTRL --> DS1
+    CTRL --> DS2
+    CTRL --> DS3
+
+    style CTRL fill:#2a1a1a,stroke:#ef4444,color:#fca5a5
+    style StandaloneCtrl fill:#1f1515,stroke:#7f1d1d,color:#fca5a5
+    style Clients fill:#1a1f2e,stroke:#3b82f6,color:#93c5fd
+    style DiskShelves fill:#1a2230,stroke:#475569,color:#94a3b8
+        </div>
+        <p class="mermaid-caption">Figure 5 — Standalone Controller Topology: Single point of failure risk with no redundancy</p>
+      </div>
+
+      <h3>Disadvantages of Standalone</h3>
+
+      <div class="compare-grid">
+        <div class="compare-card danger">
+          <h4 style="color:#fca5a5;">❌ Downtime Scenarios</h4>
+          <ul>
+            <li>Hardware failure (controller board, PSU, fans)</li>
+            <li>ONTAP OS upgrade requires controller reboot</li>
+            <li>Any firmware maintenance window</li>
+            <li>NIC or HBA replacement</li>
+            <li>Memory upgrades or hardware refresh</li>
+          </ul>
+        </div>
+        <div class="compare-card danger">
+          <h4 style="color:#fca5a5;">❌ Risk Implications</h4>
+          <ul>
+            <li>All clients lose storage access during downtime</li>
+            <li>Applications may crash or corrupt data mid-write</li>
+            <li>Database backups may fail or be left inconsistent</li>
+            <li>No non-disruptive upgrade (NDU) capability</li>
+            <li>SLA violations for production workloads</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-body">
+          <div class="callout-title">Warning — Standalone in Production</div>
+          <p class="callout-text">Standalone deployments are generally not recommended for production workloads. They are acceptable for development, test environments, or non-critical ROBO (Remote Office / Branch Office) locations with relaxed SLA requirements. Any organization with a defined RTO (Recovery Time Objective) will require at minimum an HA Pair configuration.</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-sep">
+
+    <!-- ══ SECTION 07: HA Pair ═════════════════════════════════════════════ -->
+    <section id="hapair" class="page-section">
+      <div class="section-label">📍 Section 07</div>
+      <h2 class="section-heading">High Availability Pair (HA Pair)</h2>
+      <p class="section-intro">The High Availability Pair is the standard deployment model for production NetApp environments. Two controllers operate as partners, continuously monitoring each other and automatically taking over services if one fails — eliminating planned and unplanned downtime.</p>
+
+      <div class="callout exam">
+        <div class="callout-icon">💼</div>
+        <div class="callout-body">
+          <div class="callout-title">#1 Interview Question — HA Pair</div>
+          <p class="callout-text">"<em>Explain how NetApp High Availability works and what happens when one controller fails.</em>" — This is one of the most common questions in NetApp L1/L2 storage engineer interviews. You must be able to walk through the heartbeat mechanism, failover trigger, and takeover process end-to-end.</p>
+        </div>
+      </div>
+
+      <h3>HA Pair Architecture</h3>
+      <p>In an HA Pair configuration, two identical controllers are connected to each other via dedicated <strong>HA Interconnect</strong> links (minimum two redundant links). All disk shelves are dual-homed — connected to both controllers simultaneously — ensuring data accessibility from either node.</p>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart TB
+    subgraph Clients["💻 Client Servers"]
+        C1["App Server 01\n172.16.20.41"]
+        C2["DB Server 02\n172.16.20.42"]
+        C3["Web Server 03\n172.16.20.43"]
+    end
+
+    subgraph HAPair["🔁 HA Pair — NetApp FAS 9500"]
+        direction LR
+        N1["Node 01\n(storage-ctrl-01)\n172.16.20.11\nStatus: ACTIVE"]
+        IC1["HA Interconnect\nLink 1 (Primary)"]
+        IC2["HA Interconnect\nLink 2 (Redundant)"]
+        N2["Node 02\n(storage-ctrl-02)\n172.16.20.12\nStatus: ACTIVE"]
+        
+        N1 --- IC1
+        N1 --- IC2
+        IC1 --- N2
+        IC2 --- N2
+    end
+
+    subgraph Shelves["💾 Dual-Homed Disk Shelves"]
+        DS1["Shelf 01 — DS224C\n24× 4TB SAS"]
+        DS2["Shelf 02 — DS224C\n24× 4TB SAS"]
+        DS3["Shelf 03 — DS224C\n24× 4TB SAS"]
+    end
+
+    C1 --> N1
+    C2 --> N1
+    C3 --> N2
+
+    N1 --> DS1
+    N1 --> DS2
+    N1 --> DS3
+    N2 --> DS1
+    N2 --> DS2
+    N2 --> DS3
+
+    style N1 fill:#1a3a2a,stroke:#10b981,color:#6ee7b7
+    style N2 fill:#1a3a2a,stroke:#10b981,color:#6ee7b7
+    style HAPair fill:#0f2a1f,stroke:#065f46,color:#a7f3d0
+    style Clients fill:#1a1f2e,stroke:#3b82f6,color:#93c5fd
+    style Shelves fill:#1a2230,stroke:#475569,color:#94a3b8
+        </div>
+        <p class="mermaid-caption">Figure 6 — HA Pair Topology: Dual controllers with HA Interconnect and dual-homed disk shelves</p>
+      </div>
+
+      <h3>Heartbeat Mechanism &amp; Failover Process</h3>
+      <p>The HA Pair relies on a continuous heartbeat exchange between the two controllers. Each node sends a status signal to its partner at regular intervals. If a controller stops responding, the partner initiates an automatic takeover process:</p>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+sequenceDiagram
+    participant N1 as Node 01 (storage-ctrl-01)
+    participant N2 as Node 02 (storage-ctrl-02)
+    participant Clients as Clients
+
+    Note over N1,N2: Normal Operation — Both nodes active
+    N1->>N2: 💓 Heartbeat: "I am operational"
+    N2->>N1: 💓 Heartbeat: "I am operational"
+    
+    Note over N2: ⚠️ Node 02 hardware failure / crash
+    N1->>N2: 💓 Heartbeat ping (no response)
+    N1->>N2: 💓 Heartbeat ping (no response — 30s elapsed)
+    
+    Note over N1: ⏳ Waits additional ~60s for confirmation
+    N1->>N2: 💓 Final heartbeat attempt (no response)
+    
+    Note over N1: 🔄 Initiating TAKEOVER of Node 02 resources
+    N1->>Clients: ✅ Serving Node 01 AND Node 02 workloads
+    Note over Clients: Zero downtime — clients unaware of failover
+        </div>
+        <p class="mermaid-caption">Figure 7 — HA Pair Heartbeat and Automatic Takeover Sequence</p>
+      </div>
+
+      <ol class="steps-list">
+        <li><span><strong>Normal Operation:</strong> Both controllers operate independently, each managing their own workloads and disk shelves.</span></li>
+        <li><span><strong>Heartbeat Exchange:</strong> Every ~30 seconds, each controller sends a health status signal to its partner via the HA Interconnect links.</span></li>
+        <li><span><strong>Missed Heartbeat:</strong> When Node 01 stops receiving heartbeats from Node 02, it begins a timer and waits an additional ~60 seconds for the partner to recover.</span></li>
+        <li><span><strong>Takeover Decision:</strong> If no heartbeat is received after the full wait period, Node 01 initiates an automatic takeover of Node 02's storage and network resources.</span></li>
+        <li><span><strong>Service Continuity:</strong> Node 01 now serves all client I/O — both its own original workloads and those previously managed by Node 02. Clients experience no disruption.</span></li>
+        <li><span><strong>Giveback (Recovery):</strong> When Node 02 is restored, an administrator initiates a "giveback" to return resources to Node 02 and restore the normal load-balanced operation.</span></li>
+      </ol>
+
+      <h3>Standalone vs HA Pair — Comparison</h3>
+      <div class="compare-grid">
+        <div class="compare-card danger">
+          <h4 style="color:#fca5a5;">Standalone</h4>
+          <ul>
+            <li>Single controller — single point of failure</li>
+            <li>Downtime required for ONTAP upgrades</li>
+            <li>No automatic failover capability</li>
+            <li>Lower hardware cost</li>
+            <li>Suitable only for non-critical workloads</li>
+          </ul>
+        </div>
+        <div class="compare-card success">
+          <h4 style="color:#6ee7b7;">HA Pair</h4>
+          <ul>
+            <li>Two controllers — automatic failover</li>
+            <li>Non-disruptive ONTAP upgrades (NDU)</li>
+            <li>Zero downtime for hardware maintenance</li>
+            <li>Higher hardware cost (double the controllers)</li>
+            <li>Required for production SLA environments</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-icon">🏆</div>
+        <div class="callout-body">
+          <div class="callout-title">Best Practice — Always Deploy HA Pairs in Production</div>
+          <p class="callout-text">Any production workload with a defined RTO (Recovery Time Objective) should be deployed on an HA Pair. The additional controller cost is consistently justified by the elimination of unplanned outage risk and the ability to perform ONTAP upgrades and hardware maintenance without scheduling maintenance windows that affect applications.</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-sep">
+
+    <!-- ══ SECTION 08: SAN vs NAS ══════════════════════════════════════════ -->
+    <section id="san-nas" class="page-section">
+      <div class="section-label">📍 Section 08</div>
+      <h2 class="section-heading">SAN vs NAS — Architecture &amp; Trade-offs</h2>
+      <p class="section-intro">SAN (Storage Area Network) and NAS (Network Attached Storage) are the two dominant storage access paradigms in enterprise environments. Understanding their architectural differences, performance profiles, and security posture is foundational for any storage professional.</p>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart LR
+    subgraph NASArch["🗂️ NAS Architecture"]
+        NC["File Servers /\nApplication Servers"]
+        LAN["LAN / IP Network\n(Shared Ethernet)"]
+        NDEV["NAS Device\n(NFS / SMB)"]
+        NC -->|"Shared IP Network"| LAN
+        LAN --> NDEV
+    end
+
+    subgraph SANArch["⚡ SAN Architecture"]
+        SC["Application Servers\n+ HBA Cards"]
+        SANNET["Dedicated SAN Fabric\n(Fibre Channel / FCoE)"]
+        SDEV["SAN Storage Array\n(Block I/O)"]
+        SC -->|"Dedicated FC Network"| SANNET
+        SANNET --> SDEV
+    end
+
+    style NASArch fill:#1a2535,stroke:#3b82f6,color:#93c5fd
+    style SANArch fill:#1a2535,stroke:#10b981,color:#6ee7b7
+    style LAN fill:#1f1a10,stroke:#f59e0b,color:#fcd34d
+    style SANNET fill:#0f2a1f,stroke:#10b981,color:#6ee7b7
+        </div>
+        <p class="mermaid-caption">Figure 8 — NAS vs SAN Architecture: Shared IP network (NAS) vs Dedicated SAN Fabric</p>
+      </div>
+
+      <h3>Detailed Comparison</h3>
+      <table>
+        <thead>
+          <tr><th>Attribute</th><th>NAS</th><th>SAN</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Access Type</td><td>File-level (NFS, SMB/CIFS)</td><td>Block-level (FC, iSCSI, NVMe-oF)</td></tr>
+          <tr><td>Network</td><td>Shared LAN (Ethernet)</td><td>Dedicated SAN fabric (FC / FCoE)</td></tr>
+          <tr><td>Security</td><td>Lower — exposed to LAN threats, ransomware risk</td><td>Higher — isolated fabric, HBA-based encryption</td></tr>
+          <tr><td>Performance</td><td>Bandwidth shared among all LAN devices</td><td>Dedicated bandwidth per host HBA port</td></tr>
+          <tr><td>Cost</td><td>Lower — reuses existing LAN infrastructure</td><td>Higher — requires dedicated SAN switches (FC)</td></tr>
+          <tr><td>Scalability</td><td>Limited by shared LAN congestion at scale</td><td>Scales with dedicated bandwidth per device</td></tr>
+          <tr><td>Protocols</td><td>NFS, SMB, AFP</td><td>Fibre Channel (FC), iSCSI, FCoE, NVMe/FC, NVMe/TCP</td></tr>
+          <tr><td>Hardware required</td><td>Standard NIC + Ethernet switch</td><td>HBA card + FC/FCoE SAN switch</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout warning">
+        <div class="callout-icon">🔒</div>
+        <div class="callout-body">
+          <div class="callout-title">Security Consideration — NAS and Ransomware</div>
+          <p class="callout-text">Because NAS operates over the standard LAN, any device on that network can potentially reach storage if access controls are misconfigured. The 2017–2018 ransomware wave (WannaCry, NotPetya) severely impacted organizations with NAS infrastructure connected to LAN segments that had internet exposure. Mitigation requires network segmentation, antivirus scanning, WORM (Write Once Read Many) policies, and NetApp's Autonomous Ransomware Protection (ARP) feature in ONTAP 9.10+.</p>
+        </div>
+      </div>
+
+      <h3>When to Choose Each Technology</h3>
+      <div class="compare-grid">
+        <div class="compare-card success">
+          <h4 style="color:#6ee7b7;">Choose NAS When:</h4>
+          <ul>
+            <li>File sharing across multiple users/teams</li>
+            <li>Home directories and user data</li>
+            <li>Content repositories and media archives</li>
+            <li>Budget is a primary constraint</li>
+            <li>Existing LAN infrastructure can be leveraged</li>
+          </ul>
+        </div>
+        <div class="compare-card success">
+          <h4 style="color:#6ee7b7;">Choose SAN When:</h4>
+          <ul>
+            <li>High-performance databases (Oracle, SQL Server)</li>
+            <li>Virtualization platforms (VMware, Hyper-V LUNs)</li>
+            <li>Applications requiring low-latency block I/O</li>
+            <li>Security-sensitive workloads</li>
+            <li>Mission-critical applications with strict SLAs</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-sep">
+
+    <!-- ══ SECTION 09: HBA & Data Security ════════════════════════════════ -->
+    <section id="hba" class="page-section">
+      <div class="section-label">📍 Section 09</div>
+      <h2 class="section-heading">HBA Cards &amp; In-Flight Data Security</h2>
+      <p class="section-intro">Host Bus Adapters (HBAs) are specialized PCIe cards installed in servers that enable connectivity to a SAN fabric. Beyond connectivity, HBAs play a direct role in securing data as it traverses the SAN network through protocol-level encoding and encryption.</p>
+
+      <h3>HBA Types and Port Configurations</h3>
+      <p>HBAs are available in three port configurations. Organizations select based on bandwidth requirements, redundancy needs, and budget:</p>
+
+      <table>
+        <thead>
+          <tr><th>Configuration</th><th>Ports</th><th>Use Case</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Single-Port HBA</td><td>1 × FC port</td><td>Entry-level / low-bandwidth requirements</td></tr>
+          <tr><td>Dual-Port HBA</td><td>2 × FC ports</td><td>Most common — supports path redundancy (MPIO)</td></tr>
+          <tr><td>Quad-Port HBA</td><td>4 × FC ports</td><td>High-throughput, enterprise-grade, maximum redundancy</td></tr>
+        </tbody>
+      </table>
+
+      <h3>WWNN and WWPN — SAN Identity Addressing</h3>
+      <p>In a SAN environment, devices are not identified by IP addresses. Instead, they use a world-wide naming scheme similar in concept to MAC addresses in Ethernet networks:</p>
+
+      <div class="card">
+        <div class="card-title">🔖 World-Wide Naming — Reference</div>
+        <table>
+          <thead><tr><th>Identifier</th><th>Scope</th><th>Description</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>WWNN</td>
+              <td>Device (HBA card)</td>
+              <td>World Wide Node Name — uniquely identifies the entire HBA card, regardless of how many ports it has.</td>
+              <td><code>20:00:00:25:b5:a0:01:00</code></td>
+            </tr>
+            <tr>
+              <td>WWPN</td>
+              <td>Port (individual)</td>
+              <td>World Wide Port Name — uniquely identifies each individual port on the HBA. A dual-port HBA has two WWPNs (one per port).</td>
+              <td><code>21:00:00:25:b5:a0:01:00</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout note">
+        <div class="callout-icon">💡</div>
+        <div class="callout-body">
+          <div class="callout-title">Key Concept — WWPN and LUN Masking</div>
+          <p class="callout-text">WWPN addresses are used in <strong>zoning</strong> (at the SAN switch level) and <strong>LUN masking</strong> (at the storage array level) to control exactly which server can see which storage volumes. When presenting a LUN to a server, you reference the server's WWPN to ensure that only that specific server's HBA port can access that LUN. WWPNs are factory-assigned and globally unique — they do not require manual configuration like IP addresses.</p>
+        </div>
+      </div>
+
+      <h3>HBA Internal Components: Transmitter &amp; Receiver</h3>
+      <p>Each port on a Fibre Channel HBA contains two functional components responsible for data transmission and security:</p>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart LR
+    subgraph Server["🖥️ Application Server"]
+        APP["Application Data\n(Binary Format)"]
+        HBA["HBA Card\n(Dual-Port)"]
+        subgraph Port1["Port 1"]
+            TX1["📤 Transmitter\nBinary → Light Signal\n(Encoding/Encryption)"]
+            RX1["📥 Receiver\nLight Signal → Binary\n(Decoding/Decryption)"]
+        end
+    end
+
+    subgraph SANFabric["⚡ SAN Fabric — Fibre Channel Network"]
+        SW1["FC Switch 01\nsanswitch-01\nWWNN: 10:00:...]"]
+    end
+
+    subgraph NetAppCtrl["🗄️ NetApp Storage Controller"]
+        FCA["FC Adapter (FCA)\non Controller"]
+        subgraph FCAPort["FCA Port"]
+            TX2["📤 Transmitter\nBinary → Light Signal"]
+            RX2["📥 Receiver\nLight Signal → Binary\n(Decryption + Write to disk)"]
+        end
+        DISK["Storage Disks\n(SAS / NVMe)"]
+    end
+
+    APP --> HBA
+    HBA --> TX1
+    TX1 -->|"Light Signals\nover Optical Fiber"| SW1
+    SW1 -->|"Light Signals\nover Optical Fiber"| RX2
+    RX2 --> DISK
+
+    DISK -->|"Read request"| TX2
+    TX2 -->|"Light Signals"| SW1
+    SW1 --> RX1
+    RX1 --> APP
+
+    style TX1 fill:#1e3a2a,stroke:#10b981,color:#6ee7b7
+    style RX1 fill:#1a2535,stroke:#3b82f6,color:#93c5fd
+    style TX2 fill:#1e3a2a,stroke:#10b981,color:#6ee7b7
+    style RX2 fill:#1a2535,stroke:#3b82f6,color:#93c5fd
+    style SANFabric fill:#2a2a10,stroke:#f59e0b,color:#fcd34d
+        </div>
+        <p class="mermaid-caption">Figure 9 — HBA Transmitter/Receiver: Data encoding and in-flight security across the SAN fabric</p>
+      </div>
+
+      <h3>How In-Flight Data Security Works</h3>
+      <ol class="steps-list">
+        <li><span><strong>Write Initiation:</strong> An application writes data to a volume. The data exists in binary format within the server's memory.</span></li>
+        <li><span><strong>HBA Transmitter Encoding:</strong> Before entering the SAN fabric, the HBA's transmitter converts the binary data into <strong>optical light signals</strong>. Fibre Channel networks operate on optical fiber, which transmits data as pulses of light rather than electrical signals.</span></li>
+        <li><span><strong>Traversal over Fibre Channel:</strong> The encoded light signals travel through the optical fiber cables and FC switches in the SAN fabric.</span></li>
+        <li><span><strong>FCA Receiver Decoding:</strong> The storage controller's Fibre Channel Adapter (FCA) receives the light signals. Its receiver component converts the optical signals back to binary format.</span></li>
+        <li><span><strong>Data Written to Disk:</strong> The decoded binary data is written to the appropriate disk in the storage system.</span></li>
+        <li><span><strong>Reads follow the reverse path:</strong> FCA transmitter → light signal over fabric → HBA receiver → decoded binary data delivered to application.</span></li>
+      </ol>
+
+      <div class="callout tip">
+        <div class="callout-icon">🔐</div>
+        <div class="callout-body">
+          <div class="callout-title">Why SAN is More Secure Than NAS</div>
+          <p class="callout-text">SAN's superior security comes from two architectural properties: (1) <strong>Network isolation</strong> — the SAN fabric is physically separate from the LAN; unauthorized devices cannot access it without an HBA and SAN switch port. (2) <strong>Optical encoding</strong> — data traversing the SAN is in the form of light signals (optical encoding), not raw electrical binary. Any attempt to intercept the signal mid-transmission yields unintelligible optical data that cannot be read without the appropriate FCA receiver for decoding. This is in contrast to NAS, where Ethernet packets on the LAN can theoretically be sniffed by any device on the same network segment.</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-sep">
+
+    <!-- ══ SECTION 10: Interview Q&A ══════════════════════════════════════ -->
+    <section id="interview" class="page-section">
+      <div class="section-label">📍 Section 10</div>
+      <h2 class="section-heading">Scenario-Based Interview Q&amp;A</h2>
+      <p class="section-intro">These scenario-based questions reflect the types of questions asked in L1/L2 NetApp storage engineer interviews. Work through each one before reviewing the answer.</p>
+
+      <div class="qa-list">
+
+        <div class="qa-item">
+          <div class="qa-q">You are onboarding as a storage engineer at a financial institution. The team currently uses a standalone NetApp FAS 2700. The CTO asks you to assess the risk. What do you tell them?</div>
+          <p class="qa-a">A standalone configuration presents a significant availability risk for a production financial environment. The single controller is a single point of failure — any hardware fault, ONTAP upgrade, or maintenance activity requires downtime, violating typical banking SLAs. I would recommend migrating to or replacing with an HA Pair configuration (such as a FAS 8300 HA Pair or AFF A400 HA Pair) to enable automatic failover, non-disruptive upgrades, and continuous data access. In the interim, maintenance windows should be planned during off-peak hours with business sign-off.</p>
+        </div>
+
+        <div class="qa-item">
+          <div class="qa-q">A client wants to repurpose their existing Dell EMC SAN array (unused capacity) to serve NAS storage to 200 file servers. They cannot afford a new NetApp FAS system. What would you recommend?</div>
+          <p class="qa-a">This is an ideal V-Series (now ONTAP FlexArray) use case. By deploying a V-Series license on a small FAS controller placed in front of the existing Dell EMC array, the organization can leverage ONTAP's NAS capabilities (NFS/SMB) while using the EMC array as the physical storage back-end. The V-Series pulls storage over SAN from the EMC array and re-presents it to the 200 file servers via NFS or SMB. This avoids purchasing new disk shelves and re-uses the existing hardware investment. The client only needs to purchase a controller (or V-Series license for an existing FAS) rather than a full new storage system.</p>
+        </div>
+
+        <div class="qa-item">
+          <div class="qa-q">Explain what happens during a NetApp HA Pair failover. Walk through each step.</div>
+          <p class="qa-a">Under normal operation, both nodes (e.g., storage-ctrl-01 and storage-ctrl-02) exchange heartbeat signals every ~30 seconds via the HA Interconnect links. Each node operates independently. If storage-ctrl-02 fails, storage-ctrl-01 stops receiving heartbeats. After the heartbeat timeout (approximately 30s initial + 60s wait period), storage-ctrl-01 automatically initiates a takeover: it assumes ownership of all storage-ctrl-02's LIFs (logical interfaces), volumes, and LUN mappings. From this point, storage-ctrl-01 serves all I/O for both nodes. Clients connected to storage-ctrl-02's LIFs experience an automatic LIF migration to storage-ctrl-01, typically transparent in NFS environments. Once storage-ctrl-02 is restored and healthy, an administrator performs a controlled giveback to return ownership of resources to the original node.</p>
+        </div>
+
+        <div class="qa-item">
+          <div class="qa-q">What is the difference between ONTAP 7-Mode and ONTAP Cluster Mode? Why was 7-Mode deprecated?</div>
+          <p class="qa-a">7-Mode was a single-node ONTAP variant that managed storage independently per controller. It was simpler and widely deployed but lacked the scalability, non-disruptive operations, and advanced feature set of Cluster Mode. Cluster Mode (C-Mode), introduced in ONTAP 8.0 and derived from the earlier ONTAP GX architecture, supports scale-out clusters of up to 24 nodes, non-disruptive upgrades (NDU), advanced multi-tenancy via Storage Virtual Machines (SVMs), and significantly more features. NetApp deprecated 7-Mode starting in ONTAP 8.3 because most customers were not voluntarily migrating despite the clear benefits, and maintaining two separate codebases was unsustainable. From ONTAP 8.3 onward, Cluster Mode is the only version available.</p>
+        </div>
+
+        <div class="qa-item">
+          <div class="qa-q">Why is SAN considered more secure than NAS from a network architecture perspective?</div>
+          <p class="qa-a">SAN security advantages stem from its architectural isolation. First, the SAN fabric is a physically separate, dedicated network — only devices equipped with HBAs and connected to SAN switch ports can access storage, unlike LAN-connected NAS devices that any node on the network can potentially reach. Second, data traversing a Fibre Channel SAN is transmitted as optical light signals (encoding via the HBA transmitter), not as readable Ethernet frames, making interception meaningless without the appropriate FCA receiver for decoding. Third, WWPNs enable granular LUN masking — storage volumes are visible only to specific server HBA ports, preventing unauthorized access even from other SAN-connected hosts. NAS over Ethernet is susceptible to network sniffing, ARP spoofing, and ransomware propagation via shared LAN segments, which SAN architecturally avoids.</p>
+        </div>
+
+        <div class="qa-item">
+          <div class="qa-q">A customer asks whether to choose AFF or FAS for their new ERP deployment running Oracle Database. What factors influence your recommendation?</div>
+          <p class="qa-a">For an Oracle ERP workload, I would recommend AFF. Oracle databases are highly sensitive to storage latency — even milliseconds of increased I/O latency can cause application timeouts and poor user experience. AFF is an all-flash (NVMe/SSD) platform delivering sub-millisecond latency and high IOPS, which is what Oracle Database requires for transaction processing. FAS, while cost-effective for mixed workloads (combining SAS, SATA, and SSD), is better suited for workloads where performance is not the primary driver, such as file archiving, backup repositories, or development environments. If the customer's budget is constrained, an entry-level AFF (e.g., AFF A250) would still provide significantly better Oracle performance than even a mid-range FAS. For tier-2 data archiving within the same system, FAS with tiering to low-cost SATA disks is appropriate.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══ ABOUT THE AUTHOR ════════════════════════════════════════════════ -->
+    <section id="about" class="page-section">
+      <div class="author-section">
+        <div class="author-header">
+          <div class="author-avatar">👨‍💻</div>
+          <div class="author-meta">
+            <h3>Mohammed Abdul</h3>
+            <div class="role">Data Protection Architect — 10+ Years Experience</div>
+            <p>Mohammed Abdul is a Data Protection Architect with more than 10 years of experience in Hybrid Cloud environments, working with global clients across Financial Services, Healthcare, Government, and Manufacturing industries.</p>
+          </div>
+        </div>
+
+        <p style="color: var(--text-secondary); font-size: 14px;">With extensive expertise in enterprise backup, recovery, and storage solutions, Mohammed specializes in designing and implementing robust data protection strategies across cloud and on-premises environments.</p>
+
+        <div class="tech-badges">
+          <span class="tech-badge">☁️ AWS</span>
+          <span class="tech-badge">🔷 Azure</span>
+          <span class="tech-badge">🟢 GCP</span>
+          <span class="tech-badge">🔵 Commvault</span>
+          <span class="tech-badge">🟢 Veeam</span>
+          <span class="tech-badge">🟠 Veritas NetBackup</span>
+          <span class="tech-badge">🗄️ NetApp</span>
+          <span class="tech-badge">⚡ Dell EMC</span>
+        </div>
+
+        <div>
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">For questions or collaborations:</p>
+          <a href="/cdn-cgi/l/email-protection#6a0b080e1f0644070e44585a5a5a5a5b5a582a0d070b030644090507" class="email-card">
+            ✉️ <span class="__cf_email__" data-cfemail="c9a8abadbca5e7a4ade7fbf9f9f9f9f8f9fb89aea4a8a0a5e7aaa6a4">[email&#160;protected]</span>
+          </a>
+        </div>
+
+        <div class="disclaimer-box">
+          <strong>⚠️ Disclaimer:</strong> This content is created for educational purposes as independent tutorial material. All technical concepts are expressed in original language. Always refer to the official <strong>NetApp Documentation</strong> at <strong>docs.netapp.com</strong> and follow your organization's change management procedures for any production implementations. IP addresses, hostnames, and configuration examples used throughout this tutorial are illustrative and should not be used in production without adaptation to your environment.
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /content-wrap -->
+</main><!-- /main-content -->
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // Initialize Mermaid
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#1e4080',
+      primaryTextColor: '#86efac',
+      primaryBorderColor: '#60a5fa',
+      lineColor: '#94a3b8',
+      arrowheadColor: '#94a3b8',
+      secondaryColor: '#1e3a5f',
+      tertiaryColor: '#163354',
+      background: '#0d1117',
+      mainBkg: '#1e4080',
+      nodeBorder: '#60a5fa',
+      clusterBkg: '#0f2040',
+      clusterBorder: '#475569',
+      titleColor: '#86efac',
+      edgeLabelBackground: '#1e3a5f',
+      fontSize: '13px',
+      fontFamily: 'Inter, sans-serif',
+      actorBkg: '#1e4080',
+      actorBorder: '#60a5fa',
+      actorTextColor: '#86efac',
+      actorLineColor: '#94a3b8',
+      labelBoxBkgColor: '#1e4080',
+      labelBoxBorderColor: '#60a5fa',
+      labelTextColor: '#86efac',
+      loopTextColor: '#86efac',
+      noteBkgColor: '#0f3a5a',
+      noteBorderColor: '#06b6d4',
+      noteTextColor: '#86efac',
+      activationBkgColor: '#1e4080',
+      activationBorderColor: '#60a5fa',
+      messageTextColor: '#86efac',
+      signalColor: '#94a3b8',
+      signalTextColor: '#86efac',
+      sequenceNumberColor: '#86efac',
+      darkMode: true,
+      /* Timeline cScale — all sections use our blue, text stays green */
+      cScale0: '#1e4080', cScale1: '#1e4080', cScale2: '#1e4080',
+      cScale3: '#1e4080', cScale4: '#1e4080', cScale5: '#1e4080',
+      cScale6: '#1e4080', cScale7: '#1e4080', cScale8: '#1e4080',
+      cScale9: '#1e4080', cScale10: '#1e4080', cScale11: '#1e4080',
+      cScaleLabel0: '#86efac', cScaleLabel1: '#86efac', cScaleLabel2: '#86efac',
+      cScaleLabel3: '#86efac', cScaleLabel4: '#86efac', cScaleLabel5: '#86efac'
+    },
+    flowchart: { curve: 'basis', padding: 16 },
+    sequence: { useMaxWidth: true, boxMargin: 8 }
+  });
+
+  // ── Post-render fix: enforce #86efac text on ALL mermaid diagrams ──
+  function fixMermaidLabels() {
+    const GREEN  = '#86efac';
+    const NODE_BG = '#1e4080';
+    const BORDER  = '#60a5fa';
+
+    // 1. Every SVG text / tspan — force fill attribute directly
+    document.querySelectorAll('.mermaid svg text, .mermaid svg tspan').forEach(el => {
+      el.setAttribute('fill', GREEN);
+      el.style.fill  = GREEN;
+      el.style.color = GREEN;
+    });
+
+    // 2. foreignObject HTML content (flowchart node labels)
+    document.querySelectorAll('.mermaid foreignObject *').forEach(el => {
+      el.style.color      = GREEN;
+      el.style.background = 'transparent';
+    });
+
+    // 3. Timeline colored rects — override every colored section/task rect
+    //    Mermaid timeline uses cScale classes and inline style fills
+    document.querySelectorAll('.mermaid svg rect, .mermaid svg polygon').forEach(el => {
+      const cls = el.getAttribute('class') || '';
+      const isEdge   = cls.includes('edge') || cls.includes('arrow') || cls.includes('path');
+      const isMarker = el.closest('marker');
+      if (!isEdge && !isMarker) {
+        // Only override if it has a fill that isn't already our dark bg or transparent
+        const fill = el.getAttribute('fill') || el.style.fill || '';
+        const isCluster = cls.includes('cluster') || cls.includes('subgraph');
+        if (!isCluster) {
+          el.setAttribute('fill', NODE_BG);
+          el.setAttribute('stroke', BORDER);
+          el.style.fill   = NODE_BG;
+          el.style.stroke = BORDER;
+        }
+      }
+    });
+
+    // 4. Re-apply text color after rect overrides (rects don't affect text,
+    //    but run again to catch any late-rendered labels)
+    document.querySelectorAll('.mermaid svg text, .mermaid svg tspan').forEach(el => {
+      el.setAttribute('fill', GREEN);
+    });
+  }
+
+  // Run on load, then once more after a short delay to catch async renders
+  window.addEventListener('load', () => {
+    setTimeout(fixMermaidLabels, 400);
+    setTimeout(fixMermaidLabels, 1200);
+  });
+
+  // Active TOC highlight on scroll
+  const sections = document.query
