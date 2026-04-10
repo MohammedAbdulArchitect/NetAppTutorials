@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetApp ONTAP: CLI Modes, Disk Shelves, Disk IDs & ADP — Tutorial 4</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-card: #1c2333;
+    --bg-card-hover: #21283a;
+    --accent-blue: #58a6ff;
+    --accent-green: #3fb950;
+    --accent-orange: #f78166;
+    --accent-purple: #bc8cff;
+    --accent-yellow: #e3b341;
+    --accent-teal: #39d3c3;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --border: #30363d;
+    --border-bright: #484f58;
+    --sidebar-width: 290px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-header {
+    padding: 20px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+    position: sticky; top: 0; z-index: 10;
+  }
+
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .sidebar-logo .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .sidebar-logo span {
+    font-family: 'Sora', sans-serif;
+    font-weight: 700; font-size: 14px;
+    color: var(--text-primary); letter-spacing: 0.5px;
+  }
+  .sidebar-subtitle { font-size: 11px; color: var(--text-muted); padding-left: 42px; }
+
+  .toc-nav { padding: 12px 0; flex: 1; }
+  .toc-section-label {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1.2px; color: var(--text-muted);
+    padding: 12px 16px 6px;
+  }
+  .toc-link {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 16px; font-size: 12.5px;
+    color: var(--text-secondary); text-decoration: none;
+    transition: all 0.2s ease;
+    border-left: 2px solid transparent; line-height: 1.4;
+  }
+  .toc-link:hover { background: var(--bg-card); color: var(--text-primary); border-left-color: var(--accent-blue); }
+  .toc-link.active { background: rgba(88,166,255,0.1); color: var(--accent-blue); border-left-color: var(--accent-blue); font-weight: 500; }
+  .toc-link .toc-num { font-size: 10px; font-weight: 700; color: var(--text-muted); min-width: 18px; font-family: 'JetBrains Mono', monospace; }
+  .toc-link.sub { padding-left: 32px; font-size: 12px; }
+
+  /* ── MAIN ── */
+  .main-content { margin-left: var(--sidebar-width); flex: 1; max-width: calc(100vw - var(--sidebar-width)); }
+
+  .top-header {
+    background: linear-gradient(135deg, #0d1117 0%, #1a2744 50%, #0d2035 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 60px 60px 50px;
+    position: relative; overflow: hidden;
+  }
+  .top-header::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(88,166,255,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(63,185,80,0.06) 0%, transparent 50%);
+  }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(88,166,255,0.12); border: 1px solid rgba(88,166,255,0.3);
+    border-radius: 20px; padding: 4px 14px;
+    font-size: 12px; color: var(--accent-blue); font-weight: 500;
+    margin-bottom: 18px; font-family: 'JetBrains Mono', monospace;
+  }
+  .main-title {
+    font-family: 'Sora', sans-serif; font-size: 38px; font-weight: 800;
+    line-height: 1.15; margin-bottom: 16px;
+    background: linear-gradient(135deg, #e6edf3 30%, #58a6ff 70%, #bc8cff 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; position: relative;
+  }
+  .header-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.7; max-width: 680px; position: relative; }
+  .header-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 20px; position: relative; }
+  .meta-chip { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-secondary); }
+  .meta-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .content-area { padding: 40px 60px 80px; max-width: 1000px; }
+
+  .section { margin-bottom: 60px; scroll-margin-top: 30px; }
+  .section-header {
+    display: flex; align-items: flex-start; gap: 16px;
+    margin-bottom: 24px; padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0; margin-top: 2px;
+  }
+  .icon-blue { background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.3); }
+  .icon-green { background: rgba(63,185,80,0.15); border: 1px solid rgba(63,185,80,0.3); }
+  .icon-orange { background: rgba(247,129,102,0.15); border: 1px solid rgba(247,129,102,0.3); }
+  .icon-purple { background: rgba(188,140,255,0.15); border: 1px solid rgba(188,140,255,0.3); }
+  .icon-teal { background: rgba(57,211,195,0.15); border: 1px solid rgba(57,211,195,0.3); }
+  .icon-yellow { background: rgba(227,179,65,0.15); border: 1px solid rgba(227,179,65,0.3); }
+
+  .section-title-wrap h2 { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+  .section-title-wrap .section-num { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); font-weight: 400; margin-bottom: 4px; }
+
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; transition: border-color 0.2s; }
+  .card:hover { border-color: var(--border-bright); }
+  .card-title { font-family: 'Sora', sans-serif; font-weight: 600; font-size: 15px; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+  p { font-size: 14.5px; line-height: 1.8; color: var(--text-secondary); margin-bottom: 14px; }
+
+  .callout { border-radius: 10px; padding: 16px 20px; margin: 20px 0; display: flex; gap: 14px; align-items: flex-start; }
+  .callout-icon { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+  .callout-content { flex: 1; }
+  .callout-title { font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .callout-text { font-size: 13.5px; line-height: 1.7; color: var(--text-secondary); }
+  .callout.info { background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.25); }
+  .callout.info .callout-title { color: var(--accent-blue); }
+  .callout.success { background: rgba(63,185,80,0.08); border: 1px solid rgba(63,185,80,0.25); }
+  .callout.success .callout-title { color: var(--accent-green); }
+  .callout.warning { background: rgba(227,179,65,0.08); border: 1px solid rgba(227,179,65,0.3); }
+  .callout.warning .callout-title { color: var(--accent-yellow); }
+  .callout.danger { background: rgba(247,129,102,0.08); border: 1px solid rgba(247,129,102,0.3); }
+  .callout.danger .callout-title { color: var(--accent-orange); }
+  .callout.tip { background: rgba(188,140,255,0.08); border: 1px solid rgba(188,140,255,0.25); }
+  .callout.tip .callout-title { color: var(--accent-purple); }
+
+  .code-block { background: #0a0e13; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 16px 0; font-family: 'JetBrains Mono', monospace; }
+  .code-header { background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .code-lang { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .code-dots { display: flex; gap: 5px; }
+  .code-dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-red { background: #ff5f56; } .dot-yellow-c { background: #ffbd2e; } .dot-green-c { background: #27c93f; }
+  .code-body { padding: 20px; font-size: 13px; line-height: 1.8; color: #79c0ff; overflow-x: auto; }
+  .code-body .cmd { color: #3fb950; }
+  .code-body .comment { color: #6e7681; font-style: italic; }
+  .code-body .param { color: #ffa657; }
+  .code-body .value { color: #a5d6ff; }
+  .code-body .output { color: #8b949e; }
+  .code-body .prompt { color: #e3b341; }
+
+  .spec-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; }
+  .spec-table th { background: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 16px; text-align: left; border-bottom: 2px solid var(--border); }
+  .spec-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
+  .spec-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+  .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent-blue); border: 1px solid rgba(88,166,255,0.3); }
+  .badge-green { background: rgba(63,185,80,0.15); color: var(--accent-green); border: 1px solid rgba(63,185,80,0.3); }
+  .badge-orange { background: rgba(247,129,102,0.15); color: var(--accent-orange); border: 1px solid rgba(247,129,102,0.3); }
+  .badge-purple { background: rgba(188,140,255,0.15); color: var(--accent-purple); border: 1px solid rgba(188,140,255,0.3); }
+  .badge-yellow { background: rgba(227,179,65,0.15); color: var(--accent-yellow); border: 1px solid rgba(227,179,65,0.3); }
+  .badge-teal { background: rgba(57,211,195,0.15); color: var(--accent-teal); border: 1px solid rgba(57,211,195,0.3); }
+  .badge-gray { background: rgba(139,148,158,0.15); color: var(--text-secondary); border: 1px solid var(--border); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0; }
+
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; }
+  .stat-num { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+  .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .step-list { list-style: none; margin: 12px 0; }
+  .step-list li { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(48,54,61,0.5); font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; align-items: flex-start; }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num { width: 22px; height: 22px; border-radius: 6px; background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.3); color: var(--accent-blue); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
+
+  .bullet-list { list-style: none; margin: 10px 0; }
+  .bullet-list li { padding: 6px 0 6px 20px; position: relative; font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; }
+  .bullet-list li::before { content: '▸'; position: absolute; left: 0; color: var(--accent-blue); font-size: 11px; top: 8px; }
+
+  h3 { font-family: 'Sora', sans-serif; font-size: 17px; font-weight: 600; color: var(--text-primary); margin: 24px 0 12px; }
+  h4 { font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 600; color: var(--accent-blue); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .mermaid-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 28px 20px 16px; margin: 20px 0; overflow-x: auto; }
+  .diagram-caption { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 10px; font-style: italic; }
+
+  .svg-diagram { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; overflow-x: auto; }
+  .svg-diagram svg { display: block; margin: 0 auto; }
+
+  .qa-block { background: var(--bg-card); border: 1px solid rgba(188,140,255,0.3); border-radius: 12px; padding: 20px 24px; margin: 16px 0; }
+  .qa-q { font-size: 14px; font-weight: 600; color: var(--accent-purple); margin-bottom: 10px; display: flex; gap: 10px; }
+  .qa-a { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; padding-left: 26px; }
+  .qa-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; }
+
+  .author-section { background: linear-gradient(135deg, #161b22, #1c2333); border: 1px solid var(--border); border-radius: 16px; padding: 36px; margin-top: 60px; }
+  .author-card { display: flex; gap: 28px; align-items: flex-start; }
+  .author-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0; border: 3px solid rgba(88,166,255,0.3); }
+  .author-name { font-family: 'Sora', sans-serif; font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .author-title { font-size: 13px; color: var(--accent-blue); margin-bottom: 14px; font-weight: 500; }
+  .author-bio { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 16px; }
+  .tech-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .author-email { display: inline-flex; align-items: center; gap: 8px; background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.3); border-radius: 8px; padding: 8px 16px; font-size: 13px; color: var(--accent-blue); text-decoration: none; transition: all 0.2s; }
+  .author-email:hover { background: rgba(88,166,255,0.2); }
+
+  .divider { height: 1px; background: var(--border); margin: 40px 0; }
+
+  .progress-bar-wrap { display: flex; gap: 6px; margin-top: 20px; position: relative; flex-wrap: wrap; }
+  .prog-chip { background: rgba(88,166,255,0.12); border: 1px solid rgba(88,166,255,0.25); border-radius: 6px; padding: 4px 10px; font-size: 11px; color: var(--accent-blue); font-family: 'JetBrains Mono', monospace; }
+
+  .hl { background: rgba(88,166,255,0.12); color: var(--accent-blue); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-green { background: rgba(63,185,80,0.12); color: var(--accent-green); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-orange { background: rgba(247,129,102,0.12); color: var(--accent-orange); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-purple { background: rgba(188,140,255,0.12); color: var(--accent-purple); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+
+  /* Mode comparison cards */
+  .mode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 20px 0; }
+  .mode-card { border-radius: 12px; padding: 20px; border: 1px solid; position: relative; overflow: hidden; }
+  .mode-card::before { content: ''; position: absolute; inset: 0; opacity: 0.04; }
+  .mode-admin { border-color: rgba(63,185,80,0.4); background: rgba(63,185,80,0.06); }
+  .mode-advanced { border-color: rgba(227,179,65,0.4); background: rgba(227,179,65,0.06); }
+  .mode-diag { border-color: rgba(247,129,102,0.4); background: rgba(247,129,102,0.06); }
+  .mode-title { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; margin-bottom: 8px; }
+  .mode-admin .mode-title { color: var(--accent-green); }
+  .mode-advanced .mode-title { color: var(--accent-yellow); }
+  .mode-diag .mode-title { color: var(--accent-orange); }
+  .mode-desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px; }
+  .mode-indicator { display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+  .mode-admin .mode-indicator { background: rgba(63,185,80,0.15); color: var(--accent-green); }
+  .mode-advanced .mode-indicator { background: rgba(227,179,65,0.15); color: var(--accent-yellow); }
+  .mode-diag .mode-indicator { background: rgba(247,129,102,0.15); color: var(--accent-orange); }
+
+  /* Shell comparison */
+  .shell-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+
+  /* Connectivity type table */
+  .conn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+  .conn-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+  .conn-icon { font-size: 28px; margin-bottom: 8px; }
+  .conn-name { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px; color: var(--text-primary); margin-bottom: 4px; }
+  .conn-detail { font-size: 11.5px; color: var(--text-muted); line-height: 1.5; }
+
+  /* IOM module visual */
+  .iom-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+  .iom-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; transition: border-color 0.2s; }
+  .iom-card:hover { border-color: var(--border-bright); }
+  .iom-speed { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 22px; margin-bottom: 4px; }
+  .iom-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+  .iom-shelves { font-size: 11.5px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* Disk ID visual */
+  .diskid-formula { display: flex; align-items: center; gap: 12px; padding: 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin: 20px 0; flex-wrap: wrap; justify-content: center; }
+  .diskid-part { background: var(--bg-secondary); border: 1px solid var(--border-bright); border-radius: 8px; padding: 12px 20px; text-align: center; }
+  .diskid-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+  .diskid-value { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; }
+  .diskid-sep { font-family: 'Sora', sans-serif; font-size: 24px; color: var(--text-muted); font-weight: 300; }
+  .diskid-example { font-family: 'JetBrains Mono', monospace; font-size: 22px; color: var(--accent-blue); font-weight: 700; }
+
+  /* ADP partition visual */
+  .partition-visual { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; }
+  .disk-bar { display: flex; height: 56px; border-radius: 8px; overflow: hidden; margin: 12px 0; border: 1px solid var(--border-bright); }
+  .disk-root { background: linear-gradient(90deg, rgba(247,129,102,0.35), rgba(247,129,102,0.2)); border-right: 2px solid rgba(247,129,102,0.6); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--accent-orange); font-family: 'JetBrains Mono', monospace; font-weight: 700; flex-direction: column; gap: 2px; }
+  .disk-data { background: linear-gradient(90deg, rgba(88,166,255,0.2), rgba(88,166,255,0.35)); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--accent-blue); font-family: 'JetBrains Mono', monospace; font-weight: 700; flex-direction: column; gap: 2px; }
+  .disk-data2 { background: linear-gradient(90deg, rgba(63,185,80,0.2), rgba(63,185,80,0.35)); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--accent-green); font-family: 'JetBrains Mono', monospace; font-weight: 700; flex-direction: column; gap: 2px; }
+  .disk-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500; }
+
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); }
+    .main-content { margin-left: 0; max-width: 100vw; }
+    .content-area { padding: 24px 20px 60px; }
+    .top-header { padding: 40px 20px 30px; }
+    .main-title { font-size: 26px; }
+    .mode-grid, .iom-grid, .conn-grid { grid-template-columns: 1fr; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .author-card { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ SIDEBAR ══════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="logo-icon">💾</div>
+      <span>ONTAP Deep Dive</span>
+    </div>
+    <div class="sidebar-subtitle">Tutorial 4 · Storage Essentials</div>
+  </div>
+  <nav class="toc-nav">
+    <div class="toc-section-label">Overview</div>
+    <a href="#intro" class="toc-link"><span class="toc-num">00</span> What This Covers</a>
+
+    <div class="toc-section-label">Part I — CLI Shells &amp; Modes</div>
+    <a href="#shells" class="toc-link"><span class="toc-num">01</span> ONTAP CLI Shells</a>
+    <a href="#shells-compare" class="toc-link sub"><span class="toc-num">↳</span> Shell Comparison</a>
+    <a href="#modes" class="toc-link"><span class="toc-num">02</span> Privilege Modes</a>
+    <a href="#modes-nav" class="toc-link sub"><span class="toc-num">↳</span> Navigating Modes</a>
+    <a href="#modes-cmds" class="toc-link sub"><span class="toc-num">↳</span> Mode Commands</a>
+
+    <div class="toc-section-label">Part II — Disk Shelf Architecture</div>
+    <a href="#connectivity" class="toc-link"><span class="toc-num">03</span> Shelf Connectivity Types</a>
+    <a href="#iom" class="toc-link"><span class="toc-num">04</span> IOM Modules</a>
+    <a href="#acp" class="toc-link sub"><span class="toc-num">↳</span> ACP — Alternate Control Path</a>
+    <a href="#daisy" class="toc-link"><span class="toc-num">05</span> Daisy-Chain Topology</a>
+    <a href="#daisy-diagram" class="toc-link sub"><span class="toc-num">↳</span> Connectivity Diagram</a>
+
+    <div class="toc-section-label">Part III — Disk Identity &amp; Ownership</div>
+    <a href="#shelfid" class="toc-link"><span class="toc-num">06</span> Setting Shelf IDs</a>
+    <a href="#diskid" class="toc-link"><span class="toc-num">07</span> Disk ID Explained</a>
+    <a href="#ownership" class="toc-link"><span class="toc-num">08</span> Disk Ownership</a>
+    <a href="#ownership-cmds" class="toc-link sub"><span class="toc-num">↳</span> Ownership Commands</a>
+
+    <div class="toc-section-label">Part IV — Advanced Disk Partitioning</div>
+    <a href="#adp" class="toc-link"><span class="toc-num">09</span> ADP Fundamentals</a>
+    <a href="#adpv1" class="toc-link sub"><span class="toc-num">↳</span> ADP v1 (FAS)</a>
+    <a href="#adpv2" class="toc-link sub"><span class="toc-num">↳</span> ADP v2 (AFF)</a>
+    <a href="#adp-cmds" class="toc-link sub"><span class="toc-num">↳</span> ADP Verification</a>
+
+    <div class="toc-section-label">Exam Prep</div>
+    <a href="#firmware" class="toc-link"><span class="toc-num">10</span> Shelf &amp; Disk Firmware</a>
+    <a href="#interview" class="toc-link"><span class="toc-num">11</span> Interview Q&amp;A</a>
+    <a href="#bestpractice" class="toc-link"><span class="toc-num">12</span> Best Practices</a>
+    <a href="#about" class="toc-link"><span class="toc-num">13</span> About the Author</a>
+  </nav>
+</aside>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<div class="main-content">
+
+  <header class="top-header">
+    <div class="header-badge">📘 TUTORIAL 4 · ONTAP STORAGE ESSENTIALS</div>
+    <h1 class="main-title">CLI Modes, Disk Shelves,<br>Disk Identity &amp; ADP</h1>
+    <p class="header-desc">A comprehensive walkthrough of ONTAP privilege modes, disk shelf connectivity architectures, how disk identifiers are structured, disk ownership concepts, and Advanced Disk Partitioning (ADP) — the technology that dramatically reduces storage waste on high-density arrays.</p>
+    <div class="header-meta">
+      <div class="meta-chip"><div class="dot" style="background:var(--accent-blue)"></div>Intermediate Level</div>
+      <div class="meta-chip"><div class="dot" style="background:var(--accent-green)"></div>~75 min read</div>
+      <div class="meta-chip"><div class="dot" style="background:var(--accent-purple)"></div>ONTAP 9.x</div>
+      <div class="meta-chip"><div class="dot" style="background:var(--accent-orange)"></div>FAS · AFF · DS-Series</div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="prog-chip">CLI Shells &amp; Modes</div>
+      <div class="prog-chip">IOM Architecture</div>
+      <div class="prog-chip">Disk IDs &amp; Ownership</div>
+      <div class="prog-chip">ADP v1 &amp; v2</div>
+    </div>
+  </header>
+
+  <div class="content-area">
+
+    <!-- ════════ INTRO ════════ -->
+    <section class="section" id="intro">
+      <div class="section-header">
+        <div class="section-icon icon-blue">🚀</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 00</div>
+          <h2>What This Tutorial Covers</h2>
+        </div>
+      </div>
+      <p>Before you can effectively administer an ONTAP-based storage environment, you need a solid understanding of three foundational areas: how the command-line interface is structured and what privileges each mode grants, how physical disk shelves are connected to controllers and identified, and how ONTAP assigns and manages disk ownership — including the modern Advanced Disk Partitioning feature that maximizes capacity utilization.</p>
+      <p>This tutorial bridges those concepts end-to-end, moving from CLI navigation through physical shelf topology all the way to ADP partition management.</p>
+      <div class="grid-3">
+        <div class="stat-card"><div class="stat-num" style="color:var(--accent-blue)">3</div><div class="stat-label">CLI Privilege Modes</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--accent-green)">3</div><div class="stat-label">Disk ID Components</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--accent-purple)">2</div><div class="stat-label">ADP Versions</div></div>
+      </div>
+    </section>
+
+    <!-- ════════ SHELLS ════════ -->
+    <section class="section" id="shells">
+      <div class="section-header">
+        <div class="section-icon icon-teal">🖥️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 01</div>
+          <h2>ONTAP CLI Shells</h2>
+        </div>
+      </div>
+      <p>ONTAP provides multiple command-line shell environments, each designed for a specific layer of administrative access. It is critical to understand the distinction between <em>shells</em> and <em>modes</em> — they are entirely different concepts that operate at different layers of the platform.</p>
+
+      <div class="shell-grid" id="shells-compare">
+        <div class="card">
+          <div class="card-title">🟢 Cluster Shell</div>
+          <p style="margin:0;font-size:13px;">The primary administrative environment for all day-to-day operations. Cluster-wide commands executed here affect all nodes in the HA pair. This is where 95% of your work happens — aggregate creation, volume management, network configuration, and monitoring.</p>
+          <div style="margin-top:12px;"><span class="badge badge-green">Default Entry Point</span> <span class="badge badge-blue">Cluster-Scoped</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔵 Node Shell</div>
+          <p style="margin:0;font-size:13px;">A legacy compatibility layer retained from 7-Mode. Access is node-specific — commands apply only to the targeted node. Certain advanced operations (e.g., specific storage and disk-level commands) still require a brief visit here. Tab completion is not available in node shell.</p>
+          <div style="margin-top:12px;"><span class="badge badge-orange">Node-Scoped</span> <span class="badge badge-gray">Limited Commands</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔴 System Shell</div>
+          <p style="margin:0;font-size:13px;">A Linux-based shell underneath ONTAP that grants access to the OS-level internals of a specific node. Used exclusively for deep diagnostic log collection. No configuration changes are performed here. This is typically invoked only under guidance from vendor support.</p>
+          <div style="margin-top:12px;"><span class="badge badge-orange">Node-Specific</span> <span class="badge badge-gray">Diagnostics Only</span></div>
+        </div>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-content">
+          <div class="callout-title">Do Not Confuse Shells with Modes</div>
+          <div class="callout-text">Shells are separate entry points into different administrative layers of ONTAP. Modes (admin, advanced, diagnostic) are privilege levels <em>within</em> the Cluster Shell. Switching modes does not change your shell context — you remain in the cluster shell and simply unlock more commands.</div>
+        </div>
+      </div>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+graph TD
+    A["🖥️ ONTAP Node"] --> B["Cluster Shell\n(ontap CLI)"]
+    A --> C["Node Shell\n(system node run)"]
+    A --> D["System Shell\n(diag/Linux layer)"]
+    B --> E["Admin Mode\n★ Default"]
+    B --> F["Advanced Mode\n★ set adv"]
+    B --> G["Diagnostic Mode\n★ set diag"]
+    C --> H["Node-specific\nlegacy commands"]
+    D --> I["Linux-level\nlog gathering"]
+    style A fill:#1c2333,stroke:#30363d,color:#e6edf3
+    style B fill:#0d2035,stroke:#58a6ff,color:#58a6ff
+    style C fill:#1a1a2e,stroke:#f78166,color:#f78166
+    style D fill:#1a1a2e,stroke:#e3b341,color:#e3b341
+    style E fill:#0d2e1a,stroke:#3fb950,color:#3fb950
+    style F fill:#2e2a0d,stroke:#e3b341,color:#e3b341
+    style G fill:#2e150d,stroke:#f78166,color:#f78166
+    style H fill:#1c2333,stroke:#30363d,color:#8b949e
+    style I fill:#1c2333,stroke:#30363d,color:#8b949e
+        </div>
+        <div class="diagram-caption">Fig 1.1 — ONTAP Shell and Mode Hierarchy</div>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <div class="callout-title">Accessing Node Shell</div>
+          <div class="callout-text">To access the node shell from the cluster shell, use: <span class="hl">system node run -node &lt;nodename&gt;</span>. To return to cluster shell, type <span class="hl">exit</span>.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ MODES ════════ -->
+    <section class="section" id="modes">
+      <div class="section-header">
+        <div class="section-icon icon-yellow">🔐</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 02</div>
+          <h2>Privilege Modes in ONTAP</h2>
+        </div>
+      </div>
+      <p>Within the Cluster Shell, ONTAP implements a three-tier privilege model that controls which commands and parameters are accessible. Think of it as a graduated security model — each level unlocks additional capabilities while increasing the potential for configuration impact.</p>
+
+      <div class="mode-grid">
+        <div class="mode-card mode-admin">
+          <div class="mode-title">Admin Mode</div>
+          <div class="mode-indicator">ontap-cluster::></div>
+          <div class="mode-desc">The default mode upon login. Approximately 80% of routine operational tasks are handled here — creating volumes, managing LIFs, running health checks, and viewing statistics.</div>
+          <div style="margin-top:10px;"><span class="badge badge-green">Default</span></div>
+        </div>
+        <div class="mode-card mode-advanced">
+          <div class="mode-title">Advanced Mode</div>
+          <div class="mode-indicator">ontap-cluster::*></div>
+          <div class="mode-desc">Unlocks additional parameters, tuning options, and commands not exposed in admin mode. The <span style="color:#e3b341">★</span> symbol appears in the prompt as a visual reminder that expanded privileges are active.</div>
+          <div style="margin-top:10px;"><span class="badge badge-yellow">★ Prompt</span></div>
+        </div>
+        <div class="mode-card mode-diag">
+          <div class="mode-title">Diagnostic Mode</div>
+          <div class="mode-indicator">ontap-cluster::*></div>
+          <div class="mode-desc">The most privileged mode. Commands here can modify deep system behaviors and affect cluster stability. Only used during vendor-guided troubleshooting or for specific known procedures.</div>
+          <div style="margin-top:10px;"><span class="badge badge-orange">Expert Only</span></div>
+        </div>
+      </div>
+
+      <h3 id="modes-nav">Navigating Between Modes</h3>
+      <p>Switching between modes is straightforward and non-destructive. Any mode can be entered from any other mode directly — there is no required sequence. The prompt changes to reflect your current privilege level.</p>
+
+      <div class="code-block" id="modes-cmds">
+        <div class="code-header">
+          <span class="code-lang">ONTAP CLI — Mode Navigation</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body">
+<span class="comment"># Check current privilege level (from any mode)</span>
+<span class="prompt">ontap-cluster::&gt;</span> <span class="cmd">set</span> <span class="param">&lt;TAB&gt;</span>
+<span class="output">Current privilege level: admin</span>
+
+<span class="comment"># Enter Advanced mode</span>
+<span class="prompt">ontap-cluster::&gt;</span> <span class="cmd">set</span> <span class="value">advanced</span>
+<span class="output">Warning: These advanced commands are potentially dangerous...</span>
+<span class="output">Do you want to continue? {y|n}: y</span>
+<span class="prompt">ontap-cluster::*&gt;</span>  <span class="comment"># Star (*) confirms advanced/diag mode</span>
+
+<span class="comment"># Enter Diagnostic mode (from any mode)</span>
+<span class="prompt">ontap-cluster::*&gt;</span> <span class="cmd">set</span> <span class="value">diag</span>
+
+<span class="comment"># Return to Admin mode</span>
+<span class="prompt">ontap-cluster::*&gt;</span> <span class="cmd">set</span> <span class="value">admin</span>
+<span class="prompt">ontap-cluster::&gt;</span>  <span class="comment"># Star disappears — you're back in admin</span>
+
+<span class="comment"># Shortcut commands (faster alternative)</span>
+<span class="cmd">set adm</span>   <span class="comment"># → Admin mode</span>
+<span class="cmd">set adv</span>   <span class="comment"># → Advanced mode</span>
+<span class="cmd">set diag</span>  <span class="comment"># → Diagnostic mode (also: set d)</span>
+
+<span class="comment"># Verify ONTAP version</span>
+<span class="prompt">ontap-cluster::&gt;</span> <span class="cmd">version</span>
+<span class="output">NetApp Release 9.12.1: Tue Jul 11 ...</span>
+
+<span class="comment"># Clear screen</span>
+<span class="prompt">ontap-cluster::&gt;</span> <span class="cmd">Ctrl+L</span>
+        </div>
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-icon">🚨</div>
+        <div class="callout-content">
+          <div class="callout-title">Diagnostic Mode Risk Warning</div>
+          <div class="callout-text">Commands available in diagnostic mode can impact cluster stability, disrupt data access, or corrupt configuration if misused. Never enter diagnostic mode without a specific known reason. If in doubt, engage vendor support before proceeding.</div>
+        </div>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <div class="callout-title">Pro Tip — Visual Mode Indicator</div>
+          <div class="callout-text">The presence of a <strong style="color:#e3b341">*</strong> (asterisk) in your CLI prompt means you are in either Advanced or Diagnostic mode. Always use <span class="hl">set &lt;TAB&gt;</span> to confirm exactly which elevated mode you are in before running unfamiliar commands.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ CONNECTIVITY TYPES ════════ -->
+    <section class="section" id="connectivity">
+      <div class="section-header">
+        <div class="section-icon icon-green">🔗</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 03</div>
+          <h2>Disk Shelf Connectivity Types</h2>
+        </div>
+      </div>
+      <p>Disk shelves must be physically connected to controllers using one of three supported interface technologies. Each technology determines what disk types are supported, the available bandwidth, and the shelf models that can be used. Understanding this is essential before planning a storage expansion.</p>
+
+      <div class="conn-grid">
+        <div class="conn-card">
+          <div class="conn-icon">🔵</div>
+          <div class="conn-name">FC-AL</div>
+          <div class="conn-detail" style="color:var(--text-muted);">Fibre Channel Arbitrated Loop — legacy protocol. Supports FC and ATA disk types. Found in older DS14 series shelves. Largely phased out in modern deployments.</div>
+          <div style="margin-top:8px;"><span class="badge badge-gray">Legacy</span></div>
+        </div>
+        <div class="conn-card" style="border-color:rgba(88,166,255,0.3);">
+          <div class="conn-icon">🟢</div>
+          <div class="conn-name">SAS</div>
+          <div class="conn-detail" style="color:var(--text-secondary);">Serial Attached SCSI — the dominant backend connectivity technology in current deployments. Supports SAS, NL-SAS (SATA-equivalent), and SSD drives. Daisy-chain capable. Available in 3, 6, and 12 Gbps variants.</div>
+          <div style="margin-top:8px;"><span class="badge badge-green">Current Standard</span></div>
+        </div>
+        <div class="conn-card" style="border-color:rgba(188,140,255,0.3);">
+          <div class="conn-icon">🟣</div>
+          <div class="conn-name">NVMe</div>
+          <div class="conn-detail" style="color:var(--text-secondary);">Non-Volatile Memory Express — the newest backend protocol, offering dramatically higher throughput for all-flash configurations. Used in the latest AFF shelf generations. Replaces SAS in ultra-high-performance designs.</div>
+          <div style="margin-top:8px;"><span class="badge badge-purple">Latest Generation</span></div>
+        </div>
+      </div>
+
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th>Interface</th>
+            <th>Disk Types Supported</th>
+            <th>Representative Shelf Models</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-gray">FC-AL</span></td>
+            <td>FC, ATA</td>
+            <td>DS14Mk-FC2, DS14Mk-FC4, DS14Mk-ATA2</td>
+            <td><span class="badge badge-orange">Deprecated</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">SAS</span></td>
+            <td>SAS, NL-SAS, SSD</td>
+            <td>DS212C, DS224C, DS460C, DS2246</td>
+            <td><span class="badge badge-green">Current</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-purple">NVMe</span></td>
+            <td>NVMe SSD</td>
+            <td>NS224 (NVMe-oF)</td>
+            <td><span class="badge badge-teal">Latest Gen</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ════════ IOM MODULES ════════ -->
+    <section class="section" id="iom">
+      <div class="section-header">
+        <div class="section-icon icon-purple">⚙️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 04</div>
+          <h2>IOM Modules — Input/Output Architecture</h2>
+        </div>
+      </div>
+      <p>Every SAS disk shelf contains exactly <strong style="color:var(--text-primary)">two IOM (Input/Output Module)</strong> modules — designated IOM-A and IOM-B. These modules are the intelligence of the shelf: they host the SAS ports used for connectivity, manage internal disk communication, and provide the physical path between controllers and drives.</p>
+      <p>Both IOM modules operate simultaneously in an active-active configuration. If one IOM or one SAS path fails, the other continues serving data without interruption — this is the foundation of shelf-level redundancy. The IOM model determines the shelf's maximum throughput speed.</p>
+
+      <div class="iom-grid">
+        <div class="iom-card" style="border-color:rgba(88,166,255,0.3);">
+          <div class="iom-speed" style="color:var(--accent-blue);">3 Gb/s</div>
+          <div class="iom-name">IOM3</div>
+          <div class="iom-shelves">Compatible Shelf: DS40-43 series</div>
+        </div>
+        <div class="iom-card" style="border-color:rgba(63,185,80,0.3);">
+          <div class="iom-speed" style="color:var(--accent-green);">6 Gb/s</div>
+          <div class="iom-name">IOM6</div>
+          <div class="iom-shelves">Compatible Shelf: DS2246, DS4246 series</div>
+        </div>
+        <div class="iom-card" style="border-color:rgba(188,140,255,0.3);">
+          <div class="iom-speed" style="color:var(--accent-purple);">12 Gb/s</div>
+          <div class="iom-name">IOM12</div>
+          <div class="iom-shelves">Compatible Shelf: DS212C, DS224C series</div>
+        </div>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-content">
+          <div class="callout-title">Critical: Never Mix IOM Types in a Single Loop</div>
+          <div class="callout-text">If you connect shelves with different IOM generations into the same daisy-chain loop, the entire loop will operate at the lowest IOM speed — severely degrading performance of faster shelves. Always create separate SAS loops per IOM generation.</div>
+        </div>
+      </div>
+
+      <h3 id="acp">ACP — Alternate Control Path (Legacy Models)</h3>
+      <p>On older disk shelf models (e.g., DS2246, DS4243), physical monitoring traffic and data traffic use separate connections. The <strong>Alternate Control Path (ACP)</strong> is a dedicated Ethernet-based management path used to monitor shelf health: temperature, disk status, power supply, and fan readings.</p>
+      <p>Controllers in these older designs expose dedicated private Ethernet ports — typically labeled <span class="hl">e0P</span> and <span class="hl">e0I</span> — specifically for ACP connections. On current-generation shelves (DS212C, DS224C and newer), ACP monitoring is bundled over the same SAS connection, eliminating the need for separate Ethernet cabling.</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">🔴 Older Shelves — ACP Required</div>
+          <ul class="bullet-list">
+            <li>DS2246, DS4243 and similar legacy models</li>
+            <li>Separate Ethernet connections to e0P/e0I ports on controllers</li>
+            <li>SAS handles data; Ethernet handles monitoring</li>
+            <li>Must configure ACP to enable shelf health alerts</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">🟢 Newer Shelves — ACP Embedded</div>
+          <ul class="bullet-list">
+            <li>DS212C, DS224C, DS460C and current models</li>
+            <li>ACP monitoring embedded within SAS protocol</li>
+            <li>Single SAS cable carries both data and management traffic</li>
+            <li>No separate ACP configuration required</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ DAISY CHAIN ════════ -->
+    <section class="section" id="daisy">
+      <div class="section-header">
+        <div class="section-icon icon-orange">🔄</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 05</div>
+          <h2>Daisy-Chain (Multi-Path) Shelf Topology</h2>
+        </div>
+      </div>
+      <p>Rather than connecting every shelf directly to the controller (which would require an impractical number of SAS ports), ONTAP uses a <strong>daisy-chain topology</strong>. In this design, controller SAS ports connect to the first shelf, and each subsequent shelf connects port-to-port in a chain — with the last shelf looping back to the second controller.</p>
+      <p>This creates a single redundant loop where all shelves are reachable by both controllers simultaneously — ensuring zero downtime access even when individual SAS links or IOM modules fail.</p>
+
+      <div id="daisy-diagram" class="svg-diagram">
+        <svg viewBox="0 0 860 400" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:860px;">
+          <!-- Background -->
+          <rect width="860" height="400" fill="#0d1117"/>
+
+          <!-- Title -->
+          <text x="430" y="28" text-anchor="middle" font-family="Sora,sans-serif" font-size="13" fill="#8b949e" font-weight="600">DAISY-CHAIN (MULTI-PATH) SHELF TOPOLOGY — DUAL CONTROLLER HA PAIR</text>
+
+          <!-- Controller 1 -->
+          <rect x="30" y="55" width="130" height="290" rx="10" fill="#1c2333" stroke="#58a6ff" stroke-width="2"/>
+          <text x="95" y="82" text-anchor="middle" font-family="Sora,sans-serif" font-size="11" fill="#58a6ff" font-weight="700">CONTROLLER 1</text>
+          <text x="95" y="97" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681">node-a01</text>
+          <!-- SAS ports on ctrl1 -->
+          <rect x="140" y="120" width="20" height="16" rx="3" fill="#3fb950" stroke="#3fb950" stroke-width="1"/>
+          <text x="150" y="132" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#0d1117">P0</text>
+          <rect x="140" y="165" width="20" height="16" rx="3" fill="#58a6ff" stroke="#58a6ff" stroke-width="1"/>
+          <text x="150" y="177" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#0d1117">P1</text>
+          <rect x="140" y="240" width="20" height="16" rx="3" fill="#3fb950" stroke="#3fb950" stroke-width="1"/>
+          <text x="150" y="252" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#0d1117">P2</text>
+          <rect x="140" y="285" width="20" height="16" rx="3" fill="#58a6ff" stroke="#58a6ff" stroke-width="1"/>
+          <text x="150" y="297" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#0d1117">P3</text>
+
+          <!-- Shelf 1 -->
+          <rect x="220" y="80" width="140" height="100" rx="8" fill="#1c2333" stroke="#30363d" stroke-width="1.5"/>
+          <text x="290" y="103" text-anchor="middle" font-family="Sora,sans-serif" font-size="11" fill="#e6edf3" font-weight="600">SHELF 01</text>
+          <text x="290" y="117" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681">Shelf-ID: 1</text>
+          <!-- IOM A -->
+          <rect x="230" y="125" width="50" height="36" rx="5" fill="#0d2e1a" stroke="#3fb950" stroke-width="1.2"/>
+          <text x="255" y="140" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#3fb950" font-weight="700">IOM-A</text>
+          <text x="255" y="154" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#3fb950">12Gb/s</text>
+          <!-- IOM B -->
+          <rect x="300" y="125" width="50" height="36" rx="5" fill="#0d1e30" stroke="#58a6ff" stroke-width="1.2"/>
+          <text x="325" y="140" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#58a6ff" font-weight="700">IOM-B</text>
+          <text x="325" y="154" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#58a6ff">12Gb/s</text>
+          <!-- IOM ports -->
+          <rect x="218" y="134" width="12" height="12" rx="2" fill="#3fb950" stroke="#3fb950"/>
+          <rect x="360" y="134" width="12" height="12" rx="2" fill="#58a6ff" stroke="#58a6ff"/>
+
+          <!-- Shelf 2 -->
+          <rect x="420" y="80" width="140" height="100" rx="8" fill="#1c2333" stroke="#30363d" stroke-width="1.5"/>
+          <text x="490" y="103" text-anchor="middle" font-family="Sora,sans-serif" font-size="11" fill="#e6edf3" font-weight="600">SHELF 02</text>
+          <text x="490" y="117" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681">Shelf-ID: 2</text>
+          <rect x="430" y="125" width="50" height="36" rx="5" fill="#0d2e1a" stroke="#3fb950" stroke-width="1.2"/>
+          <text x="455" y="140" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#3fb950" font-weight="700">IOM-A</text>
+          <text x="455" y="154" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#3fb950">12Gb/s</text>
+          <rect x="500" y="125" width="50" height="36" rx="5" fill="#0d1e30" stroke="#58a6ff" stroke-width="1.2"/>
+          <text x="525" y="140" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#58a6ff" font-weight="700">IOM-B</text>
+          <text x="525" y="154" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#58a6ff">12Gb/s</text>
+          <rect x="418" y="134" width="12" height="12" rx="2" fill="#3fb950" stroke="#3fb950"/>
+          <rect x="560" y="134" width="12" height="12" rx="2" fill="#58a6ff" stroke="#58a6ff"/>
+
+          <!-- Shelf 3 -->
+          <rect x="620" y="80" width="140" height="100" rx="8" fill="#1c2333" stroke="#30363d" stroke-width="1.5"/>
+          <text x="690" y="103" text-anchor="middle" font-family="Sora,sans-serif" font-size="11" fill="#e6edf3" font-weight="600">SHELF 03</text>
+          <text x="690" y="117" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681">Shelf-ID: 3</text>
+          <rect x="630" y="125" width="50" height="36" rx="5" fill="#0d2e1a" stroke="#3fb950" stroke-width="1.2"/>
+          <text x="655" y="140" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#3fb950" font-weight="700">IOM-A</text>
+          <text x="655" y="154" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#3fb950">12Gb/s</text>
+          <rect x="700" y="125" width="50" height="36" rx="5" fill="#0d1e30" stroke="#58a6ff" stroke-width="1.2"/>
+          <text x="725" y="140" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#58a6ff" font-weight="700">IOM-B</text>
+          <text x="725" y="154" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#58a6ff">12Gb/s</text>
+          <rect x="618" y="134" width="12" height="12" rx="2" fill="#3fb950" stroke="#3fb950"/>
+          <rect x="760" y="134" width="12" height="12" rx="2" fill="#58a6ff" stroke="#58a6ff"/>
+
+          <!-- Controller 2 -->
+          <rect x="700" y="240" width="130" height="130" rx="10" fill="#1c2333" stroke="#bc8cff" stroke-width="2"/>
+          <text x="765" y="267" text-anchor="middle" font-family="Sora,sans-serif" font-size="11" fill="#bc8cff" font-weight="700">CONTROLLER 2</text>
+          <text x="765" y="282" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681">node-a02</text>
+          <rect x="690" y="290" width="20" height="16" rx="3" fill="#3fb950" stroke="#3fb950" stroke-width="1"/>
+          <text x="700" y="302" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#0d1117">P0</text>
+          <rect x="690" y="320" width="20" height="16" rx="3" fill="#58a6ff" stroke="#58a6ff" stroke-width="1"/>
+          <text x="700" y="332" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#0d1117">P1</text>
+
+          <!-- PATH A (green) — Controller1:P0 → Shelf1-IOMA → Shelf2-IOMA → Shelf3-IOMA → Ctrl2:P0 -->
+          <!-- Ctrl1 P0 → Shelf1 IOM-A left port -->
+          <line x1="160" y1="128" x2="218" y2="140" stroke="#3fb950" stroke-width="2" stroke-dasharray="5,3"/>
+          <!-- Shelf1 IOM-A right → Shelf2 IOM-A left (daisy) -->
+          <line x1="280" y1="140" x2="418" y2="140" stroke="#3fb950" stroke-width="2" stroke-dasharray="5,3"/>
+          <!-- Shelf2 IOM-A right → Shelf3 IOM-A left (daisy) -->
+          <line x1="480" y1="140" x2="618" y2="140" stroke="#3fb950" stroke-width="2" stroke-dasharray="5,3"/>
+          <!-- Shelf3 IOM-A → down to Ctrl2 P0 -->
+          <line x1="655" y1="161" x2="655" y2="295" stroke="#3fb950" stroke-width="2" stroke-dasharray="5,3"/>
+          <line x1="655" y1="295" x2="710" y2="295" stroke="#3fb950" stroke-width="2" stroke-dasharray="5,3"/>
+
+          <!-- PATH B (blue) — Controller1:P1 → Shelf1-IOMB → Shelf2-IOMB → Shelf3-IOMB → Ctrl2:P1 -->
+          <!-- Ctrl1 P1 → Shelf1 IOM-B right port (via bottom arc) -->
+          <path d="M160,173 Q190,320 325,320 Q430,320 525,320 Q630,320 725,320 Q760,320 760,161" stroke="#58a6ff" stroke-width="2" fill="none" stroke-dasharray="5,3"/>
+          <!-- Ctrl2 P1 connected indicator -->
+          <line x1="710" y1="327" x2="760" y2="327" stroke="#58a6ff" stroke-width="1.5" stroke-dasharray="3,2"/>
+
+          <!-- Labels for Paths -->
+          <text x="280" y="110" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#3fb950">── PATH A (IOM-A Loop)</text>
+          <text x="430" y="360" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#58a6ff">─ ─ PATH B (IOM-B Loop)</text>
+
+          <!-- Disk icons in shelves -->
+          <text x="260" y="112" text-anchor="middle" font-size="8" fill="#6e7681">💿💿💿</text>
+          <text x="460" y="112" text-anchor="middle" font-size="8" fill="#6e7681">💿💿💿</text>
+          <text x="660" y="112" text-anchor="middle" font-size="8" fill="#6e7681">💿💿💿</text>
+        </svg>
+        <div class="diagram-caption">Fig 5.1 — Dual-Path Daisy-Chain SAS Shelf Topology with IOM-A and IOM-B Loops</div>
+      </div>
+
+      <div class="callout success">
+        <div class="callout-icon">✅</div>
+        <div class="callout-content">
+          <div class="callout-title">Expanding Storage — Online, No Downtime</div>
+          <div class="callout-text">Adding a new shelf to an existing daisy-chain is a non-disruptive operation. Disconnect the last shelf's outbound SAS port from the controller, insert the new shelf into the chain, and reconnect — one path at a time to maintain continuous access throughout the procedure.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ SHELF ID ════════ -->
+    <section class="section" id="shelfid">
+      <div class="section-header">
+        <div class="section-icon icon-blue">🏷️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 06</div>
+          <h2>Setting Shelf IDs</h2>
+        </div>
+      </div>
+      <p>Each disk shelf must be assigned a unique numeric ID before it is connected to a controller. This ID forms part of the disk's permanent address within the cluster and helps administrators identify which physical shelf a disk resides in during fault isolation.</p>
+
+      <h3>Physical ID Assignment Process</h3>
+      <ul class="step-list">
+        <li><span class="step-num">1</span>Locate the small LCD display panel on the front or back of the shelf. Beside it you will find one or two physical buttons.</li>
+        <li><span class="step-num">2</span>Press and hold the button. The display will cycle through numbers (0, 1, 2, 3 … up to 32).</li>
+        <li><span class="step-num">3</span>Release when your desired shelf ID number appears. This immediately sets the shelf ID — no ONTAP command required.</li>
+        <li><span class="step-num">4</span>Shelf IDs must be unique within the same SAS loop. Shelf IDs can be reused across separate loops (different SAS channels).</li>
+        <li><span class="step-num">5</span>Valid range is 0–32 per loop, reflecting the maximum supported shelves per SAS channel on most controllers.</li>
+      </ul>
+
+      <div class="callout warning">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-content">
+          <div class="callout-title">Shelf ID Changes Are Disruptive in Production</div>
+          <div class="callout-text">Once a shelf is in service with active disk ownership and live data, changing its shelf ID is a disruptive operation that requires taking the shelf offline. Plan shelf IDs carefully before deployment. Shelf IDs can be freely changed only on shelves with no assigned disks.</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">✅ Allowed Same-Loop IDs</div>
+          <ul class="bullet-list">
+            <li>Each shelf must have a distinct ID within a single SAS loop</li>
+            <li>IDs in range 0–32 are valid (model-dependent upper limit)</li>
+            <li>Numbers need not be sequential — gaps are fine</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">✅ Cross-Loop ID Reuse</div>
+          <ul class="bullet-list">
+            <li>Two shelves in <em>different</em> SAS loops can share the same shelf ID number</li>
+            <li>Example: Loop A can have Shelf-ID 1 and Loop B can also have a Shelf-ID 1</li>
+            <li>ONTAP differentiates them by channel (loop) number</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ DISK ID ════════ -->
+    <section class="section" id="diskid">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🔢</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 07</div>
+          <h2>Understanding Disk IDs</h2>
+        </div>
+      </div>
+      <p>Every physical disk in an ONTAP environment is assigned a unique address — the <strong>Disk ID</strong>. This three-part identifier allows ONTAP to locate any disk in any shelf across any SAS loop instantly. When a disk fails and an alert fires, the disk ID in the alert tells you exactly where to go physically.</p>
+
+      <div class="diskid-formula">
+        <div class="diskid-part">
+          <div class="diskid-label">Channel / Loop</div>
+          <div class="diskid-value" style="color:var(--accent-teal);">1</div>
+        </div>
+        <div class="diskid-sep">.</div>
+        <div class="diskid-part">
+          <div class="diskid-label">Shelf ID</div>
+          <div class="diskid-value" style="color:var(--accent-blue);">2</div>
+        </div>
+        <div class="diskid-sep">.</div>
+        <div class="diskid-part">
+          <div class="diskid-label">Disk Number</div>
+          <div class="diskid-value" style="color:var(--accent-purple);">7</div>
+        </div>
+        <div style="padding: 0 16px; color: var(--text-muted); font-size: 18px;">→</div>
+        <div class="diskid-part" style="border-color:var(--accent-blue);">
+          <div class="diskid-label">Full Disk ID</div>
+          <div class="diskid-example">1.2.7</div>
+        </div>
+      </div>
+
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Description</th>
+            <th>Assigned By</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-teal">Channel</span></td>
+            <td>Identifies the SAS loop / HBA port group connecting the shelf set to the controller. Automatically assigned by ONTAP.</td>
+            <td>ONTAP (auto)</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-blue">Shelf ID</span></td>
+            <td>The numeric ID physically set on the shelf LCD panel. Identifies which shelf within the loop.</td>
+            <td>Administrator (manual)</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-purple">Disk Number</span></td>
+            <td>The slot position of the drive within the shelf. Starts at 0. A 24-slot shelf has disk numbers 0–23.</td>
+            <td>ONTAP (positional)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+graph LR
+    A["SAS Port Group\n(Channel 2)"] --> B["Shelf ID: 4"]
+    B --> C["Disk Slot 11"]
+    C --> D["Disk ID: 2.4.11"]
+    style A fill:#0d2333,stroke:#39d3c3,color:#39d3c3
+    style B fill:#0d1e30,stroke:#58a6ff,color:#58a6ff
+    style C fill:#1a1232,stroke:#bc8cff,color:#bc8cff
+    style D fill:#0a0e13,stroke:#e3b341,color:#e3b341,font-weight:bold
+        </div>
+        <div class="diagram-caption">Fig 7.1 — Disk ID Address Resolution: Channel.Shelf.Slot → Final Disk ID</div>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-icon">ℹ️</div>
+        <div class="callout-content">
+          <div class="callout-title">Practical Disk ID Example</div>
+          <div class="callout-text">A disk identified as <strong style="color:var(--accent-blue)">2.4.11</strong> tells you: SAS channel 2, Shelf-ID 4, disk slot 11 (12th physical slot from zero). Walk to the shelf labeled "4" on the cable loop connected to channel 2, and count to slot 11.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ OWNERSHIP ════════ -->
+    <section class="section" id="ownership">
+      <div class="section-header">
+        <div class="section-icon icon-green">👤</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 08</div>
+          <h2>Disk Ownership in ONTAP</h2>
+        </div>
+      </div>
+      <p>In an HA pair, both controllers share visibility of all attached disks — every disk connected to the shelf stack can be seen by both nodes. However, each disk can only be <em>owned</em> by one controller at a time. Disk ownership determines which controller manages the disk and can use it in an aggregate.</p>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+graph TD
+    SH1["Shelf 1 — 24 Disks"] --> CTL1["Controller 1\nnode-a01"]
+    SH1 --> CTL2["Controller 2\nnode-a02"]
+    SH2["Shelf 2 — 24 Disks"] --> CTL1
+    SH2 --> CTL2
+    SH3["Shelf 3 — 12 Disks"] --> CTL1
+    SH3 --> CTL2
+    CTL1 --> OWN1["Owns: 30 Disks\n(Root Aggr + Data Aggr)"]
+    CTL2 --> OWN2["Owns: 30 Disks\n(Root Aggr + Data Aggr)"]
+    SH3 --> SPARE["6 Disks → Spare Pool\n(Unassigned)"]
+    style CTL1 fill:#0d2035,stroke:#58a6ff,color:#58a6ff
+    style CTL2 fill:#0d2035,stroke:#bc8cff,color:#bc8cff
+    style OWN1 fill:#0d2e1a,stroke:#3fb950,color:#3fb950
+    style OWN2 fill:#0d2e1a,stroke:#3fb950,color:#3fb950
+    style SPARE fill:#2e1e0d,stroke:#e3b341,color:#e3b341
+    style SH1 fill:#1c2333,stroke:#30363d,color:#e6edf3
+    style SH2 fill:#1c2333,stroke:#30363d,color:#e6edf3
+    style SH3 fill:#1c2333,stroke:#30363d,color:#e6edf3
+        </div>
+        <div class="diagram-caption">Fig 8.1 — Disk Ownership Distribution Across HA Controllers and Spare Pool</div>
+      </div>
+
+      <h3>Auto-Assign vs Manual Ownership</h3>
+      <p>ONTAP can automatically assign disks to controllers based on physical shelf layout and an autoassignment policy, or you can assign disks manually using CLI commands. Disks that have not yet been assigned to any controller are in an <strong>unassigned</strong> state and appear in what is effectively a spare pool visible to both controllers.</p>
+
+      <h3 id="ownership-cmds">Key Disk Ownership Commands</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">ONTAP CLI — Disk Ownership Operations</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body">
+<span class="comment"># View all disks and their ownership status</span>
+<span class="prompt">ontap-cluster::&gt;</span> <span class="cmd">storage disk show</span>
+<span class="output">Disk      Owner          Pool  Status</span>
+<span class="output">----      -----          ----  ------</span>
+<span class="output">1.1.0     node-a01       Pool0 Partner</span>
+<span class="output">1.1.1     node-a01       Pool0 Partner</span>
+<span class="output">1.1.23    -              -     Unassigned</span>
+
+<span class="comment"># View spare disks</span>
+<span class="prompt">ontap-cluster::&gt;</span> <span class="cmd">storage aggregate show-spare-disks</span>
+
+<span class="comment"># Manually assign a disk to a specific node</span>
+<span class="prompt">ontap-cluster::&gt;</span> <span class="cmd">storage disk assign</span> <span class="param">-disk</span> <span class="value">1.1.23</span> <span class="param">-owner</span> <span class="value">node-a01</span>
+
+<span class="comment"># Remove disk ownership (make it unassigned)</span>
+<span class="prompt">ontap-cluster::&gt;</span> <span class="cmd">storage disk removeowner</span> <span class="param">-disk</span> <span class="value">1.1.23</span>
+
+<span class="comment"># Enable auto-assign (on by default)</span>
+<span class="prompt">ontap-cluster::&gt;</span> <span class="cmd">storage disk option modify</span> <span class="param">-node</span> <span class="value">node-a01</span> <span class="param">-autoassign</span> <span class="value">on</span>
+
+<span class="comment"># Show disk ownership details per aggregate</span>
+<span class="prompt">ontap-cluster::&gt;</span> <span class="cmd">storage aggregate show</span> <span class="param">-fields</span> <span class="value">node,raidtype,disks</span>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-icon">ℹ️</div>
+        <div class="callout-content">
+          <div class="callout-title">Root Aggregate Disk Reservation</div>
+          <div class="callout-text">During initial cluster setup, ONTAP automatically reserves disks to create root aggregates — one per node. In non-ADP systems, exactly 3 full disks are consumed per controller (6 total for an HA pair). In ADP-enabled systems, only the root partition of multiple drives is used, leaving data partitions available for user aggregates.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ ADP ════════ -->
+    <section class="section" id="adp">
+      <div class="section-header">
+        <div class="section-icon icon-purple">✂️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 09</div>
+          <h2>Advanced Disk Partitioning (ADP)</h2>
+        </div>
+      </div>
+      <p>Advanced Disk Partitioning (ADP) is a storage efficiency technology that logically divides a physical drive into separate root and data partitions. Without ADP, ONTAP reserves entire disks for root aggregate use — which wastes significant capacity, especially on large-capacity or expensive flash drives.</p>
+
+      <h3>The Problem ADP Solves</h3>
+      <p>Consider a scenario with twelve 8TB NVMe SSDs in a shelf. Without ADP, ONTAP would reserve three entire disks (24TB) per controller simply for root aggregates — consuming 24TB of premium flash storage just for configuration data that realistically requires under 500GB. ADP eliminates this waste by partitioning each drive so only a small root partition is consumed by the root aggregate.</p>
+
+      <div class="partition-visual">
+        <div class="disk-label">Without ADP — 3 Full 8TB Drives Consumed Per Controller (Root Aggregate)</div>
+        <div class="disk-bar">
+          <div class="disk-root" style="width:50%;">ROOT AGGR<br>3 × 8TB = 24TB<br>used ≈ 400GB</div>
+          <div class="disk-data" style="width:50%;">WASTED<br>23.6TB unused forever</div>
+        </div>
+        <div class="disk-label" style="margin-top:20px;">With ADP v1 — Only Root Partition Reserved, Data Partition Available</div>
+        <div class="disk-bar">
+          <div class="disk-root" style="width:6%;">ROOT<br>≈400GB</div>
+          <div class="disk-data" style="width:94%;">DATA PARTITION — 7.6TB available for user aggregates per drive</div>
+        </div>
+        <div class="disk-label" style="margin-top:20px;">With ADP v2 (AFF) — Three Partitions per Drive</div>
+        <div class="disk-bar">
+          <div class="disk-root" style="width:5%;">ROOT</div>
+          <div class="disk-data" style="width:47.5%;">DATA-1 Partition</div>
+          <div class="disk-data2" style="width:47.5%;">DATA-2 Partition</div>
+        </div>
+      </div>
+
+      <h3 id="adpv1">ADP Version 1 — FAS Mid-Range Systems</h3>
+      <p>ADP v1 applies to FAS mid-range platforms and creates <strong>two partitions</strong> per drive: one root partition and one data partition. Key characteristics to understand:</p>
+      <ul class="bullet-list">
+        <li>ADP v1 is applied only to shelves included at initial cluster configuration — additional shelves purchased later will arrive as non-ADP by default</li>
+        <li>ADP and non-ADP disks <strong>cannot be mixed in the same aggregate</strong> — they must be placed in separate aggregates</li>
+        <li>Conversion from ADP to non-ADP (or vice versa) requires a complete cluster reset — it is destructive and not possible on a system with live production data</li>
+        <li>Optional for larger FAS 8000/9000 platforms; factory-configured for FAS 2500, 2600, 2700 series</li>
+      </ul>
+
+      <h3 id="adpv2">ADP Version 2 — AFF All-Flash Systems</h3>
+      <p>ADP v2 is <strong>mandatory</strong> on all AFF systems. It creates <strong>three partitions</strong> per drive: one root partition and two equal data partitions. This further maximizes flash utilization and ensures even data distribution across mirrored configurations.</p>
+      <ul class="bullet-list">
+        <li>Mandatory on all AFF platforms — cannot be disabled</li>
+        <li>Three-partition model: 1 root + 2 data partitions per drive</li>
+        <li>Data partitions are equal in size — ONTAP divides remaining capacity in half</li>
+        <li>All shelves (including future expansions) are automatically ADP v2 on AFF systems</li>
+        <li>Enables flexible aggregate design — data partitions can be assigned independently</li>
+      </ul>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+graph LR
+    subgraph ADP_V1["ADP v1 — 2 Partitions (FAS)"]
+      D1["Physical Drive\n8TB"] --> RP1["Root Partition\n~400GB\n(for root aggr)"]
+      D1 --> DP1["Data Partition\n~7.6TB\n(for user data)"]
+    end
+    subgraph ADP_V2["ADP v2 — 3 Partitions (AFF)"]
+      D2["Physical Drive\n8TB"] --> RP2["Root Partition\n~400GB"]
+      D2 --> DP2A["Data Partition-1\n~3.8TB"]
+      D2 --> DP2B["Data Partition-2\n~3.8TB"]
+    end
+    style ADP_V1 fill:#1c2333,stroke:#3fb950,color:#3fb950
+    style ADP_V2 fill:#1c2333,stroke:#bc8cff,color:#bc8cff
+    style D1 fill:#0d1e30,stroke:#58a6ff,color:#58a6ff
+    style D2 fill:#0d1e30,stroke:#58a6ff,color:#58a6ff
+    style RP1 fill:#2e150d,stroke:#f78166,color:#f78166
+    style RP2 fill:#2e150d,stroke:#f78166,color:#f78166
+    style DP1 fill:#0d2035,stroke:#58a6ff,color:#58a6ff
+    style DP2A fill:#0d2035,stroke:#58a6ff,color:#58a6ff
+    style DP2B fill:#0d2e1a,stroke:#3fb950,color:#3fb950
+        </div>
+        <div class="diagram-caption">Fig 9.1 — ADP v1 vs ADP v2 Partition Layout Comparison</div>
+      </div>
+
+      <h3 id="adp-cmds">Verifying ADP Configuration</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">ONTAP CLI — ADP Verification Commands</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body">
+<span class="comment"># Enter Diagnostic mode (required for partition commands)</span>
+<span class="prompt">ontap-cluster::&gt;</span> <span class="cmd">set diag</span>
+<span class="prompt">ontap-cluster::*&gt;</span>
+
+<span class="comment"># Show disk partitions — if output is populated, ADP is active</span>
+<span class="prompt">ontap-cluster::*&gt;</span> <span class="cmd">disk partition show</span>
+<span class="output">Disk       Part Type  Owner         Pool    Size</span>
+<span class="output">--------   ---- ----  -----         ----    ----</span>
+<span class="output">1.1.0P1    P1   root  node-a01      Pool0   400.0GB</span>
+<span class="output">1.1.0P2    P2   data  node-a01      Pool0   3.58TB</span>
+<span class="output">1.1.0P3    P3   data  node-a01      Pool0   3.58TB</span>
+<span class="comment"># 3 partitions per disk = ADP v2 (AFF)</span>
+<span class="comment"># 2 partitions per disk = ADP v1 (FAS)</span>
+<span class="comment"># Empty output = No ADP (full disk, non-partitioned)</span>
+
+<span class="comment"># Check usable capacity breakdown (data vs root)</span>
+<span class="prompt">ontap-cluster::*&gt;</span> <span class="cmd">storage aggregate show-spare-disks</span>
+<span class="output">local data usable: 3.58TB</span>
+<span class="output">local root usable: 400.0GB</span>
+
+<span class="comment"># Return to Admin mode after diagnostics</span>
+<span class="prompt">ontap-cluster::*&gt;</span> <span class="cmd">set admin</span>
+        </div>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <div class="callout-title">Identifying ADP Version from Output</div>
+          <div class="callout-text">If <span class="hl">disk partition show</span> returns 3 partitions per disk (P1, P2, P3), you have <strong style="color:var(--accent-purple)">ADP v2</strong>. Two partitions per disk indicates <strong style="color:var(--accent-green)">ADP v1</strong>. Empty output confirms the cluster is operating in non-ADP mode with full physical disks.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ FIRMWARE ════════ -->
+    <section class="section" id="firmware">
+      <div class="section-header">
+        <div class="section-icon icon-teal">🔄</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 10</div>
+          <h2>Shelf &amp; Disk Firmware Management</h2>
+        </div>
+      </div>
+      <p>Disk shelves and the drives inside them each carry their own firmware. Keeping firmware current ensures compatibility, stability, and access to bug fixes. Understanding how firmware management works in modern ONTAP versions will save you significant operational overhead.</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">🕒 Legacy Approach (Pre-ONTAP 9)</div>
+          <ul class="bullet-list">
+            <li>ONTAP OS upgrade — separate manual process</li>
+            <li>Shelf firmware upgrade — separate manual process</li>
+            <li>Disk firmware upgrade — separate manual process</li>
+            <li>Each required individual planning, scheduling, and validation</li>
+          </ul>
+        </div>
+        <div class="card" style="border-color:rgba(63,185,80,0.3);">
+          <div class="card-title">✅ Modern Approach (ONTAP 9+)</div>
+          <ul class="bullet-list">
+            <li>Shelf firmware, disk firmware bundled inside ONTAP image</li>
+            <li>All components upgraded automatically during ONTAP upgrade</li>
+            <li>Background non-disruptive updates during normal operation</li>
+            <li>Individual firmware update only needed for specific patch fixes</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-icon">ℹ️</div>
+        <div class="callout-content">
+          <div class="callout-title">When Individual Firmware Updates Are Still Needed</div>
+          <div class="callout-text">If after an ONTAP upgrade you discover a firmware bug in a specific shelf or disk model, the vendor may release an out-of-cycle firmware patch. In this case, you apply only that specific firmware package independently. This is now the exception rather than the standard practice.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ════════ INTERVIEW Q&A ════════ -->
+    <section class="section" id="interview">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🎯</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 11</div>
+          <h2>Scenario-Based Interview Q&amp;A</h2>
+        </div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q1</span> You're in the ONTAP CLI and need to run a command that isn't available in admin mode. What do you do, and what precaution do you take?</div>
+        <div class="qa-a">Enter advanced mode using <span class="hl">set adv</span>. The prompt will display a <strong style="color:#e3b341">*</strong> confirming elevated privileges. After completing the task, return to admin mode with <span class="hl">set adm</span>. The precaution is to note which mode you are in before running any command — the asterisk in the prompt is your visual cue. Never leave an interactive session running in advanced or diagnostic mode unattended.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q2</span> Your team purchased 3 additional SAS shelves to expand storage. Two are DS224C (IOM12) and one is a DS2246 (IOM6). How do you connect them?</div>
+        <div class="qa-a">The DS224C shelves (IOM12, 12Gb/s) and the DS2246 shelf (IOM6, 6Gb/s) must not be daisy-chained together — mixing IOM types on a single loop degrades performance. Connect the two DS224C shelves into one new SAS loop and the DS2246 into a separate loop, each using its own pair of SAS ports on the controller (or via a SAS HBA expansion card if native ports are exhausted).</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q3</span> A disk alert shows failed disk <strong style="color:var(--accent-blue)">2.3.15</strong>. How do you physically locate it?</div>
+        <div class="qa-a">Decode the disk ID: Channel 2 (the second SAS loop group), Shelf ID 3 (the shelf with ID set to "3" on that loop), disk slot 15 (16th physical slot, counting from 0). Walk to the shelf rack, identify channel 2's cable grouping, find the shelf with "3" on its LCD, and count to slot 15. The disk LED should also be blinking red to confirm the location.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q4</span> What is ADP and why is it mandatory on AFF systems?</div>
+        <div class="qa-a">ADP (Advanced Disk Partitioning) logically splits physical drives into root and data partitions so the root aggregate only consumes a small partition (~400GB) rather than entire drives. On AFF systems — which use expensive NVMe SSDs — wasting multiple full drives just for root configuration would be financially and operationally unacceptable. ADP v2 (the AFF version) creates three partitions per drive (1 root + 2 data), ensuring near-zero overhead from root aggregates regardless of drive capacity.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q5</span> A client asks if they can mix ADP and non-ADP drives in the same data aggregate after expanding storage. What is your answer?</div>
+        <div class="qa-a">No — ADP and non-ADP disks cannot coexist in the same aggregate. They must be placed in separate aggregates. This means the client will have two distinct capacity pools. If they want uniformity, the only option is to either request that expansion shelves be configured as ADP at the factory, or reset the entire array to convert — which is disruptive and not possible on a system with live data.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q6</span> How do you verify whether a running ONTAP cluster is using ADP, and which version?</div>
+        <div class="qa-a">Enter diagnostic mode (<span class="hl">set diag</span>) and run <span class="hl">disk partition show</span>. If output is empty, no ADP is in use. If you see 2 partitions per disk (P1, P2), it is ADP v1 (FAS mid-range). If you see 3 partitions per disk (P1, P2, P3), it is ADP v2 (AFF). You can also cross-reference partition sizes — the root partition will be significantly smaller than the data partition(s).</div>
+      </div>
+    </section>
+
+    <!-- ════════ BEST PRACTICES ════════ -->
+    <section class="section" id="bestpractice">
+      <div class="section-header">
+        <div class="section-icon icon-green">⭐</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 12</div>
+          <h2>Best Practices Summary</h2>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">🖥️ CLI Mode Safety</div>
+          <ul class="bullet-list">
+            <li>Always use <span class="hl">set &lt;TAB&gt;</span> to confirm your current privilege level before running critical commands</li>
+            <li>Return to admin mode immediately after completing advanced tasks</li>
+            <li>Never execute unfamiliar commands in diagnostic mode without vendor guidance</li>
+            <li>Document any diagnostic-mode actions taken during troubleshooting</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">🔗 Shelf Connectivity</div>
+          <ul class="bullet-list">
+            <li>Never mix different IOM generations (IOM3, IOM6, IOM12) in a single SAS loop</li>
+            <li>Always use separate loops for different shelf models</li>
+            <li>Add/remove shelves one path at a time for non-disruptive expansion</li>
+            <li>Plan and cable both IOM-A and IOM-B paths on every shelf for full redundancy</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">🏷️ Shelf &amp; Disk IDs</div>
+          <ul class="bullet-list">
+            <li>Plan all shelf IDs before racking — avoid changes after go-live</li>
+            <li>Keep a physical cable and shelf ID map document for each environment</li>
+            <li>Use consistent ID numbering conventions across deployments</li>
+            <li>Enable disk autoassignment in new environments to reduce manual overhead</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">✂️ ADP Planning</div>
+          <ul class="bullet-list">
+            <li>Confirm ADP requirements before placing hardware orders — factory configuration is easiest</li>
+            <li>Never mix ADP and non-ADP disks in the same aggregate</li>
+            <li>Plan aggregate layout carefully when using ADP v1 with mixed shelf purchases</li>
+            <li>For AFF — rely on ADP v2 default behavior; do not attempt to disable it</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ AUTHOR ════════ -->
+    <section class="section" id="about">
+      <div class="author-section">
+        <div class="author-card">
+          <div class="author-avatar">👨‍💼</div>
+          <div style="flex:1;">
+            <div class="author-name">Mohammed Abdul</div>
+            <div class="author-title">Data Protection Architect — Hybrid Cloud &amp; Enterprise Storage</div>
+            <div class="author-bio">Mohammed Abdul is a Data Protection Architect with more than 10 years of experience in Hybrid Cloud and has worked with global clients across various industries. With extensive expertise in enterprise backup and recovery solutions, Mohammed specializes in AWS, Azure, GCP, Commvault, Veeam, NetBackup, and NetApp technologies — helping organizations design and implement robust data protection strategies.</div>
+            <div class="tech-badges">
+              <span class="badge badge-blue">AWS</span>
+              <span class="badge badge-teal">Azure</span>
+              <span class="badge badge-green">GCP</span>
+              <span class="badge badge-orange">Commvault</span>
+              <span class="badge badge-purple">Veeam</span>
+              <span class="badge badge-yellow">NetBackup</span>
+              <span class="badge badge-blue">NetApp</span>
+            </div>
+            <a class="author-email" href="mailto:abdul.md.20000102@gmail.com">✉️ &nbsp;abdul.md.20000102@gmail.com</a>
+          </div>
+        </div>
+
+        <div class="callout warning" style="margin-top:28px;">
+          <div class="callout-icon">📋</div>
+          <div class="callout-content">
+            <div class="callout-title">Disclaimer</div>
+            <div class="callout-text">This content is intended solely for educational and knowledge-sharing purposes. All technical concepts have been independently researched and rewritten. Always refer to official vendor documentation and follow your organization's change management procedures for any production implementations. The author is not liable for decisions made based on this material.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /content-area -->
+</div><!-- /main-content -->
+
+<script>
+  // Initialize Mermaid
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      background: '#1c2333',
+      primaryColor: '#1c2333',
+      primaryTextColor: '#e6edf3',
+      primaryBorderColor: '#30363d',
+      lineColor: '#58a6ff',
+      secondaryColor: '#161b22',
+      tertiaryColor: '#0d1117',
+      edgeLabelBackground: '#1c2333',
+      fontSize: '13px'
+    },
+    flowchart: { curve: 'linear', padding: 20 }
+  });
+
+  // Active TOC link tracking
+  const sections = document.querySelectorAll('section[id]');
+  const tocLinks = document.querySelectorAll('.toc-link[href^="#"]');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === '#' + entry.target.id);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(sec => observer.observe(sec));
+</script>
+</body>
+</html>
