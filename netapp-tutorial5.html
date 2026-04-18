@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetApp ONTAP: Partition Ownership, RDB, Cluster Quorum, Epsilon & Aggregates — Deep Dive</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-card: #1c2333;
+    --bg-card-hover: #21283a;
+    --accent-blue: #58a6ff;
+    --accent-green: #3fb950;
+    --accent-orange: #f78166;
+    --accent-purple: #bc8cff;
+    --accent-yellow: #e3b341;
+    --accent-teal: #39d3c3;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --border: #30363d;
+    --border-bright: #484f58;
+    --sidebar-width: 290px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+  .sidebar-header {
+    padding: 20px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .sidebar-logo .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .sidebar-logo span { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px; color: var(--text-primary); letter-spacing: 0.5px; }
+  .sidebar-subtitle { font-size: 11px; color: var(--text-muted); padding-left: 42px; }
+
+  .toc-nav { padding: 12px 0; flex: 1; }
+  .toc-section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); padding: 12px 16px 6px; }
+  .toc-link {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 16px; font-size: 12.5px;
+    color: var(--text-secondary); text-decoration: none;
+    transition: all 0.2s ease;
+    border-left: 2px solid transparent; line-height: 1.4;
+  }
+  .toc-link:hover { background: var(--bg-card); color: var(--text-primary); border-left-color: var(--accent-blue); }
+  .toc-link.active { background: rgba(88,166,255,0.1); color: var(--accent-blue); border-left-color: var(--accent-blue); font-weight: 500; }
+  .toc-link .toc-num { font-size: 10px; font-weight: 700; color: var(--text-muted); min-width: 18px; font-family: 'JetBrains Mono', monospace; }
+  .toc-link.sub { padding-left: 32px; font-size: 12px; }
+
+  /* ── MAIN ── */
+  .main-content { margin-left: var(--sidebar-width); flex: 1; max-width: calc(100vw - var(--sidebar-width)); }
+
+  .top-header {
+    background: linear-gradient(135deg, #0d1117 0%, #1a2744 50%, #0d2035 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 60px 60px 50px;
+    position: relative; overflow: hidden;
+  }
+  .top-header::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(88,166,255,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(63,185,80,0.06) 0%, transparent 50%);
+  }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(88,166,255,0.12); border: 1px solid rgba(88,166,255,0.3);
+    border-radius: 20px; padding: 4px 14px;
+    font-size: 12px; color: var(--accent-blue); font-weight: 500;
+    margin-bottom: 18px; font-family: 'JetBrains Mono', monospace;
+  }
+  .main-title {
+    font-family: 'Sora', sans-serif; font-size: 36px; font-weight: 800;
+    line-height: 1.15; margin-bottom: 16px;
+    background: linear-gradient(135deg, #e6edf3 30%, #58a6ff 70%, #bc8cff 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; position: relative;
+  }
+  .header-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.7; max-width: 700px; position: relative; }
+  .header-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 20px; position: relative; }
+  .meta-chip { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-secondary); }
+  .meta-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .content-area { padding: 40px 60px 80px; max-width: 1000px; }
+
+  .section { margin-bottom: 64px; scroll-margin-top: 30px; }
+  .section-header {
+    display: flex; align-items: flex-start; gap: 16px;
+    margin-bottom: 24px; padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .icon-blue { background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.3); }
+  .icon-green { background: rgba(63,185,80,0.15); border: 1px solid rgba(63,185,80,0.3); }
+  .icon-orange { background: rgba(247,129,102,0.15); border: 1px solid rgba(247,129,102,0.3); }
+  .icon-purple { background: rgba(188,140,255,0.15); border: 1px solid rgba(188,140,255,0.3); }
+  .icon-teal { background: rgba(57,211,195,0.15); border: 1px solid rgba(57,211,195,0.3); }
+  .icon-yellow { background: rgba(227,179,65,0.15); border: 1px solid rgba(227,179,65,0.3); }
+
+  .section-title-wrap h2 { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+  .section-title-wrap .section-num { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); font-weight: 400; margin-bottom: 4px; }
+
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; transition: border-color 0.2s; }
+  .card:hover { border-color: var(--border-bright); }
+  .card-title { font-family: 'Sora', sans-serif; font-weight: 600; font-size: 15px; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+  p { font-size: 14.5px; line-height: 1.8; color: var(--text-secondary); margin-bottom: 14px; }
+
+  .callout { border-radius: 10px; padding: 16px 20px; margin: 20px 0; display: flex; gap: 14px; align-items: flex-start; }
+  .callout-icon { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+  .callout-content { flex: 1; }
+  .callout-title { font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .callout-text { font-size: 13.5px; line-height: 1.7; color: var(--text-secondary); }
+  .callout.info { background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.25); }
+  .callout.info .callout-title { color: var(--accent-blue); }
+  .callout.success { background: rgba(63,185,80,0.08); border: 1px solid rgba(63,185,80,0.25); }
+  .callout.success .callout-title { color: var(--accent-green); }
+  .callout.warning { background: rgba(227,179,65,0.08); border: 1px solid rgba(227,179,65,0.3); }
+  .callout.warning .callout-title { color: var(--accent-yellow); }
+  .callout.danger { background: rgba(247,129,102,0.08); border: 1px solid rgba(247,129,102,0.3); }
+  .callout.danger .callout-title { color: var(--accent-orange); }
+  .callout.tip { background: rgba(188,140,255,0.08); border: 1px solid rgba(188,140,255,0.25); }
+  .callout.tip .callout-title { color: var(--accent-purple); }
+
+  .code-block { background: #0a0e13; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 16px 0; font-family: 'JetBrains Mono', monospace; }
+  .code-header { background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .code-lang { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .code-dots { display: flex; gap: 5px; }
+  .code-dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-red { background: #ff5f56; } .dot-yellow-c { background: #ffbd2e; } .dot-green-c { background: #27c93f; }
+  .code-body { padding: 20px; font-size: 13px; line-height: 1.9; color: #79c0ff; overflow-x: auto; }
+  .code-body .cmd { color: #3fb950; }
+  .code-body .comment { color: #6e7681; font-style: italic; }
+  .code-body .param { color: #ffa657; }
+  .code-body .value { color: #a5d6ff; }
+  .code-body .output { color: #8b949e; }
+  .code-body .prompt { color: #e3b341; }
+
+  .spec-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; }
+  .spec-table th { background: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 16px; text-align: left; border-bottom: 2px solid var(--border); }
+  .spec-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
+  .spec-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+  .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent-blue); border: 1px solid rgba(88,166,255,0.3); }
+  .badge-green { background: rgba(63,185,80,0.15); color: var(--accent-green); border: 1px solid rgba(63,185,80,0.3); }
+  .badge-orange { background: rgba(247,129,102,0.15); color: var(--accent-orange); border: 1px solid rgba(247,129,102,0.3); }
+  .badge-purple { background: rgba(188,140,255,0.15); color: var(--accent-purple); border: 1px solid rgba(188,140,255,0.3); }
+  .badge-yellow { background: rgba(227,179,65,0.15); color: var(--accent-yellow); border: 1px solid rgba(227,179,65,0.3); }
+  .badge-teal { background: rgba(57,211,195,0.15); color: var(--accent-teal); border: 1px solid rgba(57,211,195,0.3); }
+  .badge-gray { background: rgba(139,148,158,0.15); color: var(--text-secondary); border: 1px solid var(--border); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0; }
+
+  ul.topic-list { list-style: none; padding: 0; margin: 12px 0; }
+  ul.topic-list li { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; font-size: 14px; color: var(--text-secondary); line-height: 1.6; border-bottom: 1px solid rgba(48,54,61,0.5); }
+  ul.topic-list li:last-child { border-bottom: none; }
+  ul.topic-list li::before { content: '▸'; color: var(--accent-blue); font-size: 11px; margin-top: 4px; flex-shrink: 0; }
+
+  .hl { background: rgba(88,166,255,0.12); color: var(--accent-blue); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-green { background: rgba(63,185,80,0.12); color: var(--accent-green); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-orange { background: rgba(247,129,102,0.12); color: var(--accent-orange); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-purple { background: rgba(188,140,255,0.12); color: var(--accent-purple); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-yellow { background: rgba(227,179,65,0.12); color: var(--accent-yellow); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+
+  /* Diagram containers */
+  .diagram-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; overflow-x: auto; }
+  .diagram-caption { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 12px; font-style: italic; }
+
+  /* SVG diagrams */
+  .svg-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin: 20px 0; display: flex; flex-direction: column; align-items: center; }
+  .svg-wrap svg { max-width: 100%; height: auto; }
+
+  /* partition bar visual */
+  .disk-bar-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; }
+  .disk-bar-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 500; }
+  .disk-bar { display: flex; height: 52px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-bright); margin-bottom: 10px; }
+  .part-root { flex: 1; background: linear-gradient(90deg, rgba(247,129,102,0.4), rgba(247,129,102,0.25)); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--accent-orange); flex-direction: column; gap: 2px; border-right: 2px solid rgba(247,129,102,0.5); }
+  .part-data1 { flex: 2; background: linear-gradient(90deg, rgba(88,166,255,0.25), rgba(88,166,255,0.4)); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--accent-blue); flex-direction: column; gap: 2px; border-right: 2px solid rgba(88,166,255,0.5); }
+  .part-data2 { flex: 2; background: linear-gradient(90deg, rgba(63,185,80,0.25), rgba(63,185,80,0.4)); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--accent-green); flex-direction: column; gap: 2px; }
+
+  /* Interview Q&A */
+  .qa-block { background: var(--bg-card); border: 1px solid rgba(57,211,195,0.3); border-radius: 12px; padding: 20px; margin: 12px 0; }
+  .qa-q { font-size: 14px; font-weight: 600; color: var(--accent-teal); margin-bottom: 10px; display: flex; gap: 8px; }
+  .qa-a { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; padding-left: 24px; }
+
+  /* Step flow */
+  .step-flow { display: flex; flex-direction: column; gap: 0; margin: 16px 0; }
+  .step-item { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.4); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--accent-blue); flex-shrink: 0; margin-top: 2px; }
+  .step-content { flex: 1; }
+  .step-title { font-weight: 600; font-size: 14px; color: var(--text-primary); margin-bottom: 4px; }
+  .step-desc { font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; }
+
+  /* RDB sub-db cards */
+  .rdb-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 20px 0; }
+  .rdb-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; transition: border-color 0.2s; }
+  .rdb-card:hover { border-color: var(--border-bright); }
+  .rdb-name { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .rdb-full { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; }
+  .rdb-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+  .rdb-card.vldb { border-left: 3px solid var(--accent-blue); }
+  .rdb-card.vldb .rdb-name { color: var(--accent-blue); }
+  .rdb-card.vif { border-left: 3px solid var(--accent-teal); }
+  .rdb-card.vif .rdb-name { color: var(--accent-teal); }
+  .rdb-card.bcom { border-left: 3px solid var(--accent-orange); }
+  .rdb-card.bcom .rdb-name { color: var(--accent-orange); }
+  .rdb-card.mgmt { border-left: 3px solid var(--accent-green); }
+  .rdb-card.mgmt .rdb-name { color: var(--accent-green); }
+  .rdb-card.crs { border-left: 3px solid var(--accent-purple); }
+  .rdb-card.crs .rdb-name { color: var(--accent-purple); }
+
+  /* Quorum meter */
+  .quorum-visual { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; }
+  .quorum-bar-wrap { margin: 16px 0; }
+  .quorum-bar { height: 36px; border-radius: 6px; background: var(--bg-secondary); position: relative; border: 1px solid var(--border); overflow: hidden; }
+  .quorum-fill { height: 100%; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; }
+  .fill-ok { background: linear-gradient(90deg, rgba(63,185,80,0.4), rgba(63,185,80,0.6)); color: var(--accent-green); }
+  .fill-warn { background: linear-gradient(90deg, rgba(227,179,65,0.4), rgba(227,179,65,0.6)); color: var(--accent-yellow); }
+  .fill-fail { background: linear-gradient(90deg, rgba(247,129,102,0.4), rgba(247,129,102,0.6)); color: var(--accent-orange); }
+  .quorum-label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+
+  /* Aggregate RAID visual */
+  .aggr-visual { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; }
+  .rg-box { border: 1px solid var(--border-bright); border-radius: 8px; padding: 14px; margin-bottom: 12px; }
+  .rg-title { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent-yellow); margin-bottom: 10px; font-weight: 700; }
+  .disk-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .disk-cell { width: 52px; height: 52px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; flex-direction: column; gap: 1px; }
+  .disk-data-cell { background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.4); color: var(--accent-blue); }
+  .disk-p-cell { background: rgba(247,129,102,0.15); border: 1px solid rgba(247,129,102,0.4); color: var(--accent-orange); }
+  .disk-dp-cell { background: rgba(188,140,255,0.15); border: 1px solid rgba(188,140,255,0.4); color: var(--accent-purple); }
+
+  /* RAIDTYPE table */
+  .raid-type-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin: 16px 0; }
+  .rt-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+  .rt-name { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  .rt-desc { font-size: 11.5px; color: var(--text-muted); line-height: 1.5; }
+
+  .mermaid-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; overflow-x: auto; }
+  .mermaid { text-align: center; }
+
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); }
+    .main-content { margin-left: 0; max-width: 100vw; }
+    .content-area { padding: 24px 20px 60px; }
+    .top-header { padding: 40px 20px 30px; }
+    .main-title { font-size: 26px; }
+    .grid-2, .grid-3, .rdb-grid, .raid-type-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ SIDEBAR ══════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="logo-icon">💾</div>
+      <span>ONTAP Deep Dive</span>
+    </div>
+    <div class="sidebar-subtitle">Part 5 · Ownership, RDB, Quorum & Aggregates</div>
+  </div>
+  <nav class="toc-nav">
+    <div class="toc-section-label">Overview</div>
+    <a href="#intro" class="toc-link"><span class="toc-num">00</span> What This Covers</a>
+
+    <div class="toc-section-label">Part I — Partition Disk Ownership</div>
+    <a href="#adp-ownership" class="toc-link"><span class="toc-num">01</span> Partitioned Disk Ownership</a>
+    <a href="#partition-types" class="toc-link sub"><span class="toc-num">↳</span> ADP v1 vs ADP v2</a>
+    <a href="#ownership-distribution" class="toc-link sub"><span class="toc-num">↳</span> Ownership Distribution</a>
+    <a href="#auto-assign" class="toc-link"><span class="toc-num">02</span> Auto-Assign Mechanism</a>
+    <a href="#ownership-cmds" class="toc-link sub"><span class="toc-num">↳</span> Key CLI Commands</a>
+    <a href="#convert-partition" class="toc-link"><span class="toc-num">03</span> Converting Non-Partitioned Disks</a>
+
+    <div class="toc-section-label">Part II — Configuration Architecture</div>
+    <a href="#seven-vs-cmode" class="toc-link"><span class="toc-num">04</span> 7-Mode vs Cluster Mode</a>
+    <a href="#rdb" class="toc-link"><span class="toc-num">05</span> Replication Database (RDB)</a>
+    <a href="#rdb-subdbs" class="toc-link sub"><span class="toc-num">↳</span> RDB Sub-Databases</a>
+    <a href="#master-rdb" class="toc-link sub"><span class="toc-num">↳</span> Master vs Secondary RDB</a>
+    <a href="#rdb-cmds" class="toc-link sub"><span class="toc-num">↳</span> RDB CLI Commands</a>
+
+    <div class="toc-section-label">Part III — Cluster Resilience</div>
+    <a href="#quorum" class="toc-link"><span class="toc-num">06</span> Cluster Quorum</a>
+    <a href="#quorum-scenarios" class="toc-link sub"><span class="toc-num">↳</span> Quorum Scenarios</a>
+    <a href="#epsilon" class="toc-link"><span class="toc-num">07</span> Epsilon — Tiebreaker Node</a>
+    <a href="#epsilon-manage" class="toc-link sub"><span class="toc-num">↳</span> Managing Epsilon</a>
+
+    <div class="toc-section-label">Part IV — Aggregates</div>
+    <a href="#aggr-intro" class="toc-link"><span class="toc-num">08</span> What Is an Aggregate?</a>
+    <a href="#raid-types" class="toc-link"><span class="toc-num">09</span> RAID Types in ONTAP</a>
+    <a href="#rg-sizing" class="toc-link sub"><span class="toc-num">↳</span> RAID Group Sizing</a>
+    <a href="#aggr-create" class="toc-link"><span class="toc-num">10</span> Creating Aggregates</a>
+    <a href="#aggr-manage" class="toc-link sub"><span class="toc-num">↳</span> Managing Aggregates</a>
+    <a href="#disk-zeroing" class="toc-link"><span class="toc-num">11</span> Disk Zeroing</a>
+
+    <div class="toc-section-label">Review</div>
+    <a href="#interview" class="toc-link"><span class="toc-num">12</span> Interview Q&amp;A</a>
+    <a href="#summary" class="toc-link"><span class="toc-num">13</span> Summary</a>
+
+    <div class="toc-section-label">Author</div>
+    <a href="#about-author" class="toc-link"><span class="toc-num">✦</span> About the Author</a>
+  </nav>
+</aside>
+
+<!-- ══════════════════ MAIN CONTENT ══════════════════ -->
+<main class="main-content">
+
+  <!-- Header -->
+  <div class="top-header">
+    <div class="header-badge">📘 ONTAP Deep Dive · Part 5</div>
+    <h1 class="main-title">Partition Ownership, RDB, Cluster Quorum, Epsilon &amp; Aggregates</h1>
+    <p class="header-desc">
+      A comprehensive walkthrough of Advanced Drive Partitioning ownership mechanics, the Replication Database architecture, cluster quorum and tiebreaker fundamentals, and aggregate creation with RAID group design — all you need to build and maintain resilient ONTAP storage.
+    </p>
+    <div class="header-meta">
+      <div class="meta-chip"><div class="dot" style="background:var(--accent-blue)"></div>Disk Partitioning</div>
+      <div class="meta-chip"><div class="dot" style="background:var(--accent-green)"></div>RDB Architecture</div>
+      <div class="meta-chip"><div class="dot" style="background:var(--accent-purple)"></div>Quorum &amp; Epsilon</div>
+      <div class="meta-chip"><div class="dot" style="background:var(--accent-yellow)"></div>Aggregate Design</div>
+      <div class="meta-chip"><div class="dot" style="background:var(--accent-teal)"></div>~2 hr read</div>
+    </div>
+  </div>
+
+  <div class="content-area">
+
+    <!-- ══ SECTION 00 — INTRO ══ -->
+    <section class="section" id="intro">
+      <div class="section-header">
+        <div class="section-icon icon-blue">🗺️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 00</div>
+          <h2>What This Tutorial Covers</h2>
+        </div>
+      </div>
+      <p>This guide continues the ONTAP storage deep dive, focusing on five interconnected pillars that every storage engineer needs to understand before managing production ONTAP clusters:</p>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">🔑 Partitioned Disk Ownership</div>
+          <ul class="topic-list">
+            <li>How ADP v2 partitions are distributed across controllers</li>
+            <li>Auto-assign vs manual ownership assignment</li>
+            <li>Converting non-partitioned disks to partitioned</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">🗄️ Replication Database (RDB)</div>
+          <ul class="topic-list">
+            <li>Why cluster mode eliminated configuration files</li>
+            <li>Five RDB sub-databases and their responsibilities</li>
+            <li>Master vs secondary RDB election</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">⚖️ Cluster Quorum</div>
+          <ul class="topic-list">
+            <li>The simple majority condition</li>
+            <li>What happens when quorum is broken</li>
+            <li>Epsilon as the cluster tiebreaker</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">🧱 Aggregates &amp; RAID Groups</div>
+          <ul class="topic-list">
+            <li>RAID types: RAID-DP, RAID-TEC, RAID4</li>
+            <li>RAID group sizing and usable capacity math</li>
+            <li>Creating, verifying, and zeroing aggregates</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SECTION 01 — PARTITION OWNERSHIP ══ -->
+    <section class="section" id="adp-ownership">
+      <div class="section-header">
+        <div class="section-icon icon-orange">🔑</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 01</div>
+          <h2>Partitioned Disk Ownership</h2>
+        </div>
+      </div>
+
+      <p>When ONTAP implements <strong>Advanced Drive Partitioning (ADP)</strong>, each physical disk is sliced into logical partitions that can be independently assigned to different controllers. Unlike traditional whole-disk ownership, partitioned disks require a more granular ownership model.</p>
+
+      <div class="callout info">
+        <div class="callout-icon">ℹ️</div>
+        <div class="callout-content">
+          <div class="callout-title">Identifying Partitioned Disks</div>
+          <div class="callout-text">Run <span class="hl">disk show</span> — if the <strong>Type</strong> column shows <span class="hl-orange">shared</span>, those disks are partitioned. Non-partitioned disks display a standard type like SAS or SSD. For definitive confirmation, use <span class="hl">disk partition show</span> at advanced privilege.</div>
+        </div>
+      </div>
+
+      <h3 id="partition-types" style="font-size:16px;color:var(--text-primary);margin:28px 0 16px;font-family:'Sora',sans-serif;">ADP v1 vs ADP v2 Partition Layouts</h3>
+
+      <div class="disk-bar-wrap">
+        <div class="disk-bar-label">📀 ADP v1 — Two partitions per disk</div>
+        <div class="disk-bar">
+          <div class="part-root" style="flex:1;">ROOT<span style="font-size:9px;font-weight:400;">~25%</span></div>
+          <div class="part-data1" style="flex:3;">DATA<span style="font-size:9px;font-weight:400;">~75%</span></div>
+        </div>
+        <div class="disk-bar-label" style="margin-top:16px;">📀 ADP v2 — Three partitions per disk</div>
+        <div class="disk-bar">
+          <div class="part-root" style="flex:1;">ROOT<span style="font-size:9px;font-weight:400;">~10%</span></div>
+          <div class="part-data1" style="flex:2;">DATA 1<span style="font-size:9px;font-weight:400;">~45%</span></div>
+          <div class="part-data2" style="flex:2;">DATA 2<span style="font-size:9px;font-weight:400;">~45%</span></div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:12px;font-style:italic;">Figure 1 — ADP partition layouts. ADP v2 (3-partition) is most common on modern AFF/FAS platforms.</div>
+      </div>
+
+      <h3 id="ownership-distribution" style="font-size:16px;color:var(--text-primary);margin:28px 0 16px;font-family:'Sora',sans-serif;">Ownership Distribution Strategy</h3>
+
+      <p>With ADP v2, a shelf of 24 drives generates three distinct partition types. The recommended distribution in an HA pair (Controller A + Controller B) follows a balanced split:</p>
+
+      <!-- SVG ownership diagram -->
+      <div class="svg-wrap">
+        <svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:320px;">
+          <defs>
+            <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#8b949e"/>
+            </marker>
+          </defs>
+          <!-- Background -->
+          <rect width="760" height="320" fill="#1c2333" rx="10"/>
+
+          <!-- Shelf label -->
+          <rect x="290" y="20" width="180" height="44" rx="8" fill="#161b22" stroke="#484f58" stroke-width="1.2"/>
+          <text x="380" y="38" text-anchor="middle" fill="#8b949e" font-size="10" font-family="monospace">24-Drive Disk Shelf</text>
+          <text x="380" y="55" text-anchor="middle" fill="#e6edf3" font-size="12" font-family="monospace" font-weight="700">SHELF-01</text>
+
+          <!-- Arrow down from shelf -->
+          <line x1="380" y1="64" x2="380" y2="100" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arr)"/>
+
+          <!-- Partition types box -->
+          <rect x="220" y="100" width="320" height="50" rx="8" fill="#21283a" stroke="#30363d" stroke-width="1"/>
+          <text x="260" y="122" text-anchor="middle" fill="#f78166" font-size="11" font-family="monospace" font-weight="700">24× ROOT</text>
+          <text x="380" y="122" text-anchor="middle" fill="#58a6ff" font-size="11" font-family="monospace" font-weight="700">24× DATA-1</text>
+          <text x="500" y="122" text-anchor="middle" fill="#3fb950" font-size="11" font-family="monospace" font-weight="700">24× DATA-2</text>
+          <text x="260" y="138" text-anchor="middle" fill="#6e7681" font-size="9" font-family="monospace">partitions</text>
+          <text x="380" y="138" text-anchor="middle" fill="#6e7681" font-size="9" font-family="monospace">partitions</text>
+          <text x="500" y="138" text-anchor="middle" fill="#6e7681" font-size="9" font-family="monospace">partitions</text>
+
+          <!-- Arrows to controllers -->
+          <line x1="280" y1="150" x2="180" y2="200" stroke="#8b949e" stroke-width="1.2" marker-end="url(#arr)" stroke-dasharray="4,3"/>
+          <line x1="380" y1="150" x2="180" y2="200" stroke="#8b949e" stroke-width="1.2" marker-end="url(#arr)" stroke-dasharray="4,3"/>
+          <line x1="390" y1="150" x2="580" y2="200" stroke="#8b949e" stroke-width="1.2" marker-end="url(#arr)" stroke-dasharray="4,3"/>
+          <line x1="490" y1="150" x2="580" y2="200" stroke="#8b949e" stroke-width="1.2" marker-end="url(#arr)" stroke-dasharray="4,3"/>
+          <!-- Root arrows to both -->
+          <line x1="260" y1="150" x2="150" y2="200" stroke="#f78166" stroke-width="1.2" marker-end="url(#arr)"/>
+          <line x1="270" y1="150" x2="580" y2="200" stroke="#f78166" stroke-width="1.2" marker-end="url(#arr)" stroke-dasharray="3,3"/>
+
+          <!-- Controller A -->
+          <rect x="60" y="200" width="220" height="90" rx="10" fill="#161b22" stroke="#58a6ff" stroke-width="1.8"/>
+          <text x="170" y="222" text-anchor="middle" fill="#58a6ff" font-size="13" font-family="monospace" font-weight="700">Controller-A</text>
+          <text x="170" y="243" text-anchor="middle" fill="#f78166" font-size="11" font-family="monospace">12× Root Partitions</text>
+          <text x="170" y="262" text-anchor="middle" fill="#58a6ff" font-size="11" font-family="monospace">24× Data-1 Partitions</text>
+          <text x="170" y="278" text-anchor="middle" fill="#6e7681" font-size="10" font-family="monospace">(more storage = more Data-1)</text>
+
+          <!-- Controller B -->
+          <rect x="480" y="200" width="220" height="90" rx="10" fill="#161b22" stroke="#3fb950" stroke-width="1.8"/>
+          <text x="590" y="222" text-anchor="middle" fill="#3fb950" font-size="13" font-family="monospace" font-weight="700">Controller-B</text>
+          <text x="590" y="243" text-anchor="middle" fill="#f78166" font-size="11" font-family="monospace">12× Root Partitions</text>
+          <text x="590" y="262" text-anchor="middle" fill="#3fb950" font-size="11" font-family="monospace">24× Data-2 Partitions</text>
+          <text x="590" y="278" text-anchor="middle" fill="#6e7681" font-size="10" font-family="monospace">(balanced HA pair)</text>
+
+          <!-- Legend -->
+          <text x="40" y="310" fill="#6e7681" font-size="9" font-family="monospace">Default balanced split: Root partitions shared 50/50 · Data-1 → Ctrl-A · Data-2 → Ctrl-B</text>
+        </svg>
+        <div class="diagram-caption">Figure 2 — Default ownership distribution for ADP v2 across an HA pair. Root partitions split 12/12; data partitions go to respective controllers.</div>
+      </div>
+
+      <div class="callout success">
+        <div class="callout-icon">✅</div>
+        <div class="callout-content">
+          <div class="callout-title">Flexible Ownership</div>
+          <div class="callout-text">Partition ownership is fully flexible. If Controller-A needs more storage capacity, you can assign <em>both</em> Data-1 and Data-2 partitions to it. ONTAP's software-based ownership model imposes no hard constraints — design it to match your workload requirements.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SECTION 02 — AUTO-ASSIGN ══ -->
+    <section class="section" id="auto-assign">
+      <div class="section-header">
+        <div class="section-icon icon-teal">🤖</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 02</div>
+          <h2>Auto-Assign Mechanism</h2>
+        </div>
+      </div>
+
+      <p>ONTAP includes an intelligent <strong>auto-assign</strong> feature that automatically allocates ownership to unowned disks and newly added shelves. When enabled, removing ownership from a disk triggers an immediate re-assignment based on internal load-balancing logic.</p>
+
+      <!-- Mermaid flowchart -->
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart TD
+    A[New Disk Added / Ownership Removed] --> B{Auto-Assign Enabled?}
+    B -->|Yes| C[ONTAP Evaluates Controller Load]
+    C --> D[Calculates Balanced Distribution]
+    D --> E[Assigns Ownership Automatically]
+    E --> F[Disk Appears in Spare Pool]
+    B -->|No| G[Disk Remains Unowned]
+    G --> H[Admin Manually Assigns via disk assign]
+    H --> F
+    style A fill:#21283a,stroke:#484f58,color:#e6edf3
+    style B fill:#21283a,stroke:#e3b341,color:#e3b341
+    style C fill:#21283a,stroke:#58a6ff,color:#58a6ff
+    style D fill:#21283a,stroke:#58a6ff,color:#58a6ff
+    style E fill:#21283a,stroke:#3fb950,color:#3fb950
+    style F fill:#21283a,stroke:#3fb950,color:#3fb950
+    style G fill:#21283a,stroke:#f78166,color:#f78166
+    style H fill:#21283a,stroke:#e3b341,color:#e3b341
+        </div>
+        <div class="diagram-caption">Figure 3 — Auto-assign decision flow. Best practice is to leave auto-assign enabled unless custom ownership is required.</div>
+      </div>
+
+      <h3 id="ownership-cmds" style="font-size:16px;color:var(--text-primary);margin:28px 0 16px;font-family:'Sora',sans-serif;">Key CLI Commands for Partition Ownership</h3>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">ONTAP CLI — Partition Ownership</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body">
+<span class="comment"># Check disk type — 'shared' indicates partitioned disk</span>
+<span class="prompt">cluster::></span> <span class="cmd">disk show</span>
+
+<span class="comment"># Confirm partition layout (ADP v1 or v2)</span>
+<span class="prompt">cluster::></span> <span class="cmd">disk partition show</span>
+
+<span class="comment"># Check auto-assign status across all nodes</span>
+<span class="prompt">cluster::></span> <span class="cmd">disk option show</span>
+
+<span class="comment"># Disable auto-assign on all nodes (use wildcard)</span>
+<span class="prompt">cluster::*></span> <span class="cmd">disk option modify</span> <span class="param">-node</span> <span class="value">*</span> <span class="param">-autoassign</span> <span class="value">off</span>
+
+<span class="comment"># View spare drives (shows partitions separately)</span>
+<span class="prompt">cluster::></span> <span class="cmd">storage aggregate show-spare-disks</span>
+
+<span class="comment"># Remove ownership of a specific partition (advanced mode required)</span>
+<span class="prompt">cluster::*></span> <span class="cmd">disk remove-ownership</span> <span class="param">-disk</span> <span class="value">2.1.15</span> <span class="param">-data2</span> <span class="value">true</span>
+
+<span class="comment"># Manually assign Data-2 partition to a specific controller</span>
+<span class="prompt">cluster::*></span> <span class="cmd">disk assign</span> <span class="param">-disk</span> <span class="value">2.1.15</span> <span class="param">-partition-type</span> <span class="value">data2</span> <span class="param">-owner</span> <span class="value">storage-ctrl-01</span>
+        </div>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-content">
+          <div class="callout-title">Advanced Mode Required</div>
+          <div class="callout-text">The <span class="hl">-partition-type</span> option in <span class="hl">disk remove-ownership</span> and <span class="hl">disk assign</span> is only visible at <span class="hl-yellow">advanced</span> or <span class="hl-orange">diagnostic</span> privilege levels. Attempting these commands in standard admin mode will not show partition-specific parameters.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SECTION 03 — CONVERT ══ -->
+    <section class="section" id="convert-partition">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🔄</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 03</div>
+          <h2>Converting Non-Partitioned Disks to Partitioned</h2>
+        </div>
+      </div>
+
+      <p>In some environments, a mix of non-partitioned and partitioned disks may exist on the same controller. While both can coexist, they <strong>cannot be combined within a single aggregate</strong>. If uniformity is required, ONTAP allows converting non-partitioned disks by using an existing partitioned disk as a sizing reference.</p>
+
+      <div class="callout danger">
+        <div class="callout-icon">🚫</div>
+        <div class="callout-content">
+          <div class="callout-title">No Mixing in Aggregates</div>
+          <div class="callout-text">Partitioned (ADP) and non-partitioned disks cannot be mixed inside a single aggregate. They may exist on the same controller, but must be in separate aggregates. Attempting to mix them is unsupported and will result in an error.</div>
+        </div>
+      </div>
+
+      <div class="step-flow">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Enter Diagnostic Mode</div>
+            <div class="step-desc">The <span class="hl">disk create-partition</span> command is only accessible at the <span class="hl-orange">diagnostic</span> privilege level.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Identify a Reference Disk</div>
+            <div class="step-desc">Select an existing partitioned disk of the same model/size as your reference (source). ONTAP will replicate its partition sizing onto the target disk.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Execute the Conversion</div>
+            <div class="step-desc">Run <span class="hl">disk create-partition -disk &lt;target&gt; -reference-disk &lt;source&gt;</span>. ONTAP will display the partition layout and prompt for confirmation before proceeding.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">Verify in Spare Pool</div>
+            <div class="step-desc">After conversion, the disk transitions from displaying separately to appearing as partitions within the spare pool, confirming successful conversion.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SECTION 04 — 7-MODE VS CMODE ══ -->
+    <section class="section" id="seven-vs-cmode">
+      <div class="section-header">
+        <div class="section-icon icon-yellow">📁</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 04</div>
+          <h2>Configuration Storage: 7-Mode vs Cluster Mode</h2>
+        </div>
+      </div>
+
+      <p>Understanding how ONTAP stores controller configurations helps explain both the architectural shift from legacy 7-Mode to Cluster Mode, and why the Replication Database (RDB) is central to modern ONTAP reliability.</p>
+
+      <div class="grid-2">
+        <div class="card" style="border-color:rgba(247,129,102,0.3);">
+          <div class="card-title" style="color:var(--accent-orange);">⚠️ 7-Mode — File-Based Config</div>
+          <p>Configuration is stored in plain text files under <span class="hl-orange">/etc/</span> in the root volume (<span class="hl">vol0</span>). Files like <span class="hl-orange">rc</span>, <span class="hl-orange">hosts</span>, and <span class="hl-orange">resolv.conf</span> must be manually edited.</p>
+          <ul class="topic-list">
+            <li>Every change requires two steps: run a command <em>and</em> edit the config file</li>
+            <li>Forgetting to update the file causes settings to be lost on reboot</li>
+            <li>Direct file edits carry risk of corrupting other settings</li>
+            <li>No built-in replication of config state to partner nodes</li>
+          </ul>
+        </div>
+        <div class="card" style="border-color:rgba(63,185,80,0.3);">
+          <div class="card-title" style="color:var(--accent-green);">✅ Cluster Mode — Database-Driven Config</div>
+          <p>All configuration is managed via the <strong>Replication Database (RDB)</strong> stored inside <span class="hl-green">/mroot/</span> of each node's root volume. Files are written automatically by the database — no manual editing required.</p>
+          <ul class="topic-list">
+            <li>Single command updates the database; file update is automatic</li>
+            <li>Configurations persist across reboots without extra steps</li>
+            <li>RDB replicates config to all nodes via cluster private network</li>
+            <li>Eliminates the risk of inconsistent file-level edits</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SECTION 05 — RDB ══ -->
+    <section class="section" id="rdb">
+      <div class="section-header">
+        <div class="section-icon icon-blue">🗄️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 05</div>
+          <h2>Replication Database (RDB)</h2>
+        </div>
+      </div>
+
+      <p>The <strong>Replication Database (RDB)</strong> is the configuration backbone of ONTAP Cluster Mode. Every node in a cluster maintains its own local RDB instance, and all instances are continuously synchronized through the cluster private network — ensuring configuration consistency across the entire cluster.</p>
+
+      <!-- Mermaid architecture -->
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart LR
+    subgraph CPN["🌐 Cluster Private Network"]
+        direction TB
+        N1["Node-01\nRDB (Master)"]
+        N2["Node-02\nRDB (Secondary)"]
+        N3["Node-03\nRDB (Secondary)"]
+        N4["Node-04\nRDB (Secondary)"]
+        N1 <-->|sync| N2
+        N1 <-->|sync| N3
+        N1 <-->|sync| N4
+        N2 <-->|sync| N3
+        N2 <-->|sync| N4
+    end
+    CMD["CLI Command\nor API Call"] --> N1
+    N1 --> CFG["Config Written to\n/mroot/ Files"]
+    style N1 fill:#21283a,stroke:#58a6ff,color:#58a6ff
+    style N2 fill:#21283a,stroke:#3fb950,color:#3fb950
+    style N3 fill:#21283a,stroke:#3fb950,color:#3fb950
+    style N4 fill:#21283a,stroke:#3fb950,color:#3fb950
+    style CMD fill:#21283a,stroke:#e3b341,color:#e3b341
+    style CFG fill:#21283a,stroke:#8b949e,color:#8b949e
+    style CPN fill:#161b22,stroke:#484f58,color:#8b949e
+        </div>
+        <div class="diagram-caption">Figure 4 — RDB synchronization model. Master RDB ensures all node databases stay in sync via the cluster private interconnect.</div>
+      </div>
+
+      <h3 id="rdb-subdbs" style="font-size:16px;color:var(--text-primary);margin:28px 0 16px;font-family:'Sora',sans-serif;">RDB Sub-Databases</h3>
+      <p>The RDB is organized into specialized sub-databases, each responsible for a distinct aspect of cluster configuration:</p>
+
+      <div class="rdb-grid">
+        <div class="rdb-card vldb">
+          <div class="rdb-name">VLDB</div>
+          <div class="rdb-full">Volume Location Database</div>
+          <div class="rdb-desc">Tracks the location and metadata of all aggregates and volumes across the cluster. When a volume is created on any node, VLDB is updated and the information replicated to every other node's VLDB instance.</div>
+        </div>
+        <div class="rdb-card vif">
+          <div class="rdb-name">VIFMGR</div>
+          <div class="rdb-full">Virtual Interface Manager</div>
+          <div class="rdb-desc">Stores all network configuration state — logical interfaces (LIFs), port groups, VLANs, and interface failover policies. All NAS/SAN networking definitions live here.</div>
+        </div>
+        <div class="rdb-card bcom">
+          <div class="rdb-name">BComDB</div>
+          <div class="rdb-full">Block Communication &amp; Operational Manager</div>
+          <div class="rdb-desc">Manages all SAN protocol configurations including iSCSI targets, FC initiator groups, LUN mappings, and zoning-related operational data for block access protocols.</div>
+        </div>
+        <div class="rdb-card mgmt">
+          <div class="rdb-name">MGMTD</div>
+          <div class="rdb-full">Management Daemon</div>
+          <div class="rdb-desc">Handles cluster internal operations — node health monitoring, storage failover coordination, background processes, and event-driven automation. If failover doesn't behave as expected, MGMTD may be the place to investigate.</div>
+        </div>
+        <div class="rdb-card crs" style="grid-column:span 2;">
+          <div class="rdb-name">CRS &nbsp;<span class="badge badge-purple">MetroCluster Only</span></div>
+          <div class="rdb-full">Cluster Replication Service / Session</div>
+          <div class="rdb-desc">An optional sub-database that becomes active only when the cluster is configured as a <strong>MetroCluster</strong>. In standard (non-Metro) clusters, CRS exists but remains dormant. Introduced in Data ONTAP 8.3, this was one of the most significant architectural changes in ONTAP history — enabling synchronous replication across geographically separated sites.</div>
+        </div>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <div class="callout-title">Interview Tip — RDB Version History</div>
+          <div class="callout-text">Up to <strong>Data ONTAP 8.2</strong>: RDB has <strong>4 sub-databases</strong> (no CRS, as MetroCluster wasn't supported in cluster mode). From <strong>Data ONTAP 8.3 onwards</strong>: RDB gains a <strong>5th sub-database</strong> (CRS) as MetroCluster support was introduced. The 8.2→8.3 upgrade was historically one of the most complex ONTAP upgrades ever performed.</div>
+        </div>
+      </div>
+
+      <h3 id="master-rdb" style="font-size:16px;color:var(--text-primary);margin:28px 0 16px;font-family:'Sora',sans-serif;">Master vs Secondary RDB — Election Process</h3>
+
+      <p>Within a cluster, one node's RDB is elected as the <strong>Master RDB</strong>. The master carries additional responsibility — it ensures configuration changes are propagated to all other nodes. There is no privilege or special access associated with being master; it is purely an internal coordination role.</p>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+sequenceDiagram
+    participant Admin as Admin CLI
+    participant Master as Node-01 (Master RDB)
+    participant Sec1 as Node-02 (Secondary)
+    participant Sec2 as Node-03 (Secondary)
+
+    Admin->>Master: Configuration change
+    Master->>Master: Update local RDB
+    Master->>Sec1: Replicate config change
+    Master->>Sec2: Replicate config change
+    Sec1-->>Master: Acknowledge
+    Sec2-->>Master: Acknowledge
+    Note over Master: Node-01 goes offline
+    Sec1->>Sec2: Election via cluster network
+    Note over Sec1: Node-02 elected as new Master
+    Sec1->>Sec1: Assumes Master responsibility
+        </div>
+        <div class="diagram-caption">Figure 5 — RDB master election sequence. When the master node goes offline, remaining nodes automatically elect a new master. The previous master does NOT reclaim its role when it returns.</div>
+      </div>
+
+      <h3 id="rdb-cmds" style="font-size:16px;color:var(--text-primary);margin:28px 0 16px;font-family:'Sora',sans-serif;">RDB Inspection Commands</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">ONTAP CLI — RDB Status</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body">
+<span class="comment"># Must be in advanced mode to view RDB ring status</span>
+<span class="prompt">cluster::></span> <span class="cmd">set advanced</span>
+
+<span class="comment"># Show all RDB sub-databases across all nodes</span>
+<span class="prompt">cluster::*></span> <span class="cmd">cluster ring show</span>
+
+<span class="output">Node      Unit Name    DB Type    Master Node    Ring Status
+--------- ------------ ---------- -------------- -----------
+node-01   VLDB         RDB        node-01        master
+node-01   VIFMGR       RDB        node-01        master
+node-01   BComDB       RDB        node-01        master
+node-01   MGMTD        RDB        node-01        master
+node-01   CRS          RDB        node-01        master
+node-02   VLDB         RDB        node-01        secondary
+node-02   VIFMGR       RDB        node-01        secondary
+...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SECTION 06 — QUORUM ══ -->
+    <section class="section" id="quorum">
+      <div class="section-header">
+        <div class="section-icon icon-yellow">⚖️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 06</div>
+          <h2>Cluster Quorum</h2>
+        </div>
+      </div>
+
+      <p><strong>Quorum</strong> is a cluster health condition that ONTAP evaluates continuously. For a cluster to remain in a functional, data-serving state, it must satisfy the quorum condition at all times. Failing to satisfy quorum causes ONTAP to forcibly shut down surviving nodes to prevent data corruption from split-brain scenarios.</p>
+
+      <div class="card" style="border-color:rgba(227,179,65,0.4);background:rgba(227,179,65,0.05);">
+        <div class="card-title" style="color:var(--accent-yellow);font-size:18px;">The Quorum Condition</div>
+        <p style="font-size:16px;color:var(--text-primary);text-align:center;padding:16px 0;">More than <strong style="color:var(--accent-yellow);font-size:22px;">50%</strong> of cluster nodes must be operational</p>
+        <p style="text-align:center;font-size:13.5px;">A majority of nodes must be healthy and reachable for the cluster to serve data.</p>
+      </div>
+
+      <h3 id="quorum-scenarios" style="font-size:16px;color:var(--text-primary);margin:28px 0 16px;font-family:'Sora',sans-serif;">Quorum Scenarios — 6-Node Cluster</h3>
+
+      <div class="quorum-visual">
+        <div class="quorum-bar-wrap">
+          <div class="quorum-label">✅ Scenario A: 2 nodes down, 4 nodes up (67% healthy)</div>
+          <div class="quorum-bar"><div class="quorum-fill fill-ok" style="width:67%;">QUORUM SATISFIED — Cluster operational</div></div>
+        </div>
+        <div class="quorum-bar-wrap">
+          <div class="quorum-label">⚠️ Scenario B: 3 nodes down, 3 nodes up (50% healthy) — Tie condition</div>
+          <div class="quorum-bar"><div class="quorum-fill fill-warn" style="width:50%;">QUORUM INDETERMINATE — Epsilon decides</div></div>
+        </div>
+        <div class="quorum-bar-wrap">
+          <div class="quorum-label">🚨 Scenario C: 4 nodes down, 2 nodes up (33% healthy)</div>
+          <div class="quorum-bar"><div class="quorum-fill fill-fail" style="width:33%;">QUORUM FAILED — ONTAP shuts down surviving nodes</div></div>
+        </div>
+        <div style="font-size:11.5px;color:var(--text-muted);margin-top:10px;">Figure 6 — Quorum scenarios for a 6-node cluster. Only 50/50 ties require Epsilon intervention.</div>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-icon">ℹ️</div>
+        <div class="callout-content">
+          <div class="callout-title">Cluster Private Network — The Lifeline</div>
+          <div class="callout-text">Even when an entire HA pair goes offline, the cluster private network allows remaining active nodes to access the storage connected to those failed nodes — serving data through indirect paths. Performance may degrade, but data remains accessible as long as quorum is satisfied. This is the key purpose of the high-speed cluster interconnect.</div>
+        </div>
+      </div>
+
+      <!-- Mermaid quorum flow -->
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart TD
+    A[Node failure detected] --> B{Count surviving nodes}
+    B --> C{>50% up?}
+    C -->|Yes| D[Quorum satisfied\nCluster continues serving data]
+    C -->|Exactly 50%| E{Is Epsilon on\na surviving node?}
+    E -->|Yes| F[Epsilon adds +1 virtual vote\nQuorum satisfied — cluster survives]
+    E -->|No| G[Quorum failed\nONTAP shuts down remaining nodes\nCluster goes offline]
+    C -->|No (&lt;50%)| G
+    style A fill:#21283a,stroke:#484f58,color:#e6edf3
+    style B fill:#21283a,stroke:#8b949e,color:#8b949e
+    style C fill:#21283a,stroke:#e3b341,color:#e3b341
+    style D fill:#21283a,stroke:#3fb950,color:#3fb950
+    style E fill:#21283a,stroke:#bc8cff,color:#bc8cff
+    style F fill:#21283a,stroke:#3fb950,color:#3fb950
+    style G fill:#21283a,stroke:#f78166,color:#f78166
+        </div>
+        <div class="diagram-caption">Figure 7 — Quorum decision tree. Epsilon is the decisive factor only in exact 50/50 tie scenarios.</div>
+      </div>
+    </section>
+
+    <!-- ══ SECTION 07 — EPSILON ══ -->
+    <section class="section" id="epsilon">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🎯</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 07</div>
+          <h2>Epsilon — The Cluster Tiebreaker</h2>
+        </div>
+      </div>
+
+      <p>Epsilon is a <strong>logical software token</strong> that resides on exactly one node in a multi-node cluster. It functions as a tie-breaking vote when exactly half the cluster nodes are down. Think of it like a casting vote in a tied parliamentary vote — whoever holds it determines the outcome.</p>
+
+      <!-- SVG Epsilon diagram -->
+      <div class="svg-wrap">
+        <svg viewBox="0 0 740 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:380px;">
+          <!-- BG -->
+          <rect width="740" height="380" fill="#1c2333" rx="10"/>
+          <text x="370" y="30" text-anchor="middle" fill="#8b949e" font-size="12" font-family="monospace">4-Node Cluster — 2 nodes down scenario</text>
+
+          <!-- Nodes -->
+          <!-- Node 1 - UP with Epsilon -->
+          <rect x="40" y="50" width="140" height="100" rx="10" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
+          <circle cx="110" cy="80" r="18" fill="rgba(63,185,80,0.2)" stroke="#3fb950" stroke-width="2"/>
+          <text x="110" y="85" text-anchor="middle" fill="#3fb950" font-size="11" font-family="monospace" font-weight="700">NODE-1</text>
+          <rect x="60" y="110" width="80" height="22" rx="5" fill="rgba(188,140,255,0.2)" stroke="#bc8cff" stroke-width="1.5"/>
+          <text x="100" y="125" text-anchor="middle" fill="#bc8cff" font-size="10" font-family="monospace" font-weight="700">ε EPSILON</text>
+          <text x="110" y="148" text-anchor="middle" fill="#3fb950" font-size="9" font-family="monospace">● UP  (votes: 2)</text>
+
+          <!-- Node 2 - UP -->
+          <rect x="220" y="50" width="140" height="100" rx="10" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
+          <circle cx="290" cy="80" r="18" fill="rgba(63,185,80,0.2)" stroke="#3fb950" stroke-width="2"/>
+          <text x="290" y="85" text-anchor="middle" fill="#3fb950" font-size="11" font-family="monospace" font-weight="700">NODE-2</text>
+          <text x="290" y="148" text-anchor="middle" fill="#3fb950" font-size="9" font-family="monospace">● UP  (votes: 1)</text>
+
+          <!-- Node 3 - DOWN -->
+          <rect x="400" y="50" width="140" height="100" rx="10" fill="#161b22" stroke="#f78166" stroke-width="2" stroke-dasharray="5,3"/>
+          <circle cx="470" cy="80" r="18" fill="rgba(247,129,102,0.1)" stroke="#f78166" stroke-width="2"/>
+          <text x="470" y="85" text-anchor="middle" fill="#f78166" font-size="11" font-family="monospace" font-weight="700">NODE-3</text>
+          <text x="470" y="148" text-anchor="middle" fill="#f78166" font-size="9" font-family="monospace">✕ DOWN (votes: 0)</text>
+
+          <!-- Node 4 - DOWN -->
+          <rect x="580" y="50" width="140" height="100" rx="10" fill="#161b22" stroke="#f78166" stroke-width="2" stroke-dasharray="5,3"/>
+          <circle cx="650" cy="80" r="18" fill="rgba(247,129,102,0.1)" stroke="#f78166" stroke-width="2"/>
+          <text x="650" y="85" text-anchor="middle" fill="#f78166" font-size="11" font-family="monospace" font-weight="700">NODE-4</text>
+          <text x="650" y="148" text-anchor="middle" fill="#f78166" font-size="9" font-family="monospace">✕ DOWN (votes: 0)</text>
+
+          <!-- Vote count section -->
+          <rect x="40" y="185" width="660" height="70" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+          <text x="370" y="208" text-anchor="middle" fill="#8b949e" font-size="11" font-family="monospace">Vote Tally</text>
+          <text x="130" y="235" text-anchor="middle" fill="#3fb950" font-size="14" font-family="monospace" font-weight="700">Surviving: 2 nodes</text>
+          <text x="370" y="235" text-anchor="middle" fill="#bc8cff" font-size="14" font-family="monospace" font-weight="700">+ Epsilon (ε) = 3 effective votes</text>
+          <text x="610" y="235" text-anchor="middle" fill="#f78166" font-size="14" font-family="monospace" font-weight="700">Failed: 2 nodes</text>
+          <text x="370" y="248" text-anchor="middle" fill="#3fb950" font-size="10" font-family="monospace">Epsilon on surviving Node-1 → Majority achieved → Cluster survives ✓</text>
+
+          <!-- Result box -->
+          <rect x="200" y="285" width="340" height="60" rx="10" fill="rgba(63,185,80,0.1)" stroke="#3fb950" stroke-width="1.8"/>
+          <text x="370" y="310" text-anchor="middle" fill="#3fb950" font-size="13" font-family="monospace" font-weight="700">✅ CLUSTER SURVIVES</text>
+          <text x="370" y="332" text-anchor="middle" fill="#8b949e" font-size="11" font-family="monospace">Data served via indirect paths through Node-1 and Node-2</text>
+
+          <!-- Epsilon arrow from Node-1 label -->
+          <line x1="110" y1="165" x2="110" y2="185" stroke="#bc8cff" stroke-width="1.5" stroke-dasharray="4,3"/>
+        </svg>
+        <div class="diagram-caption">Figure 8 — Epsilon tiebreaker in action. With 2 of 4 nodes down, Epsilon on Node-1 provides the deciding vote, keeping the cluster alive.</div>
+      </div>
+
+      <h3 style="font-size:16px;color:var(--text-primary);margin:28px 0 16px;font-family:'Sora',sans-serif;">Epsilon Applicability</h3>
+      <table class="spec-table">
+        <thead>
+          <tr><th>Cluster Size</th><th>Epsilon Applicable?</th><th>Reason</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1-node cluster</td><td><span class="badge badge-gray">Disabled</span></td><td>No quorum concept — single node is always the master</td></tr>
+          <tr><td>2-node cluster</td><td><span class="badge badge-gray">Disabled</span></td><td>Two-node HA relies on HA mediator, not Epsilon</td></tr>
+          <tr><td>4-node cluster</td><td><span class="badge badge-green">Active</span></td><td>50/50 tie is possible (2 vs 2); Epsilon resolves it</td></tr>
+          <tr><td>6-node and above</td><td><span class="badge badge-green">Active</span></td><td>Odd-majority scenarios possible; Epsilon provides tiebreaking</td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="epsilon-manage" style="font-size:16px;color:var(--text-primary);margin:28px 0 16px;font-family:'Sora',sans-serif;">Managing Epsilon</h3>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">ONTAP CLI — Epsilon Management</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body">
+<span class="comment"># Advanced mode required for Epsilon operations</span>
+<span class="prompt">cluster::></span> <span class="cmd">set advanced</span>
+
+<span class="comment"># Check which node holds Epsilon (true = Epsilon is here)</span>
+<span class="prompt">cluster::*></span> <span class="cmd">cluster show</span>
+<span class="output">Node           Health  Eligibility  Epsilon
+-------------- ------- ------------ -------
+storage-01     true    true         true
+storage-02     true    true         false
+storage-03     true    true         false
+storage-04     true    true         false</span>
+
+<span class="comment"># Move Epsilon: first remove from current node</span>
+<span class="prompt">cluster::*></span> <span class="cmd">cluster modify</span> <span class="param">-node</span> <span class="value">storage-01</span> <span class="param">-epsilon</span> <span class="value">false</span>
+
+<span class="comment"># Then assign Epsilon to a different node</span>
+<span class="prompt">cluster::*></span> <span class="cmd">cluster modify</span> <span class="param">-node</span> <span class="value">storage-03</span> <span class="param">-epsilon</span> <span class="value">true</span>
+        </div>
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-icon">🚨</div>
+        <div class="callout-content">
+          <div class="callout-title">Critical Best Practice — Epsilon Before Maintenance</div>
+          <div class="callout-text">
+            <strong>Never reboot a node that holds Epsilon without first relocating it.</strong> If Epsilon is on Node-1 and you reboot Node-1, ONTAP treats this as if a node holding a critical vote has failed. If coincidentally another node in the cluster also goes down during that window, your cluster can unexpectedly lose quorum.<br><br>
+            Additionally, when moving Epsilon away from a node you plan to reboot, <strong>do not move it to the HA partner</strong> of that node. The HA partner will absorb the rebooting node's workload and already carries extra load — adding Epsilon on top increases the risk of cascading failure. Move Epsilon to a node in a <em>different HA pair</em>.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SECTION 08 — AGGREGATES ══ -->
+    <section class="section" id="aggr-intro">
+      <div class="section-header">
+        <div class="section-icon icon-green">🧱</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 08</div>
+          <h2>What Is an Aggregate?</h2>
+        </div>
+      </div>
+
+      <p>An <strong>aggregate</strong> is a logical storage pool created by grouping physical disk drives and applying RAID protection across them. It forms the foundational storage layer in ONTAP — volumes (logical partitions that NFS/CIFS/iSCSI clients access) are created on top of aggregates.</p>
+
+      <div class="card">
+        <div class="card-title">🔑 Two Mandatory Parameters When Creating an Aggregate</div>
+        <div class="grid-2">
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--accent-blue);margin-bottom:8px;">1. RAID Type</div>
+            <p>Defines the protection level. Determines how many parity drives are used and how much redundancy you get.</p>
+          </div>
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--accent-green);margin-bottom:8px;">2. RAID Group Size</div>
+            <p>Defines how many disks are grouped together into a single RAID stripe set (RAID group / RG). This drives usable capacity and fault tolerance granularity.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-icon">ℹ️</div>
+        <div class="callout-content">
+          <div class="callout-title">Default and Root Aggregates</div>
+          <div class="callout-text">Every ONTAP node ships with a <strong>root aggregate</strong> named <span class="hl">aggr0_&lt;nodename&gt;</span>. This aggregate hosts only controller configuration data — it is never used for client data. If you have a 6-node cluster, you'll have 6 root aggregates (one per node). All user-facing volumes must be created on <em>additional</em> aggregates you create.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SECTION 09 — RAID TYPES ══ -->
+    <section class="section" id="raid-types">
+      <div class="section-header">
+        <div class="section-icon icon-orange">🛡️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 09</div>
+          <h2>RAID Types in ONTAP</h2>
+        </div>
+      </div>
+
+      <p>ONTAP supports multiple RAID variants. Each offers a different balance of protection, disk overhead, and suitability for specific storage tiers.</p>
+
+      <div class="raid-type-grid">
+        <div class="rt-card" style="border-color:rgba(63,185,80,0.4);">
+          <div class="rt-name" style="color:var(--accent-green);">RAID-DP</div>
+          <div class="rt-desc">Double Parity. 2 dedicated parity drives per RAID group. Can survive 2 simultaneous disk failures. <strong>Industry default for FAS/AFF.</strong></div>
+        </div>
+        <div class="rt-card" style="border-color:rgba(88,166,255,0.4);">
+          <div class="rt-name" style="color:var(--accent-blue);">RAID-TEC</div>
+          <div class="rt-desc">Triple Erasure Coding. 3 parity drives. Survives 3 simultaneous failures. Best for large-capacity drives (8TB+) where reconstruction takes longer.</div>
+        </div>
+        <div class="rt-card" style="border-color:rgba(139,148,158,0.4);">
+          <div class="rt-name" style="color:var(--text-secondary);">RAID4</div>
+          <div class="rt-desc">Single parity. 1 parity drive per RAID group. Rarely used in FAS/AFF. Only appropriate for V-Series (third-party back-end arrays).</div>
+        </div>
+        <div class="rt-card" style="border-color:rgba(227,179,65,0.4);">
+          <div class="rt-name" style="color:var(--accent-yellow);">RAID0</div>
+          <div class="rt-desc">No parity / striping only. Zero data protection. <strong>Only used with V-Series</strong> where the back-end array already provides its own RAID protection.</div>
+        </div>
+      </div>
+
+      <div class="callout success">
+        <div class="callout-icon">✅</div>
+        <div class="callout-content">
+          <div class="callout-title">Practical Guidance</div>
+          <div class="callout-text">For the vast majority of deployments: use <span class="hl-green">RAID-DP</span>. Only move to <span class="hl-blue">RAID-TEC</span> if you're using very large capacity drives (8TB+, 10TB+ SSDs) where a rebuild after a disk failure takes a long time, increasing the window of vulnerability to a second failure.</div>
+        </div>
+      </div>
+
+      <h3 id="rg-sizing" style="font-size:16px;color:var(--text-primary);margin:28px 0 16px;font-family:'Sora',sans-serif;">RAID Group Sizing &amp; Usable Capacity</h3>
+
+      <p>When creating an aggregate, ONTAP groups your disks into one or more <strong>RAID Groups (RG)</strong>, named <span class="hl">RG0</span>, <span class="hl">RG1</span>, <span class="hl">RG2</span>, etc. Each RAID group contains a fixed number of disks as defined by the RAID group size parameter.</p>
+
+      <!-- RAID group visual -->
+      <div class="aggr-visual">
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Example: 12-disk aggregate using RAID-DP with RAID group size = 6</p>
+        <div class="rg-box">
+          <div class="rg-title">RAID Group: RG0 (6 disks)</div>
+          <div class="disk-row">
+            <div class="disk-cell disk-data-cell">DATA<br/>Disk 1</div>
+            <div class="disk-cell disk-data-cell">DATA<br/>Disk 2</div>
+            <div class="disk-cell disk-data-cell">DATA<br/>Disk 3</div>
+            <div class="disk-cell disk-data-cell">DATA<br/>Disk 4</div>
+            <div class="disk-cell disk-p-cell">P<br/>Parity</div>
+            <div class="disk-cell disk-dp-cell">DP<br/>D-Parity</div>
+          </div>
+        </div>
+        <div class="rg-box">
+          <div class="rg-title">RAID Group: RG1 (6 disks)</div>
+          <div class="disk-row">
+            <div class="disk-cell disk-data-cell">DATA<br/>Disk 5</div>
+            <div class="disk-cell disk-data-cell">DATA<br/>Disk 6</div>
+            <div class="disk-cell disk-data-cell">DATA<br/>Disk 7</div>
+            <div class="disk-cell disk-data-cell">DATA<br/>Disk 8</div>
+            <div class="disk-cell disk-p-cell">P<br/>Parity</div>
+            <div class="disk-cell disk-dp-cell">DP<br/>D-Parity</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:16px;padding:14px;background:var(--bg-secondary);border-radius:8px;">
+          <div style="font-size:13px;color:var(--text-secondary);">Total disks: <span style="color:var(--accent-blue);font-weight:700;">12</span></div>
+          <div style="font-size:13px;color:var(--text-secondary);">Parity disks: <span style="color:var(--accent-orange);font-weight:700;">4</span> (2 per RG)</div>
+          <div style="font-size:13px;color:var(--text-secondary);">Data disks: <span style="color:var(--accent-green);font-weight:700;">8</span></div>
+          <div style="font-size:13px;color:var(--text-secondary);">Usable capacity (2TB disks): <span style="color:var(--accent-yellow);font-weight:700;">~16 TB</span></div>
+        </div>
+        <div style="font-size:11.5px;color:var(--text-muted);margin-top:10px;font-style:italic;">Figure 9 — RAID-DP aggregate with 2 RAID groups of 6 disks each. Each RG consumes 2 disks for parity.</div>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <div class="callout-title">Larger RAID Groups = More Usable Capacity</div>
+          <div class="callout-text">A <strong>larger RAID group size</strong> means fewer parity disks relative to your total disk count, resulting in more usable space. However, it also increases rebuild time if a disk fails. SSD RAID-DP limits: minimum <strong>5</strong>, default ~<strong>18</strong>, maximum <strong>28</strong> disks per RAID group. Best practice: distribute disks <em>evenly</em> across RAID groups.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SECTION 10 — CREATE AGGREGATES ══ -->
+    <section class="section" id="aggr-create">
+      <div class="section-header">
+        <div class="section-icon icon-teal">⚙️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 10</div>
+          <h2>Creating Aggregates</h2>
+        </div>
+      </div>
+
+      <p>ONTAP provides a flexible aggregate creation workflow that lets you either specify disk IDs manually or rely on ONTAP intelligence to select optimal drives automatically. The system always previews the layout before committing.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">ONTAP CLI — Aggregate Creation</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body">
+<span class="comment"># Method 1: Auto-select disks by count, type, and size</span>
+<span class="prompt">cluster::></span> <span class="cmd">storage aggregate create</span>
+  <span class="param">-aggregate</span> <span class="value">aggr1_node01</span>
+  <span class="param">-node</span> <span class="value">storage-ctrl-01</span>
+  <span class="param">-diskcount</span> <span class="value">12</span>
+  <span class="param">-disktype</span> <span class="value">SSD</span>
+  <span class="param">-raidtype</span> <span class="value">raid_dp</span>
+  <span class="param">-maxraidsize</span> <span class="value">6</span>
+
+<span class="comment"># ONTAP previews the layout — confirm with 'yes'</span>
+
+<span class="comment"># Method 2: Specify exact disk IDs manually</span>
+<span class="prompt">cluster::></span> <span class="cmd">storage aggregate create</span>
+  <span class="param">-aggregate</span> <span class="value">aggr2_node02</span>
+  <span class="param">-node</span> <span class="value">storage-ctrl-02</span>
+  <span class="param">-disklist</span> <span class="value">2.1.1,2.1.2,2.1.3,2.1.4,2.1.5,2.1.6,2.1.7,2.1.8,2.1.9,2.1.10,2.1.11,2.1.12</span>
+  <span class="param">-raidtype</span> <span class="value">raid_dp</span>
+
+<span class="comment"># Verify aggregate after creation</span>
+<span class="prompt">cluster::></span> <span class="cmd">storage aggregate show</span>
+
+<span class="comment"># Check detailed RAID group layout</span>
+<span class="prompt">cluster::></span> <span class="cmd">storage aggregate show-status</span> <span class="param">-aggregate</span> <span class="value">aggr1_node01</span>
+        </div>
+      </div>
+
+      <h3 id="aggr-manage" style="font-size:16px;color:var(--text-primary);margin:28px 0 16px;font-family:'Sora',sans-serif;">Managing Existing Aggregates</h3>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">ONTAP CLI — Aggregate Management</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body">
+<span class="comment"># Check aggregate status and capacity</span>
+<span class="prompt">cluster::></span> <span class="cmd">storage aggregate show</span> <span class="param">-fields</span> <span class="value">size,availsize,usedsize,state,raidtype</span>
+
+<span class="comment"># Take an aggregate offline before deletion</span>
+<span class="prompt">cluster::></span> <span class="cmd">storage aggregate offline</span> <span class="param">-aggregate</span> <span class="value">aggr1_node01</span>
+
+<span class="comment"># Delete aggregate (volumes must be removed first)</span>
+<span class="prompt">cluster::></span> <span class="cmd">storage aggregate delete</span> <span class="param">-aggregate</span> <span class="value">aggr1_node01</span>
+
+<span class="comment"># Add disks to expand existing aggregate</span>
+<span class="prompt">cluster::></span> <span class="cmd">storage aggregate add-disks</span>
+  <span class="param">-aggregate</span> <span class="value">aggr1_node01</span>
+  <span class="param">-diskcount</span> <span class="value">6</span>
+  <span class="param">-disktype</span> <span class="value">SSD</span>
+        </div>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-content">
+          <div class="callout-title">Deletion Prerequisite</div>
+          <div class="callout-text">An aggregate cannot be deleted while it hosts volumes. The state shown as <span class="hl-orange">degraded</span> indicates a drive failure within that aggregate. Always bring an aggregate <span class="hl">offline</span> before attempting deletion. After deletion, previously used disks return to the spare pool.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SECTION 11 — DISK ZEROING ══ -->
+    <section class="section" id="disk-zeroing">
+      <div class="section-header">
+        <div class="section-icon icon-yellow">🧹</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 11</div>
+          <h2>Disk Zeroing — Why It Matters</h2>
+        </div>
+      </div>
+
+      <p>When disks are released from an aggregate, they return to the spare pool in a <strong>not-zeroed</strong> state. This means they still contain old data blocks. ONTAP must zero (format/wipe) these disks before incorporating them into a new aggregate.</p>
+
+      <!-- Zeroing flow -->
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart LR
+    A["Disk Released\nfrom Aggregate\nStatus: not-zeroed"] --> B{Creating\nnew aggregate?}
+    B -->|Auto| C[ONTAP zeroes disk\nautomatically\nbefore adding]
+    B -->|Pre-zeroed manually| D[Disk added\ninstantly to aggregate\nNo zeroing delay]
+    C --> E[Aggregate created\nbut slower start]
+    D --> F[Aggregate created\nquickly]
+    G["Hot-Spare for\nfailed disk replacement"] --> H{Spare disk\nzeroed?}
+    H -->|Not zeroed| I[Zeroing happens first\nthen disk replaces failed one\n⚠️ Increased vulnerability window]
+    H -->|Pre-zeroed| J[Immediate replacement\nMinimized risk window]
+    style A fill:#21283a,stroke:#f78166,color:#f78166
+    style D fill:#21283a,stroke:#3fb950,color:#3fb950
+    style F fill:#21283a,stroke:#3fb950,color:#3fb950
+    style J fill:#21283a,stroke:#3fb950,color:#3fb950
+    style I fill:#21283a,stroke:#e3b341,color:#e3b341
+        </div>
+        <div class="diagram-caption">Figure 10 — Zeroing impact on aggregate creation speed and hot-spare replacement time.</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">ONTAP CLI — Disk Zeroing</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body">
+<span class="comment"># Zero all spare (not-zeroed) disks</span>
+<span class="prompt">cluster::></span> <span class="cmd">disk zerospares</span>
+
+<span class="comment"># Command only acts on SPARE pool — never touches disks in aggregates</span>
+<span class="comment"># Safe to run at any time — no impact to production data</span>
+
+<span class="comment"># Check disk zeroing status</span>
+<span class="prompt">cluster::></span> <span class="cmd">storage disk show</span> <span class="param">-fields</span> <span class="value">zeroing-percent,container-type</span>
+<span class="output">disk      zeroing-percent   container-type
+-------   ---------------   --------------
+2.1.5     100               spare          <span class="comment">← fully zeroed, ready to use</span>
+2.1.9     0                 spare          <span class="comment">← not zeroed, will need zeroing</span>
+2.1.12    67                spare          <span class="comment">← zeroing in progress</span></span>
+        </div>
+      </div>
+
+      <div class="callout success">
+        <div class="callout-icon">✅</div>
+        <div class="callout-content">
+          <div class="callout-title">Best Practice — Keep Spares Zeroed</div>
+          <div class="callout-text">Proactively run <span class="hl">disk zerospares</span> whenever disks return to the spare pool. This ensures hot-spare replacements happen immediately when a drive fails — minimizing the double-failure vulnerability window during RAID rebuild.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SECTION 12 — INTERVIEW Q&A ══ -->
+    <section class="section" id="interview">
+      <div class="section-header">
+        <div class="section-icon icon-teal">🎤</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 12</div>
+          <h2>Scenario-Based Interview Questions &amp; Answers</h2>
+        </div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q">❓ Q1: You have a 4-node ONTAP cluster and need to take Node-2 offline for hardware maintenance. What preparation steps should you take before shutting it down?</div>
+        <div class="qa-a">First, run <span class="hl">cluster show</span> in advanced mode to check if Node-2 holds Epsilon. If it does, relocate Epsilon to Node-3 or Node-4 (never Node-1, which is its HA partner). Verify the HA partner can take over Node-2's workloads via <span class="hl">storage failover show</span>. Confirm all volumes are accessible via alternative paths. Only then proceed with the shutdown. Without relocating Epsilon, if Node-2 goes down while Epsilon is on it, the cluster believes it has lost 2 votes instead of 1, endangering quorum.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q">❓ Q2: What is the RDB, and how is it different from configuration file management in 7-Mode?</div>
+        <div class="qa-a">The Replication Database (RDB) is a distributed, multi-node database system in ONTAP Cluster Mode that stores all cluster configuration state. Unlike 7-Mode, where an administrator had to both run a command AND manually edit files under <span class="hl-orange">/etc/</span>, Cluster Mode automatically writes configuration changes to the underlying files via the RDB. The RDB also replicates configuration across all nodes via the cluster private network, ensuring consistency. ONTAP 8.2 had 4 RDB sub-units; from 8.3 onwards a 5th (CRS) was added for MetroCluster support.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q">❓ Q3: In a 6-node cluster, 3 nodes fail simultaneously. Will the cluster survive? What determines the outcome?</div>
+        <div class="qa-a">With exactly 3 of 6 nodes down (50% failure), the cluster enters a tie condition — it cannot satisfy the simple majority quorum rule on its own. This is precisely where Epsilon comes into play. If Epsilon is hosted on one of the 3 surviving nodes, ONTAP counts it as an additional fractional vote, tipping the balance toward the surviving side and keeping the cluster operational. If Epsilon is on one of the failed nodes, quorum fails and ONTAP shuts down all remaining nodes to prevent a split-brain. The outcome is entirely determined by Epsilon's placement.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q">❓ Q4: You're designing an aggregate using 18 SSD disks with RAID-DP. What RAID group size would you use, and how does it affect usable capacity?</div>
+        <div class="qa-a">For 18 SSDs with RAID-DP and a RAID group size of 9: ONTAP creates 2 RAID groups of 9 disks each. Each group uses 2 disks for parity (P + DP), leaving 7 data disks per group — totaling 14 data disks. If each disk is 4TB, usable capacity is approximately 56TB. Using a larger RG (e.g., 18 as a single group) would give 16 data disks (~64TB usable) but increases reconstruction time on failure. Using smaller RGs (e.g., 6×3 groups) gives less usable space. The default ONTAP RG size for SSD RAID-DP is typically around 18, and maximum is 28 — always distribute disks evenly across RAID groups.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q">❓ Q5: What is the significance of the "not-zeroed" disk state, and when does it become a serious operational risk?</div>
+        <div class="qa-a">A not-zeroed spare disk still contains residual data from a previous aggregate and must be formatted before ONTAP can use it. The risk manifests during a hot-spare rebuild: if a disk fails in an aggregate and the designated hot-spare is not-zeroed, ONTAP must first zero it before starting the RAID rebuild. During this zeroing period, the aggregate is in a degraded state with no spare. If a second disk fails before zeroing completes and the new spare is ready, the aggregate may be irrecoverable. The mitigation is always running <span class="hl">disk zerospares</span> proactively to keep the spare pool in a ready-to-use state.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q">❓ Q6: Why can't you mix partitioned (ADP) and non-partitioned disks in the same aggregate?</div>
+        <div class="qa-a">Partitioned disks in ADP present logical partition units (Data-1, Data-2, Root) to ONTAP rather than whole physical disks. Non-partitioned disks present a full physical disk. The capacity sizing, block addressing, and RAID stripe calculations differ fundamentally between the two disk types. ONTAP's RAID layer cannot reconcile these differences within a single RAID group — mixing them would make consistent parity calculations impossible and introduce data integrity risks. Both types can coexist on the same controller, but they must be in separate aggregates.</div>
+      </div>
+    </section>
+
+    <!-- ══ SECTION 13 — SUMMARY ══ -->
+    <section class="section" id="summary">
+      <div class="section-header">
+        <div class="section-icon icon-green">✅</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 13</div>
+          <h2>Summary &amp; Key Takeaways</h2>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">🔑 Partition Ownership</div>
+          <ul class="topic-list">
+            <li>ADP v2 creates 3 partitions: Root, Data-1, Data-2</li>
+            <li>Data-1 → Controller-A; Data-2 → Controller-B (default balanced split)</li>
+            <li>Root partitions split 50/50 between HA pair nodes</li>
+            <li>Auto-assign is the recommended default — disable only for custom layouts</li>
+            <li>Partition commands require advanced or diagnostic privilege</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">🗄️ RDB Architecture</div>
+          <ul class="topic-list">
+            <li>RDB replaces 7-Mode's manual config file model</li>
+            <li>5 sub-databases: VLDB, VIFMGR, BComDB, MGMTD, CRS</li>
+            <li>CRS appeared in ONTAP 8.3 for MetroCluster support</li>
+            <li>Master RDB ensures all nodes stay in sync</li>
+            <li>Master role migrates on reboot — never returns to original node</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">⚖️ Quorum &amp; Epsilon</div>
+          <ul class="topic-list">
+            <li>Quorum requires >50% of nodes operational</li>
+            <li>Epsilon is a tiebreaker for exact 50/50 split scenarios</li>
+            <li>Epsilon only applies to clusters of 4+ nodes</li>
+            <li>Never reboot the Epsilon-holding node without first relocating it</li>
+            <li>Move Epsilon to a node in a different HA pair during maintenance</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">🧱 Aggregates</div>
+          <ul class="topic-list">
+            <li>Aggregate = logical pool of physical disks + RAID protection</li>
+            <li>RAID-DP is the standard for 90%+ of deployments</li>
+            <li>Larger RAID groups = more usable capacity, longer rebuild time</li>
+            <li>Keep spare disks zeroed to minimize hot-spare replacement delays</li>
+            <li>Volumes (client data) live on top of aggregates, not directly on disks</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout tip" style="margin-top:30px;">
+        <div class="callout-icon">🚀</div>
+        <div class="callout-content">
+          <div class="callout-title">What's Next</div>
+          <div class="callout-text">The next part of this series covers <strong>FlexVol volumes, thin provisioning, space guarantees, and volume management</strong> — the layer directly above aggregates where your actual data workloads live. Understanding aggregates thoroughly now sets you up to make optimal volume design decisions.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SECTION — ABOUT THE AUTHOR ══ -->
+    <section class="section" id="about-author">
+      <div class="section-header">
+        <div class="section-icon icon-purple">👤</div>
+        <div class="section-title-wrap">
+          <div class="section-num">ABOUT</div>
+          <h2>About the Author</h2>
+        </div>
+      </div>
+
+      <!-- Author bio card -->
+      <div style="background: linear-gradient(135deg, rgba(88,166,255,0.07) 0%, rgba(188,140,255,0.07) 100%); border: 1px solid rgba(188,140,255,0.3); border-radius: 16px; padding: 32px; margin-bottom: 24px; position: relative; overflow: hidden;">
+        <div style="position:absolute;top:0;right:0;width:200px;height:200px;background:radial-gradient(circle, rgba(188,140,255,0.08) 0%, transparent 70%);pointer-events:none;"></div>
+        <div style="display:flex; align-items:flex-start; gap:24px; flex-wrap:wrap;">
+          <!-- Avatar -->
+          <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#58a6ff,#bc8cff);display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;border:2px solid rgba(188,140,255,0.4);">👨‍💻</div>
+          <!-- Name & title -->
+          <div style="flex:1;min-width:220px;">
+            <div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:800;color:var(--text-primary);margin-bottom:4px;">Mohammed Abdul</div>
+            <div style="font-size:13px;color:var(--accent-purple);font-weight:600;margin-bottom:12px;font-family:'JetBrains Mono',monospace;">Data Protection Architect</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+              <span style="background:rgba(88,166,255,0.12);border:1px solid rgba(88,166,255,0.3);color:var(--accent-blue);padding:3px 12px;border-radius:20px;font-size:11.5px;font-weight:600;font-family:'JetBrains Mono',monospace;">10+ Years Experience</span>
+              <span style="background:rgba(63,185,80,0.12);border:1px solid rgba(63,185,80,0.3);color:var(--accent-green);padding:3px 12px;border-radius:20px;font-size:11.5px;font-weight:600;font-family:'JetBrains Mono',monospace;">Hybrid Cloud</span>
+              <span style="background:rgba(227,179,65,0.12);border:1px solid rgba(227,179,65,0.3);color:var(--accent-yellow);padding:3px 12px;border-radius:20px;font-size:11.5px;font-weight:600;font-family:'JetBrains Mono',monospace;">Global Clients</span>
+            </div>
+            <p style="font-size:14px;line-height:1.8;color:var(--text-secondary);margin-bottom:0;">
+              Mohammed Abdul is a Data Protection Architect with more than 10 years of experience in Hybrid Cloud and has worked with global clients across various industries. With extensive expertise in enterprise backup and recovery solutions, Mohammed specializes in AWS, Azure, GCP, Commvault, Veeam, NetBackup, and NetApp technologies, helping organizations design and implement robust data protection strategies.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Technology expertise badges -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-title">🛠️ Technology Expertise</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;">
+          <span style="background:rgba(247,129,102,0.12);border:1px solid rgba(247,129,102,0.35);color:var(--accent-orange);padding:6px 16px;border-radius:8px;font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;">☁️ AWS</span>
+          <span style="background:rgba(88,166,255,0.12);border:1px solid rgba(88,166,255,0.35);color:var(--accent-blue);padding:6px 16px;border-radius:8px;font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;">☁️ Azure</span>
+          <span style="background:rgba(63,185,80,0.12);border:1px solid rgba(63,185,80,0.35);color:var(--accent-green);padding:6px 16px;border-radius:8px;font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;">☁️ GCP</span>
+          <span style="background:rgba(188,140,255,0.12);border:1px solid rgba(188,140,255,0.35);color:var(--accent-purple);padding:6px 16px;border-radius:8px;font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;">🔒 Commvault</span>
+          <span style="background:rgba(57,211,195,0.12);border:1px solid rgba(57,211,195,0.35);color:var(--accent-teal);padding:6px 16px;border-radius:8px;font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;">🔒 Veeam</span>
+          <span style="background:rgba(227,179,65,0.12);border:1px solid rgba(227,179,65,0.35);color:var(--accent-yellow);padding:6px 16px;border-radius:8px;font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;">🔒 NetBackup</span>
+          <span style="background:rgba(88,166,255,0.12);border:1px solid rgba(88,166,255,0.35);color:var(--accent-blue);padding:6px 16px;border-radius:8px;font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;">💾 NetApp</span>
+        </div>
+      </div>
+
+      <!-- Email contact card -->
+      <a href="mailto:abdul.md.20000102@gmail.com" style="text-decoration:none;display:block;">
+        <div style="background:var(--bg-card);border:1px solid rgba(88,166,255,0.3);border-radius:12px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;gap:18px;transition:border-color 0.2s,background 0.2s;cursor:pointer;" onmouseover="this.style.borderColor='rgba(88,166,255,0.6)';this.style.background='rgba(88,166,255,0.06)'" onmouseout="this.style.borderColor='rgba(88,166,255,0.3)';this.style.background='var(--bg-card)'">
+          <div style="width:48px;height:48px;border-radius:12px;background:rgba(88,166,255,0.15);border:1px solid rgba(88,166,255,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">✉️</div>
+          <div>
+            <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;font-family:'JetBrains Mono',monospace;margin-bottom:4px;">For Queries &amp; Collaboration</div>
+            <div style="font-size:15px;font-weight:600;color:var(--accent-blue);font-family:'JetBrains Mono',monospace;">abdul.md.20000102@gmail.com</div>
+          </div>
+          <div style="margin-left:auto;color:var(--text-muted);font-size:18px;">→</div>
+        </div>
+      </a>
+
+      <!-- Disclaimer -->
+      <div style="background:rgba(139,148,158,0.07);border:1px solid rgba(139,148,158,0.25);border-radius:10px;padding:18px 22px;display:flex;gap:14px;align-items:flex-start;">
+        <div style="font-size:18px;flex-shrink:0;margin-top:1px;">📋</div>
+        <div>
+          <div style="font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);margin-bottom:8px;">Disclaimer</div>
+          <p style="font-size:13.5px;line-height:1.8;color:var(--text-muted);margin-bottom:8px;">This content is for educational purposes and reference material only. Always refer to official NetApp documentation and follow your organization's procedures for production implementations.</p>
+          <p style="font-size:13px;line-height:1.7;color:var(--text-muted);margin-bottom:0;">I am not affiliated with or endorsed by NetApp, Inc. <strong style="color:var(--text-secondary);">NetApp®</strong> and <strong style="color:var(--text-secondary);">ONTAP®</strong> are registered trademarks of NetApp, Inc. All references are made purely for learning and knowledge sharing.</p>
+        </div>
+      </div>
+
+    </section>
+
+  </div><!-- /content-area -->
+</main>
+
+<script>
+  // Mermaid init
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#21283a',
+      primaryTextColor: '#e6edf3',
+      primaryBorderColor: '#484f58',
+      lineColor: '#8b949e',
+      secondaryColor: '#161b22',
+      tertiaryColor: '#1c2333',
+      background: '#1c2333',
+      nodeBorder: '#484f58',
+      clusterBkg: '#161b22',
+      titleColor: '#e6edf3',
+      edgeLabelBackground: '#21283a',
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: '13px'
+    },
+    flowchart: { htmlLabels: true, curve: 'basis' },
+    sequence: { actorMargin: 60, messageMargin: 35, mirrorActors: false }
+  });
+
+  // Active TOC on scroll
+  const sections = document.querySelectorAll('.section');
+  const links = document.querySelectorAll('.toc-link');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        links.forEach(l => {
+          l.classList.toggle('active', l.getAttribute('href') === '#' + id);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
