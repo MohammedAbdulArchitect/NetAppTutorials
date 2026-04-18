@@ -861,12 +861,12 @@ node-02   VIFMGR       RDB        node-01        secondary
         <div class="mermaid">
 flowchart TD
     A[Node failure detected] --> B{Count surviving nodes}
-    B --> C{>50% up?}
-    C -->|Yes| D[Quorum satisfied\nCluster continues serving data]
-    C -->|Exactly 50%| E{Is Epsilon on\na surviving node?}
-    E -->|Yes| F[Epsilon adds +1 virtual vote\nQuorum satisfied — cluster survives]
-    E -->|No| G[Quorum failed\nONTAP shuts down remaining nodes\nCluster goes offline]
-    C -->|No (&lt;50%)| G
+    B --> C{More than 50% up?}
+    C -->|Yes| D[Quorum satisfied — Cluster continues serving data]
+    C -->|Exactly 50%| E{Is Epsilon on a surviving node?}
+    E -->|Yes| F[Epsilon adds virtual vote — Quorum satisfied — Cluster survives]
+    E -->|No| G[Quorum failed — ONTAP shuts down remaining nodes — Cluster goes offline]
+    C -->|Less than 50%| G
     style A fill:#21283a,stroke:#484f58,color:#e6edf3
     style B fill:#21283a,stroke:#8b949e,color:#8b949e
     style C fill:#21283a,stroke:#e3b341,color:#e3b341
