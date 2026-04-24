@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetApp Administration Series — Tutorial 8: Qtrees, Security Styles, Quotas & CIFS Setup</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-card: #1c2333;
+    --bg-card-hover: #21283a;
+    --accent-blue: #58a6ff;
+    --accent-green: #3fb950;
+    --accent-orange: #f78166;
+    --accent-purple: #bc8cff;
+    --accent-yellow: #e3b341;
+    --accent-teal: #39d3c3;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --border: #30363d;
+    --border-bright: #484f58;
+    --sidebar-width: 290px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── PROGRESS BAR ── */
+  #reading-progress {
+    position: fixed; top: 0; left: var(--sidebar-width); right: 0;
+    height: 3px; background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+    transform-origin: left; transform: scaleX(0);
+    z-index: 999; transition: transform 0.1s linear;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-header {
+    padding: 20px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .sidebar-logo .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .sidebar-logo span { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px; color: var(--text-primary); letter-spacing: 0.5px; }
+  .sidebar-subtitle { font-size: 11px; color: var(--text-muted); padding-left: 42px; }
+  .toc-nav { padding: 12px 0; flex: 1; }
+  .toc-section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); padding: 12px 16px 6px; }
+  .toc-link {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 16px; font-size: 12.5px;
+    color: var(--text-secondary); text-decoration: none;
+    transition: all 0.2s ease;
+    border-left: 2px solid transparent; line-height: 1.4;
+  }
+  .toc-link:hover { background: var(--bg-card); color: var(--text-primary); border-left-color: var(--accent-blue); }
+  .toc-link.active { background: rgba(88,166,255,0.1); color: var(--accent-blue); border-left-color: var(--accent-blue); font-weight: 500; }
+  .toc-link .toc-num { font-size: 10px; font-weight: 700; color: var(--text-muted); min-width: 18px; font-family: 'JetBrains Mono', monospace; }
+  .toc-link.sub { padding-left: 32px; font-size: 12px; }
+
+  /* ── MAIN ── */
+  .main-content { margin-left: var(--sidebar-width); flex: 1; max-width: calc(100vw - var(--sidebar-width)); }
+
+  .top-header {
+    background: linear-gradient(135deg, #0d1117 0%, #1a2744 50%, #0d2035 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 60px 60px 50px;
+    position: relative; overflow: hidden;
+  }
+  .top-header::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(88,166,255,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(63,185,80,0.06) 0%, transparent 50%);
+  }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(88,166,255,0.12); border: 1px solid rgba(88,166,255,0.3);
+    border-radius: 20px; padding: 4px 14px;
+    font-size: 12px; color: var(--accent-blue); font-weight: 500;
+    margin-bottom: 18px; font-family: 'JetBrains Mono', monospace;
+  }
+  .main-title {
+    font-family: 'Sora', sans-serif; font-size: 38px; font-weight: 800;
+    line-height: 1.15; margin-bottom: 16px;
+    background: linear-gradient(135deg, #e6edf3 30%, #58a6ff 70%, #bc8cff 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; position: relative;
+  }
+  .header-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.7; max-width: 680px; position: relative; }
+  .header-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 20px; position: relative; }
+  .meta-chip { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-secondary); }
+  .meta-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .progress-bar-wrap { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; position: relative; }
+  .prog-chip {
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    border-radius: 6px; padding: 3px 10px; font-size: 11.5px;
+    color: var(--text-muted); font-family: 'JetBrains Mono', monospace;
+  }
+
+  .content-area { padding: 40px 60px 80px; max-width: 1000px; }
+  .section { margin-bottom: 60px; scroll-margin-top: 30px; }
+  .section-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .section-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .icon-blue { background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.3); }
+  .icon-green { background: rgba(63,185,80,0.15); border: 1px solid rgba(63,185,80,0.3); }
+  .icon-orange { background: rgba(247,129,102,0.15); border: 1px solid rgba(247,129,102,0.3); }
+  .icon-purple { background: rgba(188,140,255,0.15); border: 1px solid rgba(188,140,255,0.3); }
+  .icon-teal { background: rgba(57,211,195,0.15); border: 1px solid rgba(57,211,195,0.3); }
+  .icon-yellow { background: rgba(227,179,65,0.15); border: 1px solid rgba(227,179,65,0.3); }
+
+  .section-title-wrap h2 { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+  .section-title-wrap .section-num { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); font-weight: 400; margin-bottom: 4px; }
+
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; transition: border-color 0.2s; }
+  .card:hover { border-color: var(--border-bright); }
+  .card-title { font-family: 'Sora', sans-serif; font-weight: 600; font-size: 15px; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+  p { font-size: 14.5px; line-height: 1.8; color: var(--text-secondary); margin-bottom: 14px; }
+
+  .callout { border-radius: 10px; padding: 16px 20px; margin: 20px 0; display: flex; gap: 14px; align-items: flex-start; }
+  .callout-icon { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+  .callout-content { flex: 1; }
+  .callout-title { font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .callout-text { font-size: 13.5px; line-height: 1.7; color: var(--text-secondary); }
+  .callout.info { background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.25); }
+  .callout.info .callout-title { color: var(--accent-blue); }
+  .callout.success { background: rgba(63,185,80,0.08); border: 1px solid rgba(63,185,80,0.25); }
+  .callout.success .callout-title { color: var(--accent-green); }
+  .callout.warning { background: rgba(227,179,65,0.08); border: 1px solid rgba(227,179,65,0.3); }
+  .callout.warning .callout-title { color: var(--accent-yellow); }
+  .callout.danger { background: rgba(247,129,102,0.08); border: 1px solid rgba(247,129,102,0.3); }
+  .callout.danger .callout-title { color: var(--accent-orange); }
+  .callout.tip { background: rgba(188,140,255,0.08); border: 1px solid rgba(188,140,255,0.25); }
+  .callout.tip .callout-title { color: var(--accent-purple); }
+
+  .code-block { background: #0a0e13; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 16px 0; font-family: 'JetBrains Mono', monospace; }
+  .code-header { background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .code-lang { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .code-dots { display: flex; gap: 5px; }
+  .code-dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-red { background: #ff5f56; } .dot-yellow-c { background: #ffbd2e; } .dot-green-c { background: #27c93f; }
+  .code-body { padding: 20px; font-size: 13px; line-height: 1.8; color: #79c0ff; overflow-x: auto; white-space: pre; }
+  .code-body .cmd { color: #3fb950; }
+  .code-body .comment { color: #6e7681; font-style: italic; }
+  .code-body .param { color: #ffa657; }
+  .code-body .value { color: #a5d6ff; }
+  .code-body .output { color: #8b949e; }
+  .code-body .prompt { color: #e3b341; }
+
+  .spec-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; }
+  .spec-table th { background: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 16px; text-align: left; border-bottom: 2px solid var(--border); }
+  .spec-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
+  .spec-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+  .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent-blue); border: 1px solid rgba(88,166,255,0.3); }
+  .badge-green { background: rgba(63,185,80,0.15); color: var(--accent-green); border: 1px solid rgba(63,185,80,0.3); }
+  .badge-orange { background: rgba(247,129,102,0.15); color: var(--accent-orange); border: 1px solid rgba(247,129,102,0.3); }
+  .badge-purple { background: rgba(188,140,255,0.15); color: var(--accent-purple); border: 1px solid rgba(188,140,255,0.3); }
+  .badge-yellow { background: rgba(227,179,65,0.15); color: var(--accent-yellow); border: 1px solid rgba(227,179,65,0.3); }
+  .badge-teal { background: rgba(57,211,195,0.15); color: var(--accent-teal); border: 1px solid rgba(57,211,195,0.3); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0; }
+
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; }
+  .stat-num { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+  .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .step-list { list-style: none; margin: 12px 0; }
+  .step-list li { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(48,54,61,0.5); font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; align-items: flex-start; }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num { width: 22px; height: 22px; border-radius: 6px; background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.3); color: var(--accent-blue); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
+
+  .bullet-list { list-style: none; margin: 10px 0; }
+  .bullet-list li { padding: 6px 0 6px 20px; position: relative; font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; }
+  .bullet-list li::before { content: '▸'; position: absolute; left: 0; color: var(--accent-blue); font-size: 11px; top: 8px; }
+
+  h3 { font-family: 'Sora', sans-serif; font-size: 17px; font-weight: 600; color: var(--text-primary); margin: 24px 0 12px; }
+  h4 { font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 600; color: var(--accent-blue); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .mermaid-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 28px 20px 16px; margin: 20px 0; overflow-x: auto; }
+  .diagram-caption { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 10px; font-style: italic; }
+
+  .svg-diagram { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; overflow-x: auto; }
+
+  .qa-block { background: var(--bg-card); border: 1px solid rgba(188,140,255,0.3); border-radius: 12px; padding: 20px 24px; margin: 16px 0; }
+  .qa-q { font-size: 14px; font-weight: 600; color: var(--accent-purple); margin-bottom: 10px; display: flex; gap: 10px; }
+  .qa-a { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; padding-left: 26px; }
+  .qa-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; }
+
+  .divider { height: 1px; background: var(--border); margin: 40px 0; }
+  .hl { background: rgba(88,166,255,0.12); color: var(--accent-blue); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-green { background: rgba(63,185,80,0.12); color: var(--accent-green); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-orange { background: rgba(247,129,102,0.12); color: var(--accent-orange); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-purple { background: rgba(188,140,255,0.12); color: var(--accent-purple); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+
+  /* Qtree visual block */
+  .qtree-vis { display: flex; gap: 0; align-items: stretch; margin: 20px 0; flex-wrap: wrap; }
+  .vol-block { background: rgba(88,166,255,0.06); border: 2px solid rgba(88,166,255,0.35); border-radius: 12px; padding: 20px; flex: 1; min-width: 200px; }
+  .vol-title { font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 700; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+  .qt-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .qt-box { flex: 1; min-width: 80px; background: var(--bg-card); border-radius: 8px; padding: 12px 10px; text-align: center; border: 1px solid var(--border); }
+  .qt-box.qt-a { border-color: rgba(63,185,80,0.4); background: rgba(63,185,80,0.06); }
+  .qt-box.qt-b { border-color: rgba(247,129,102,0.4); background: rgba(247,129,102,0.06); }
+  .qt-box.qt-c { border-color: rgba(188,140,255,0.4); background: rgba(188,140,255,0.06); }
+  .qt-box-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+  .qt-a .qt-box-name { color: var(--accent-green); }
+  .qt-b .qt-box-name { color: var(--accent-orange); }
+  .qt-c .qt-box-name { color: var(--accent-purple); }
+  .qt-box-sub { font-size: 10.5px; color: var(--text-muted); }
+
+  /* Security style cards */
+  .sec-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin: 20px 0; }
+  .sec-card { border-radius: 12px; padding: 18px; border: 1px solid; }
+  .sec-unix { border-color: rgba(63,185,80,0.4); background: rgba(63,185,80,0.05); }
+  .sec-ntfs { border-color: rgba(88,166,255,0.4); background: rgba(88,166,255,0.05); }
+  .sec-mix { border-color: rgba(227,179,65,0.4); background: rgba(227,179,65,0.05); opacity: 0.7; }
+  .sec-icon { font-size: 26px; margin-bottom: 8px; }
+  .sec-name { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .sec-unix .sec-name { color: var(--accent-green); }
+  .sec-ntfs .sec-name { color: var(--accent-blue); }
+  .sec-mix .sec-name { color: var(--accent-yellow); }
+  .sec-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+
+  /* Quota level cards */
+  .quota-tier { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin: 16px 0; }
+  .qt-tier-card { border-radius: 10px; padding: 16px; border: 1px solid var(--border); background: var(--bg-card); text-align: center; }
+  .qt-tier-icon { font-size: 26px; margin-bottom: 8px; }
+  .qt-tier-name { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; color: var(--text-primary); margin-bottom: 6px; }
+  .qt-tier-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+  /* CIFS setup steps timeline */
+  .cifs-timeline { display: flex; gap: 0; align-items: flex-start; margin: 20px 0; overflow-x: auto; padding-bottom: 8px; }
+  .cifs-step { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; min-width: 160px; flex-shrink: 0; text-align: center; }
+  .cifs-arrow { color: var(--accent-blue); font-size: 22px; padding: 20px 8px 0; flex-shrink: 0; }
+  .cifs-step-num { width: 28px; height: 28px; border-radius: 50%; background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.4); color: var(--accent-blue); font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-family: 'JetBrains Mono', monospace; }
+  .cifs-step-label { font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+  .cifs-step-sub { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+
+  /* Quota workflow boxes */
+  .quota-flow { display: flex; align-items: center; gap: 0; margin: 20px 0; flex-wrap: wrap; }
+  .qf-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; flex-shrink: 0; text-align: center; min-width: 140px; }
+  .qf-arrow { color: var(--accent-green); font-size: 20px; padding: 0 8px; flex-shrink: 0; }
+  .qf-label { font-size: 12.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+  .qf-sub { font-size: 11px; color: var(--text-muted); }
+
+  /* System Manager comparison */
+  .sm-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .sm-col { border-radius: 10px; padding: 18px; border: 1px solid var(--border); background: var(--bg-card); }
+  .sm-col-title { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); }
+    .main-content { margin-left: 0; max-width: 100vw; }
+    #reading-progress { left: 0; }
+    .top-header { padding: 30px 20px; }
+    .content-area { padding: 20px; }
+    .grid-2, .grid-3, .sec-grid, .quota-tier, .sm-compare { grid-template-columns: 1fr; }
+    .main-title { font-size: 26px; }
+    .cifs-timeline { flex-direction: column; }
+    .cifs-arrow { transform: rotate(90deg); margin: 0 auto; padding: 0; }
+    .quota-flow { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div id="reading-progress"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🗄️</div>
+      <span>NetApp ONTAP</span>
+    </div>
+    <div class="sidebar-subtitle">Administration Tutorial Series</div>
+  </div>
+  <nav class="toc-nav">
+    <div class="toc-section-label">Overview</div>
+    <a href="#intro" class="toc-link"><span class="toc-num">00</span> Introduction</a>
+
+    <div class="toc-section-label">Qtrees</div>
+    <a href="#qtree-overview" class="toc-link"><span class="toc-num">01</span> What Are Qtrees?</a>
+    <a href="#qtree-usecase" class="toc-link sub"><span class="toc-num">↳</span> Use Cases & Limits</a>
+    <a href="#qtree-cli" class="toc-link"><span class="toc-num">02</span> Qtree CLI Operations</a>
+    <a href="#oplock" class="toc-link sub"><span class="toc-num">↳</span> Oplocks Feature</a>
+
+    <div class="toc-section-label">Security Styles</div>
+    <a href="#security-styles" class="toc-link"><span class="toc-num">03</span> Security Style Overview</a>
+    <a href="#sec-recommendations" class="toc-link sub"><span class="toc-num">↳</span> Best Practices</a>
+
+    <div class="toc-section-label">Quotas</div>
+    <a href="#quota-intro" class="toc-link"><span class="toc-num">04</span> Quota Concepts</a>
+    <a href="#quota-types" class="toc-link sub"><span class="toc-num">↳</span> Quota Types</a>
+    <a href="#quota-limits" class="toc-link sub"><span class="toc-num">↳</span> Hard / Soft / Threshold</a>
+    <a href="#quota-workflow" class="toc-link"><span class="toc-num">05</span> Quota Configuration</a>
+    <a href="#quota-ops" class="toc-link sub"><span class="toc-num">↳</span> Modify & Refresh</a>
+
+    <div class="toc-section-label">System Manager</div>
+    <a href="#system-manager" class="toc-link"><span class="toc-num">06</span> ActiveIQ System Manager</a>
+
+    <div class="toc-section-label">CIFS / SMB</div>
+    <a href="#cifs-prereqs" class="toc-link"><span class="toc-num">07</span> CIFS Prerequisites</a>
+    <a href="#cifs-lif" class="toc-link sub"><span class="toc-num">↳</span> LIF & DNS Setup</a>
+    <a href="#cifs-setup" class="toc-link"><span class="toc-num">08</span> CIFS Server Setup</a>
+    <a href="#cifs-ad" class="toc-link sub"><span class="toc-num">↳</span> Active Directory Join</a>
+
+    <div class="toc-section-label">Reference</div>
+    <a href="#interview-qa" class="toc-link"><span class="toc-num">09</span> Interview Q&amp;A</a>
+    <a href="#author" class="toc-link"><span class="toc-num">—</span> About the Author</a>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<main class="main-content">
+
+  <!-- HEADER -->
+  <div class="top-header">
+    <div class="header-badge">📚 ONTAP Storage · Tutorial Series · Episode 8</div>
+    <h1 class="main-title">Qtrees, Security Styles,<br>Quotas &amp; CIFS Setup</h1>
+    <p class="header-desc">
+      A practical deep-dive into NetApp ONTAP namespace management — covering Qtree architecture, volume security styles, quota policies with hard/soft limits, and end-to-end CIFS server configuration with Active Directory integration.
+    </p>
+    <div class="header-meta">
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-blue)"></span>Intermediate</div>
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-green)"></span>ONTAP 9.x</div>
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-purple)"></span>NAS / SMB</div>
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-yellow)"></span>Active Directory</div>
+    </div>
+    <div class="progress-bar-wrap">
+      <span class="prog-chip">qtree</span>
+      <span class="prog-chip">security style</span>
+      <span class="prog-chip">oplock</span>
+      <span class="prog-chip">quota policy</span>
+      <span class="prog-chip">hard limit</span>
+      <span class="prog-chip">soft limit</span>
+      <span class="prog-chip">CIFS/SMB</span>
+      <span class="prog-chip">active directory</span>
+      <span class="prog-chip">system manager</span>
+    </div>
+  </div>
+
+  <div class="content-area">
+
+    <!-- INTRO -->
+    <section class="section" id="intro">
+      <div class="section-header">
+        <div class="section-icon icon-blue">🎯</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 00</div>
+          <h2>What You Will Learn</h2>
+        </div>
+      </div>
+      <p>This tutorial continues the NetApp ONTAP Administration series by focusing on practical NAS storage management concepts that every storage administrator encounters in daily operations. We cover four core areas that build on each other:</p>
+      <div class="grid-3">
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--accent-blue)">Qtree</div>
+          <div class="stat-label">Sub-directory namespace management</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--accent-green)">Quota</div>
+          <div class="stat-label">Capacity enforcement policies</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--accent-purple)">CIFS</div>
+          <div class="stat-label">Windows file sharing via SMB</div>
+        </div>
+      </div>
+      <div class="callout info">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <div class="callout-title">Tutorial Scope</div>
+          <div class="callout-text">Each section builds on the previous. CLI commands are highlighted with syntax explanations. Real-world design guidance and interview Q&amp;A are included at the end. All IP addresses, hostnames, and SVM names used are illustrative examples only.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────── QTREE OVERVIEW ─────────── -->
+    <section class="section" id="qtree-overview">
+      <div class="section-header">
+        <div class="section-icon icon-blue">📁</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 01</div>
+          <h2>What Are Qtrees?</h2>
+        </div>
+      </div>
+
+      <p>A <strong style="color:var(--text-primary)">Qtree</strong> is a special-purpose sub-directory created inside an ONTAP volume. Unlike an ordinary directory, a Qtree can carry its own security style, quota policy, and access controls — making it a lightweight alternative to creating separate volumes for every storage request.</p>
+
+      <h3>The Volume Count Problem</h3>
+      <p>ONTAP controllers have a hard ceiling on the number of volumes they can host — typically 1,000 to 2,500 volumes depending on the platform and ONTAP release. In large enterprise environments with dozens of teams submitting small storage requests, this limit can become a bottleneck if a separate volume is created for every requirement.</p>
+
+      <!-- Visual: Volume vs Qtree approach -->
+      <div class="svg-diagram">
+        <svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto;">
+          <!-- Left side: 3 volumes -->
+          <text x="130" y="22" font-family="Sora,sans-serif" font-size="12" fill="#8b949e" text-anchor="middle">❌ Without Qtrees</text>
+          <rect x="40" y="35" width="80" height="44" rx="8" fill="rgba(247,129,102,0.1)" stroke="rgba(247,129,102,0.4)" stroke-width="1.5"/>
+          <text x="80" y="52" font-family="JetBrains Mono,monospace" font-size="10" fill="#f78166" text-anchor="middle">VOL-A</text>
+          <text x="80" y="67" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681" text-anchor="middle">5 GB</text>
+          <rect x="130" y="35" width="80" height="44" rx="8" fill="rgba(247,129,102,0.1)" stroke="rgba(247,129,102,0.4)" stroke-width="1.5"/>
+          <text x="170" y="52" font-family="JetBrains Mono,monospace" font-size="10" fill="#f78166" text-anchor="middle">VOL-B</text>
+          <text x="170" y="67" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681" text-anchor="middle">15 GB</text>
+          <rect x="220" y="35" width="80" height="44" rx="8" fill="rgba(247,129,102,0.1)" stroke="rgba(247,129,102,0.4)" stroke-width="1.5"/>
+          <text x="260" y="52" font-family="JetBrains Mono,monospace" font-size="10" fill="#f78166" text-anchor="middle">VOL-C</text>
+          <text x="260" y="67" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681" text-anchor="middle">30 GB</text>
+          <text x="170" y="102" font-family="Inter,sans-serif" font-size="11" fill="#f78166" text-anchor="middle">3 volumes consumed</text>
+
+          <!-- Divider -->
+          <line x1="370" y1="20" x2="370" y2="185" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
+
+          <!-- Right side: 1 volume + 3 qtrees -->
+          <text x="570" y="22" font-family="Sora,sans-serif" font-size="12" fill="#8b949e" text-anchor="middle">✅ With Qtrees</text>
+          <rect x="400" y="35" width="330" height="110" rx="10" fill="rgba(88,166,255,0.05)" stroke="rgba(88,166,255,0.35)" stroke-width="1.5"/>
+          <text x="565" y="52" font-family="Sora,sans-serif" font-size="11" font-weight="700" fill="#58a6ff" text-anchor="middle">VOL-SHARED · 50 GB</text>
+          <rect x="415" y="60" width="88" height="70" rx="8" fill="rgba(63,185,80,0.1)" stroke="rgba(63,185,80,0.35)" stroke-width="1.2"/>
+          <text x="459" y="84" font-family="JetBrains Mono,monospace" font-size="10" fill="#3fb950" text-anchor="middle">QT-DEPT1</text>
+          <text x="459" y="100" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681" text-anchor="middle">Client A</text>
+          <rect x="518" y="60" width="88" height="70" rx="8" fill="rgba(247,129,102,0.1)" stroke="rgba(247,129,102,0.35)" stroke-width="1.2"/>
+          <text x="562" y="84" font-family="JetBrains Mono,monospace" font-size="10" fill="#f78166" text-anchor="middle">QT-DEPT2</text>
+          <text x="562" y="100" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681" text-anchor="middle">Client B</text>
+          <rect x="621" y="60" width="96" height="70" rx="8" fill="rgba(188,140,255,0.1)" stroke="rgba(188,140,255,0.35)" stroke-width="1.2"/>
+          <text x="669" y="84" font-family="JetBrains Mono,monospace" font-size="10" fill="#bc8cff" text-anchor="middle">QT-DEPT3</text>
+          <text x="669" y="100" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681" text-anchor="middle">Client C</text>
+          <text x="565" y="165" font-family="Inter,sans-serif" font-size="11" fill="#3fb950" text-anchor="middle">Only 1 volume consumed</text>
+        </svg>
+        <div class="diagram-caption">Qtrees allow multiple isolated namespaces within a single volume — preserving the volume count budget</div>
+      </div>
+
+      <section id="qtree-usecase">
+        <h3>When to Use Qtrees vs Volumes</h3>
+        <table class="spec-table">
+          <thead>
+            <tr><th>Scenario</th><th>Recommended Approach</th><th>Reason</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>User file shares, home directories</td><td><span class="badge badge-green">Qtree</span></td><td>Saves volume count; data is user-driven</td></tr>
+            <tr><td>Document libraries, shared folders</td><td><span class="badge badge-green">Qtree</span></td><td>Multiple teams, single volume</td></tr>
+            <tr><td>Web application data</td><td><span class="badge badge-blue">Volume</span></td><td>App-specific mount points required</td></tr>
+            <tr><td>Database files (Oracle, SQL Server)</td><td><span class="badge badge-blue">Volume</span></td><td>Performance tuning per workload</td></tr>
+            <tr><td>Any application requiring NFS/SMB mount</td><td><span class="badge badge-blue">Volume</span></td><td>NetApp best practice for app data</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout warning">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-content">
+            <div class="callout-title">Best Practice</div>
+            <div class="callout-text">Qtrees are suited for <strong>user data</strong> storage such as documents, spreadsheets, and media files. For any <strong>application data</strong> — including databases, web servers, or containerized workloads — always provision a dedicated volume. This is an official NetApp recommendation regardless of the requested capacity.</div>
+          </div>
+        </div>
+
+        <h4>Qtree Limits at a Glance</h4>
+        <div class="grid-3">
+          <div class="stat-card">
+            <div class="stat-num" style="color:var(--accent-blue)">4,096</div>
+            <div class="stat-label">Max Qtrees per volume</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" style="color:var(--accent-green)">None</div>
+            <div class="stat-label">Intrinsic size limit (quotas control capacity)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" style="color:var(--accent-purple)">3</div>
+            <div class="stat-label">Security style options</div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- ─────────── QTREE CLI ─────────── -->
+    <section class="section" id="qtree-cli">
+      <div class="section-header">
+        <div class="section-icon icon-green">⌨️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 02</div>
+          <h2>Qtree CLI Operations</h2>
+        </div>
+      </div>
+
+      <p>ONTAP provides a dedicated <span class="hl">qtree</span> command namespace (also accessible as <span class="hl">volume qtree</span>). The core operations are: display, create, and modify.</p>
+
+      <h3>Display Existing Qtrees</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="prompt">::></span> <span class="cmd">qtree show</span>
+<span class="comment"># Displays: vserver, volume, qtree name, security style, oplock mode, status</span>
+
+<span class="prompt">::></span> <span class="cmd">qtree show</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span>
+<span class="comment"># Filter by a specific SVM</span></div>
+      </div>
+
+      <h3>Create a Qtree</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="prompt">::></span> <span class="cmd">qtree create</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_shared</span> <span class="param">-qtree</span> <span class="value">dept_finance</span>
+<span class="comment"># Security style inherits from volume if not specified</span>
+
+<span class="prompt">::></span> <span class="cmd">qtree create</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_shared</span> <span class="param">-qtree</span> <span class="value">dept_linux</span> <span class="param">-security-style</span> <span class="value">unix</span>
+<span class="comment"># Explicitly set Unix security style</span>
+
+<span class="prompt">::></span> <span class="cmd">qtree create</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_shared</span> <span class="param">-qtree</span> <span class="value">dept_win</span> <span class="param">-security-style</span> <span class="value">ntfs</span> <span class="param">-oplocks</span> <span class="value">disabled</span>
+<span class="comment"># NTFS style with oplocks disabled</span></div>
+      </div>
+
+      <h3>Modify a Qtree</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="prompt">::></span> <span class="cmd">qtree modify</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_shared</span> <span class="param">-qtree</span> <span class="value">dept_finance</span> <span class="param">-oplocks</span> <span class="value">disabled</span>
+<span class="comment"># Change oplock mode on existing qtree</span></div>
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-icon">🚫</div>
+        <div class="callout-content">
+          <div class="callout-title">Warning — Security Style Changes</div>
+          <div class="callout-text">Changing the security style of a volume or Qtree that already contains data can corrupt permissions and cause data access failures. Always make this change <strong>before</strong> data is copied in. If you have data and a wrong security style, create a new Qtree with the correct style and migrate the data.</div>
+        </div>
+      </div>
+
+      <section id="oplock">
+        <h3>Understanding Oplocks (Opportunistic Locks)</h3>
+        <p>An <strong style="color:var(--text-primary)">oplock</strong> (opportunistic lock) is a client-side caching mechanism that allows a client to store frequently accessed Qtree data in its local cache. When a client holds an oplock, it can read and write data locally without contacting the storage for every operation — significantly improving performance for read-heavy workloads.</p>
+
+        <div class="mermaid-wrap">
+          <div class="mermaid">
+flowchart LR
+    A[Client App] -->|"Request data"| B{Oplock\nGranted?}
+    B -->|"Yes"| C[Local Client Cache]
+    C -->|"Cache hit → fast read"| A
+    B -->|"No / Cache miss"| D[NetApp Volume / Qtree]
+    D -->|"Data served"| A
+    style A fill:#1c2333,stroke:#58a6ff,color:#e6edf3
+    style B fill:#1c2333,stroke:#e3b341,color:#e6edf3
+    style C fill:#1c2333,stroke:#3fb950,color:#3fb950
+    style D fill:#1c2333,stroke:#bc8cff,color:#e6edf3
+          </div>
+          <div class="diagram-caption">Oplock flow — cached data is served locally; uncached data comes from storage</div>
+        </div>
+
+        <div class="callout tip">
+          <div class="callout-icon">🧠</div>
+          <div class="callout-content">
+            <div class="callout-title">Best Practice — Oplock Usage</div>
+            <div class="callout-text">Oplocks are enabled by default. They work well for file-sharing workloads where clients frequently re-read the same files. However, for workloads with high concurrency or strict write ordering requirements, test before enabling. The decision should be driven by the application behaviour and access pattern.</div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- ─────────── SECURITY STYLES ─────────── -->
+    <section class="section" id="security-styles">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🔐</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 03</div>
+          <h2>Volume &amp; Qtree Security Styles</h2>
+        </div>
+      </div>
+
+      <p>Every ONTAP volume and Qtree carries a <strong style="color:var(--text-primary)">security style</strong> that determines which permission model governs file access. Choosing the correct security style at provisioning time avoids complex permission debugging later.</p>
+
+      <div class="sec-grid">
+        <div class="sec-card sec-unix">
+          <div class="sec-icon">🐧</div>
+          <div class="sec-name">Unix</div>
+          <div class="sec-desc">Used when serving storage to Linux, Unix, or Solaris hosts. Enforces POSIX permissions (owner/group/other with rwx bits). NFS protocol is the natural fit.</div>
+        </div>
+        <div class="sec-card sec-ntfs">
+          <div class="sec-icon">🪟</div>
+          <div class="sec-name">NTFS</div>
+          <div class="sec-desc">Used when serving storage to Windows hosts. Enforces Windows ACL-based permissions (user-level, group-level access control). CIFS/SMB protocol is the natural fit.</div>
+        </div>
+        <div class="sec-card sec-mix">
+          <div class="sec-icon">⚠️</div>
+          <div class="sec-name">Mixed <span style="font-size:10px;color:var(--accent-yellow)">(Not Recommended)</span></div>
+          <div class="sec-desc">Designed for dual-protocol environments but causes permission inconsistencies in practice. NetApp does not recommend its use. Use multi-protocol configuration instead.</div>
+        </div>
+      </div>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart TD
+    A[Storage Provisioning Request] --> B{Target OS?}
+    B -->|Linux / Unix / Solaris| C[Set Security Style: Unix]
+    B -->|Windows| D[Set Security Style: NTFS]
+    B -->|Both Windows + Linux| E[Use Multi-Protocol Config]
+    C --> F[Present via NFS]
+    D --> G[Present via CIFS/SMB]
+    E --> H[Advanced multi-protocol — separate procedure]
+    style A fill:#1c2333,stroke:#58a6ff,color:#e6edf3
+    style B fill:#1c2333,stroke:#e3b341,color:#e6edf3
+    style C fill:#1c2333,stroke:#3fb950,color:#3fb950
+    style D fill:#1c2333,stroke:#58a6ff,color:#58a6ff
+    style E fill:#1c2333,stroke:#bc8cff,color:#bc8cff
+    style F fill:#1c2333,stroke:#3fb950,color:#e6edf3
+    style G fill:#1c2333,stroke:#58a6ff,color:#e6edf3
+    style H fill:#1c2333,stroke:#bc8cff,color:#e6edf3
+        </div>
+        <div class="diagram-caption">Security style selection decision tree</div>
+      </div>
+
+      <section id="sec-recommendations">
+        <h3>Cross-Protocol Limitations</h3>
+        <p>When a volume or Qtree is provisioned with a security style that does not match the consuming operating system, the user-level permission feature is disabled. Practically, this means:</p>
+
+        <table class="spec-table">
+          <thead>
+            <tr><th>Volume Security Style</th><th>Presented to OS</th><th>Effect</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="badge badge-green">Unix</span></td><td>Linux / Unix</td><td>✅ Full POSIX permissions available</td></tr>
+            <tr><td><span class="badge badge-blue">NTFS</span></td><td>Windows</td><td>✅ Full ACL permissions available</td></tr>
+            <tr><td><span class="badge badge-green">Unix</span></td><td>Windows</td><td>⚠️ User-level permissions tab missing in Windows Explorer</td></tr>
+            <tr><td><span class="badge badge-blue">NTFS</span></td><td>Linux / Unix</td><td>⚠️ POSIX permission control disabled</td></tr>
+            <tr><td><span class="badge badge-yellow">Mixed</span></td><td>Any</td><td>🚫 Permission conflicts — not recommended by NetApp</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout tip">
+          <div class="callout-icon">📝</div>
+          <div class="callout-content">
+            <div class="callout-title">Inheritance Rule</div>
+            <div class="callout-text">If a security style is not specified during Qtree creation, the Qtree inherits the security style of its parent volume. The parent volume's style, in turn, defaults to the root volume security style set at SVM creation time.</div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- ─────────── QUOTA INTRO ─────────── -->
+    <section class="section" id="quota-intro">
+      <div class="section-header">
+        <div class="section-icon icon-yellow">📊</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 04</div>
+          <h2>Understanding Quotas</h2>
+        </div>
+      </div>
+
+      <p>A <strong style="color:var(--text-primary)">quota</strong> is a capacity enforcement mechanism applied on top of a Qtree (or volume) to limit how much disk space a target can consume. Without quotas, all clients sharing a volume could potentially consume the entire available capacity, starving other tenants.</p>
+
+      <h3>Why Quotas Are Essential</h3>
+      <p>Consider a scenario where three departments share a 50 GB volume via separate Qtrees. Without quotas, a single department could consume all 50 GB, preventing the others from storing any data. Quotas give the storage administrator precise control over capacity allocation per Qtree.</p>
+
+      <section id="quota-types">
+        <h3>Quota Target Types</h3>
+        <div class="quota-tier">
+          <div class="qt-tier-card">
+            <div class="qt-tier-icon">🌳</div>
+            <div class="qt-tier-name">Tree-Level Quota</div>
+            <div class="qt-tier-desc">Limits total capacity consumed by a Qtree, regardless of who wrote the data. Most commonly used in enterprise environments.</div>
+          </div>
+          <div class="qt-tier-card">
+            <div class="qt-tier-icon">👤</div>
+            <div class="qt-tier-name">User-Level Quota</div>
+            <div class="qt-tier-desc">Caps the amount a specific user account can store within a volume or Qtree. Useful for home directory environments.</div>
+          </div>
+          <div class="qt-tier-card">
+            <div class="qt-tier-icon">👥</div>
+            <div class="qt-tier-name">Group-Level Quota</div>
+            <div class="qt-tier-desc">Restricts total consumption by all members of a Unix/Windows group combined. Useful for departmental capacity management.</div>
+          </div>
+        </div>
+
+        <div class="callout success">
+          <div class="callout-icon">✅</div>
+          <div class="callout-content">
+            <div class="callout-title">Real-World Usage</div>
+            <div class="callout-text">In most enterprise deployments, <strong>tree-level quotas</strong> are the dominant choice. User-level and group-level quotas are less commonly seen in production NetApp environments, though they remain available for specific requirements.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="quota-limits">
+        <h3>Hard Limit, Soft Limit, and Threshold</h3>
+        <p>ONTAP quotas support three enforcement tiers. Understanding the difference is critical for both configuration and interview preparation:</p>
+
+        <!-- Interactive quota gauge visualization -->
+        <div class="svg-diagram">
+          <svg viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px;display:block;margin:0 auto;">
+            <!-- Capacity bar background -->
+            <rect x="30" y="70" width="640" height="40" rx="8" fill="rgba(48,54,61,0.5)" stroke="#30363d" stroke-width="1"/>
+            <!-- Soft limit zone -->
+            <rect x="30" y="70" width="384" height="40" rx="8" fill="rgba(63,185,80,0.18)" stroke="none"/>
+            <!-- Threshold zone -->
+            <rect x="414" y="70" width="128" height="40" fill="rgba(227,179,65,0.2)" stroke="none"/>
+            <!-- Hard limit zone -->
+            <rect x="542" y="70" width="128" height="40" rx="8" fill="rgba(247,129,102,0.2)" stroke="none"/>
+
+            <!-- Soft limit line -->
+            <line x1="414" y1="55" x2="414" y2="125" stroke="#3fb950" stroke-width="1.5" stroke-dasharray="5,3"/>
+            <text x="414" y="50" font-family="JetBrains Mono,monospace" font-size="10" fill="#3fb950" text-anchor="middle">Soft Limit</text>
+            <text x="414" y="140" font-family="JetBrains Mono,monospace" font-size="9" fill="#3fb950" text-anchor="middle">3 GB</text>
+
+            <!-- Threshold line -->
+            <line x1="542" y1="55" x2="542" y2="125" stroke="#e3b341" stroke-width="1.5" stroke-dasharray="5,3"/>
+            <text x="542" y="50" font-family="JetBrains Mono,monospace" font-size="10" fill="#e3b341" text-anchor="middle">Threshold</text>
+            <text x="542" y="140" font-family="JetBrains Mono,monospace" font-size="9" fill="#e3b341" text-anchor="middle">4 GB</text>
+
+            <!-- Hard limit line -->
+            <line x1="670" y1="55" x2="670" y2="125" stroke="#f78166" stroke-width="1.5"/>
+            <text x="670" y="50" font-family="JetBrains Mono,monospace" font-size="10" fill="#f78166" text-anchor="middle">Hard Limit</text>
+            <text x="670" y="140" font-family="JetBrains Mono,monospace" font-size="9" fill="#f78166" text-anchor="middle">5 GB</text>
+
+            <!-- Labels inside bar -->
+            <text x="220" y="95" font-family="Inter,sans-serif" font-size="11" fill="#3fb950" text-anchor="middle">Normal Write Zone</text>
+            <text x="478" y="95" font-family="Inter,sans-serif" font-size="10" fill="#e3b341" text-anchor="middle">Warning Zone</text>
+            <text x="606" y="95" font-family="Inter,sans-serif" font-size="10" fill="#f78166" text-anchor="middle">Blocked</text>
+          </svg>
+          <div class="diagram-caption">Quota enforcement tiers — soft limit triggers an alert, threshold logs a warning, hard limit blocks writes</div>
+        </div>
+
+        <table class="spec-table">
+          <thead>
+            <tr><th>Limit Type</th><th>ONTAP Parameter</th><th>Behavior When Reached</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="badge badge-green">Soft Limit</span></td><td><span class="hl">-soft-disk-limit</span></td><td>Sends an SNMP/EMS alert; writes continue</td></tr>
+            <tr><td><span class="badge badge-yellow">Threshold</span></td><td><span class="hl">-threshold</span></td><td>Logs a warning in the EMS event log; writes continue</td></tr>
+            <tr><td><span class="badge badge-orange">Hard Limit</span></td><td><span class="hl">-disk-limit</span></td><td>Immediately blocks all writes; returns "no space" error to client</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+
+    <!-- ─────────── QUOTA WORKFLOW ─────────── -->
+    <section class="section" id="quota-workflow">
+      <div class="section-header">
+        <div class="section-icon icon-teal">⚙️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 05</div>
+          <h2>Quota Configuration Workflow</h2>
+        </div>
+      </div>
+
+      <p>Quota configuration in ONTAP follows a three-step process. Each step must be completed in sequence for quotas to take effect. A key constraint: only <strong style="color:var(--text-primary)">one quota policy can be active per SVM</strong> at any time.</p>
+
+      <div class="quota-flow">
+        <div class="qf-box">
+          <div class="qf-label">Step 1</div>
+          <div class="qf-sub">Select or create<br>a quota policy</div>
+        </div>
+        <div class="qf-arrow">→</div>
+        <div class="qf-box">
+          <div class="qf-label">Step 2</div>
+          <div class="qf-sub">Add quota rules<br>to the policy</div>
+        </div>
+        <div class="qf-arrow">→</div>
+        <div class="qf-box">
+          <div class="qf-label">Step 3</div>
+          <div class="qf-sub">Enable quota<br>on the volume</div>
+        </div>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-content">
+          <div class="callout-title">One Policy Per SVM</div>
+          <div class="callout-text">You can create multiple quota policies and add rules to each, but only a single policy can be assigned to an SVM at a time. All Qtree quota rules you want to enforce must be placed inside that one active policy. This is the most common misconfiguration pitfall.</div>
+        </div>
+      </div>
+
+      <h3>Step 1 — Quota Policy</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="prompt">::></span> <span class="cmd">volume quota policy show</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span>
+<span class="comment"># Shows existing policies — a "default" policy always exists</span>
+
+<span class="prompt">::></span> <span class="cmd">volume quota policy create</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-policy-name</span> <span class="value">dept-quotas-2024</span>
+<span class="comment"># Create a named policy (optional — can use "default")</span>
+
+<span class="comment"># Apply the policy to the SVM</span>
+<span class="prompt">::></span> <span class="cmd">vserver modify</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-quota-policy</span> <span class="value">dept-quotas-2024</span></div>
+      </div>
+
+      <h3>Step 2 — Quota Rules</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="prompt">::></span> <span class="cmd">volume quota policy rule create</span> \
+    <span class="param">-vserver</span> <span class="value">svm-prod01</span> \
+    <span class="param">-policy-name</span> <span class="value">dept-quotas-2024</span> \
+    <span class="param">-volume</span> <span class="value">vol_shared</span> \
+    <span class="param">-type</span> <span class="value">tree</span> \
+    <span class="param">-target</span> <span class="value">/vol_shared/dept_finance</span> \
+    <span class="param">-disk-limit</span> <span class="value">10g</span> \
+    <span class="param">-soft-disk-limit</span> <span class="value">8g</span> \
+    <span class="param">-threshold</span> <span class="value">9g</span>
+<span class="comment"># Hard=10GB, Alert at 8GB, Warning log at 9GB</span></div>
+      </div>
+
+      <h3>Step 3 — Enable Quota on Volume</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="prompt">::></span> <span class="cmd">volume quota on</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_shared</span>
+
+<span class="comment"># Verify quota is active</span>
+<span class="prompt">::></span> <span class="cmd">volume quota report</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span>
+<span class="output">                    Disk     Files  Quota
+Vserver  Type Target  Used  Limit  Limit  Quota Specifier
+-------- ---- ------  ----  -----  -----  ----------------
+svm-prod01 tree /vol_shared/dept_finance 0B 10GB -  /vol_shared/dept_finance</span></div>
+      </div>
+
+      <section id="quota-ops">
+        <h3>Modifying Quotas and Refreshing</h3>
+        <p>After modifying any quota rule, the quota must be <strong style="color:var(--text-primary)">turned off and back on</strong> on the volume for the changes to take effect. This is a critical operational step that is easy to forget.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">ONTAP CLI — Modify & Refresh</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+          <div class="code-body"><span class="comment"># Step 1: Modify the rule (change disk limit)</span>
+<span class="prompt">::></span> <span class="cmd">volume quota policy rule modify</span> \
+    <span class="param">-vserver</span> <span class="value">svm-prod01</span> \
+    <span class="param">-policy-name</span> <span class="value">dept-quotas-2024</span> \
+    <span class="param">-volume</span> <span class="value">vol_shared</span> \
+    <span class="param">-type</span> <span class="value">tree</span> \
+    <span class="param">-target</span> <span class="value">/vol_shared/dept_finance</span> \
+    <span class="param">-disk-limit</span> <span class="value">15g</span>
+
+<span class="comment"># Step 2: Turn quota off</span>
+<span class="prompt">::></span> <span class="cmd">volume quota off</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_shared</span>
+
+<span class="comment"># Step 3: Turn quota back on to apply changes</span>
+<span class="prompt">::></span> <span class="cmd">volume quota on</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_shared</span>
+
+<span class="comment"># Verify updated limits</span>
+<span class="prompt">::></span> <span class="cmd">volume quota report</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span></div>
+        </div>
+
+        <div class="callout tip">
+          <div class="callout-icon">🧠</div>
+          <div class="callout-content">
+            <div class="callout-title">Trainer Note — CLI vs GUI for Quotas</div>
+            <div class="callout-text">Quota CLI commands have strict parameter ordering and path-format requirements. Even experienced administrators sometimes get the <span class="hl">-target</span> path format wrong. For production quota management, using <strong>ActiveIQ System Manager</strong> is strongly recommended as it handles parameter validation and the off/on cycle automatically.</div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- ─────────── SYSTEM MANAGER ─────────── -->
+    <section class="section" id="system-manager">
+      <div class="section-header">
+        <div class="section-icon icon-orange">🖥️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 06</div>
+          <h2>ActiveIQ System Manager</h2>
+        </div>
+      </div>
+
+      <p><strong style="color:var(--text-primary)">ActiveIQ System Manager</strong> (formerly OnCommand System Manager) is NetApp's browser-based graphical management interface for ONTAP clusters. It provides a visual alternative to the CLI for all major storage administration tasks.</p>
+
+      <div class="sm-compare">
+        <div class="sm-col">
+          <div class="sm-col-title" style="color:var(--accent-orange)">📦 ONTAP 8.2 and earlier</div>
+          <ul class="bullet-list">
+            <li>System Manager was a <strong>separate downloadable application</strong></li>
+            <li>Required installation on a management server or laptop</li>
+            <li>Clusters had to be added manually to the tool</li>
+            <li>Available for both 7-Mode and Cluster-Mode</li>
+          </ul>
+        </div>
+        <div class="sm-col">
+          <div class="sm-col-title" style="color:var(--accent-green)">🚀 ONTAP 8.3 and later</div>
+          <ul class="bullet-list">
+            <li>System Manager is <strong>bundled with ONTAP OS</strong> — no separate install needed</li>
+            <li>Accessible directly from a browser using the cluster management IP</li>
+            <li>Just navigate to <span class="hl">https://&lt;cluster-mgmt-ip&gt;/</span></li>
+            <li>Same admin credentials as CLI login</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Accessing System Manager</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">CLI — Find Cluster Management IP</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="prompt">::></span> <span class="cmd">network interface show</span> <span class="param">-role</span> <span class="value">cluster-mgmt</span>
+<span class="output">            Logical    Status     Network            Current       Current Is
+Vserver     Interface  Admin/Oper Address/Mask       Node          Port    Home
+----------- ---------- ---------- ------------------ ------------- ------- ----
+cluster1    cluster_mgmt up/up  10.20.30.100/24    node-01       e0M     true</span>
+
+<span class="comment"># Open in browser: https://10.20.30.100/</span>
+<span class="comment"># Accept the certificate warning and proceed</span>
+<span class="comment"># Login with same admin/password as CLI</span></div>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <div class="callout-title">Interview Insight — ONTAP 8.2 vs 8.3</div>
+          <div class="callout-text">A common interview question asks: "What changed with System Manager in ONTAP 8.3?" The answer is that from 8.3 onwards, System Manager became an integrated part of the ONTAP image, eliminating the need to download and install it separately. Prior to 8.3, it was a standalone tool requiring manual installation and cluster registration.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────── CIFS PREREQS ─────────── -->
+    <section class="section" id="cifs-prereqs">
+      <div class="section-header">
+        <div class="section-icon icon-teal">🌐</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 07</div>
+          <h2>CIFS/SMB — Prerequisites</h2>
+        </div>
+      </div>
+
+      <p><strong style="color:var(--text-primary)">CIFS (Common Internet File System)</strong>, now standardized as SMB (Server Message Block), is the Windows native file-sharing protocol. Configuring CIFS on an ONTAP SVM enables Windows clients to mount and access NetApp storage as standard Windows shares.</p>
+
+      <h3>Information to Gather Before Starting</h3>
+      <table class="spec-table">
+        <thead>
+          <tr><th>#</th><th>Required Information</th><th>Where to Get It</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>Active Directory domain name (e.g., <span class="hl">corp.example.com</span>)</td><td>Windows / AD team</td></tr>
+          <tr><td>2</td><td>DNS server IP address(es) — up to 3 allowed</td><td>Windows / AD team</td></tr>
+          <tr><td>3</td><td>AD admin username and password (or account with AD join rights)</td><td>Windows team</td></tr>
+          <tr><td>4</td><td>Organizational Unit (OU) path — if company standard requires a non-default OU</td><td>Windows team</td></tr>
+          <tr><td>5</td><td>Desired CIFS server name (can match SVM name)</td><td>Storage admin decision</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout info">
+        <div class="callout-icon">🔑</div>
+        <div class="callout-content">
+          <div class="callout-title">Why AD Admin Credentials Are Required</div>
+          <div class="callout-text">Active Directory is a secured, centralized authentication service. When an ONTAP SVM joins an AD domain, it is registering itself as a computer object within that domain. This operation requires an account with permission to add computer objects — typically a Domain Admin account or a delegated service account. The credentials are only required at join time, not for ongoing operation.</div>
+        </div>
+      </div>
+
+      <section id="cifs-lif">
+        <h3>CIFS Setup Steps Overview</h3>
+
+        <div class="cifs-timeline">
+          <div class="cifs-step">
+            <div class="cifs-step-num">1</div>
+            <div class="cifs-step-label">Verify CIFS Protocol</div>
+            <div class="cifs-step-sub">Confirm CIFS is in the allowed protocols list on the SVM</div>
+          </div>
+          <div class="cifs-arrow">→</div>
+          <div class="cifs-step">
+            <div class="cifs-step-num">2</div>
+            <div class="cifs-step-label">Create Data LIF</div>
+            <div class="cifs-step-sub">Assign the correct service policy for CIFS traffic</div>
+          </div>
+          <div class="cifs-arrow">→</div>
+          <div class="cifs-step">
+            <div class="cifs-step-num">3</div>
+            <div class="cifs-step-label">Configure DNS</div>
+            <div class="cifs-step-sub">Enable DNS service on SVM and point to the AD/DNS server</div>
+          </div>
+          <div class="cifs-arrow">→</div>
+          <div class="cifs-step">
+            <div class="cifs-step-num">4</div>
+            <div class="cifs-step-label">Create CIFS Server</div>
+            <div class="cifs-step-sub">Join the SVM to Active Directory domain</div>
+          </div>
+        </div>
+
+        <h3>Configuring DNS on the SVM</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+          <div class="code-body"><span class="comment"># Check if DNS is already configured</span>
+<span class="prompt">::></span> <span class="cmd">vserver services dns show</span>
+
+<span class="comment"># Configure DNS on SVM (if not already done)</span>
+<span class="prompt">::></span> <span class="cmd">vserver services dns create</span> \
+    <span class="param">-vserver</span> <span class="value">svm-prod01</span> \
+    <span class="param">-domains</span> <span class="value">corp.example.com</span> \
+    <span class="param">-name-servers</span> <span class="value">10.20.30.253,10.20.30.252</span>
+<span class="comment"># Comma-separated — max 3 DNS servers</span>
+
+<span class="comment"># Verify DNS configuration</span>
+<span class="prompt">::></span> <span class="cmd">vserver services dns show</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span></div>
+        </div>
+      </section>
+    </section>
+
+    <!-- ─────────── CIFS SETUP ─────────── -->
+    <section class="section" id="cifs-setup">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🏢</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 08</div>
+          <h2>Creating the CIFS Server</h2>
+        </div>
+      </div>
+
+      <p>With DNS configured and credentials in hand, the CIFS virtual server can be created. This single command performs the Active Directory join and registers the CIFS server as a computer object in the domain.</p>
+
+      <section id="cifs-ad">
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">ONTAP CLI — CIFS Server Create</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+          <div class="code-body"><span class="comment"># Check if CIFS is already configured</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs show</span>
+
+<span class="comment"># Create and join to Active Directory</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs create</span> \
+    <span class="param">-vserver</span> <span class="value">svm-prod01</span> \
+    <span class="param">-cifs-server</span> <span class="value">SVM-PROD01</span> \
+    <span class="param">-domain</span> <span class="value">corp.example.com</span> \
+    <span class="param">-admin-username</span> <span class="value">ad-admin</span>
+<span class="comment"># You will be prompted for the AD admin password</span>
+
+<span class="comment"># Optional: specify a custom OU path</span>
+<span class="comment"># -ou "OU=Storage,OU=Infrastructure,DC=corp,DC=example,DC=com"</span>
+
+<span class="comment"># Verify creation</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs show</span>
+<span class="output">          Server          Status    Domain/Workgroup  Auth Style
+--------- --------------- --------- ----------------  ----------
+svm-prod01 SVM-PROD01      up        CORP              domain</span></div>
+        </div>
+
+        <h3>What Happens During the AD Join</h3>
+        <div class="mermaid-wrap">
+          <div class="mermaid">
+sequenceDiagram
+    participant O as ONTAP SVM
+    participant D as DNS Server
+    participant A as Active Directory DC
+
+    O->>D: Resolve domain name corp.example.com
+    D-->>O: Domain Controller IP returned
+    O->>A: Request to join domain (with admin credentials)
+    A->>A: Validate admin credentials
+    A->>A: Create computer object for SVM-PROD01 in AD
+    A-->>O: Domain join confirmed + Kerberos ticket
+    O-->>O: CIFS server up, auth-style = domain
+          </div>
+          <div class="diagram-caption">CIFS server AD join sequence — DNS resolution, authentication, and computer object registration</div>
+        </div>
+
+        <h3>Key CIFS Configuration Parameters</h3>
+        <table class="spec-table">
+          <thead>
+            <tr><th>Parameter</th><th>Description</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="hl">-cifs-server</span></td><td>Name of the virtual CIFS server in AD</td><td>Can match or differ from SVM name; visible in AD as a computer object</td></tr>
+            <tr><td><span class="hl">-domain</span></td><td>Active Directory domain FQDN</td><td>Must be resolvable via DNS configured on the SVM</td></tr>
+            <tr><td><span class="hl">-ou</span></td><td>Organizational Unit path</td><td>Defaults to CN=Computers; check with Windows team for company standards</td></tr>
+            <tr><td><span class="hl">-admin-username</span></td><td>AD account for domain join operation</td><td>Requires computer join permission; not used after initial join</td></tr>
+            <tr><td>Auth Style: <span class="hl-green">domain</span></td><td>Kerberos/NTLM via Active Directory</td><td>Default and recommended; workgroup mode is rarely used</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout success">
+          <div class="callout-icon">✅</div>
+          <div class="callout-content">
+            <div class="callout-title">Verifying the Setup</div>
+            <div class="callout-text">After <span class="hl">vserver cifs create</span> completes, run <span class="hl">vserver cifs show</span> and confirm the status is <span class="hl-green">up</span> and the domain shows correctly. Windows clients should now be able to map drives using the CIFS server name.</div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- ─────────── INTERVIEW Q&A ─────────── -->
+    <section class="section" id="interview-qa">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🎤</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 09</div>
+          <h2>Scenario-Based Interview Q&amp;A</h2>
+        </div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q1</span> What is a Qtree and how does it differ from a volume?</div>
+        <div class="qa-a">A Qtree is a special sub-directory within an ONTAP volume that supports its own security style, quota, and access controls. Unlike a volume, a Qtree is not an independently mounted namespace — it lives inside a volume. Volumes consume from the platform's volume count limit (typically 1,000–2,500); Qtrees do not. Qtrees are ideal for consolidating many small user data requests into a single volume, conserving the volume count budget. Application data should always use dedicated volumes.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q2</span> Why would you choose NTFS security style over Unix for an ONTAP volume?</div>
+        <div class="qa-a">The security style should match the operating system that will access the data. If Windows clients are mounting the share via CIFS/SMB, NTFS security style ensures that Windows ACL-based permissions (the Security tab in Windows Explorer) function correctly. Assigning Unix security style to a Windows-accessed volume disables user-level permission management, creating a significant operational limitation.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q3</span> What is the difference between a hard limit and soft limit in ONTAP quotas?</div>
+        <div class="qa-a">A hard limit is an absolute ceiling — when reached, further writes are blocked and the client receives a "no space" error. A soft limit is an early-warning threshold — when crossed, ONTAP generates an alert (SNMP/EMS notification) but continues allowing writes. The threshold parameter serves a similar early-warning purpose at a slightly higher watermark. Typical production configuration: soft limit at 80%, threshold at 90%, hard limit at 100% of allocated capacity.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q4</span> After modifying a quota rule in ONTAP, the change is not reflected. What do you do?</div>
+        <div class="qa-a">Quota changes do not take effect immediately after rule modification. The quota must be turned off (<span class="hl">volume quota off</span>) and turned back on (<span class="hl">volume quota on</span>) on the affected volume. This off/on cycle causes ONTAP to re-read all quota rules and apply them. This applies to any quota modification — adding new rules, changing limits, or removing rules.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q5</span> You need to configure CIFS on an SVM but the domain join keeps failing. What do you check?</div>
+        <div class="qa-a">Systematically check: (1) Is the domain name resolvable? Run <span class="hl">vserver services dns show</span> and verify the DNS server IP is correct. (2) Is the DNS server reachable from the SVM's data LIF? Ping the DNS server IP. (3) Are the AD credentials correct and does the account have permission to add computer objects to the domain? (4) Is NTP synchronized between the SVM and the domain controller? Kerberos authentication fails if the time difference exceeds 5 minutes. (5) Is there a firewall blocking AD-required ports (TCP 389, 88, 445, 135)?</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q6</span> What changed with System Manager in ONTAP 8.3?</div>
+        <div class="qa-a">Before ONTAP 8.3, System Manager was a standalone application that had to be downloaded from the NetApp support portal and installed separately on a management server or workstation, with clusters added manually. From ONTAP 8.3 onwards, System Manager was bundled into the ONTAP OS image itself. Administrators can access it by pointing a browser to the cluster management IP address — no separate installation required.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q7</span> Can multiple quota policies be active on the same SVM simultaneously?</div>
+        <div class="qa-a">No. Only one quota policy can be assigned and active on an SVM at any given time. You can create multiple policies and populate each with different rules, but only one can be set as the active policy via <span class="hl">vserver modify -quota-policy</span>. This means all Qtree quota rules for an SVM must be consolidated into the single active policy. This constraint is a common source of confusion when administrators create a new policy but forget that the default policy is still active.</div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ─────────── AUTHOR SECTION ─────────── -->
+    <section class="section" id="author">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:32px;margin-bottom:32px;">
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border);">
+          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(88,166,255,0.2),rgba(188,140,255,0.2));border:1px solid rgba(88,166,255,0.3);display:flex;align-items:center;justify-content:center;font-size:18px;">✍️</div>
+          <div>
+            <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">About the Author</div>
+            <div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:700;color:var(--text-primary);">Mohammed Abdul</div>
+          </div>
+        </div>
+
+        <!-- Bio card -->
+        <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;">
+          <!-- Avatar -->
+          <div style="flex-shrink:0;">
+            <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#58a6ff,#bc8cff);display:flex;align-items:center;justify-content:center;font-size:36px;border:3px solid rgba(88,166,255,0.35);box-shadow:0 0 24px rgba(88,166,255,0.15);">👨‍💻</div>
+            <div style="margin-top:10px;text-align:center;">
+              <span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-family:'JetBrains Mono',monospace;background:rgba(63,185,80,0.15);color:var(--accent-green);border:1px solid rgba(63,185,80,0.3);">10+ Years Exp.</span>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div style="flex:1;min-width:260px;">
+            <div style="font-family:'Sora',sans-serif;font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Data Protection Architect</div>
+            <div style="font-size:13px;color:var(--accent-blue);font-weight:500;margin-bottom:14px;">Hybrid Cloud · Enterprise Backup &amp; Recovery · Storage Architecture</div>
+            <p style="margin-bottom:14px;">Mohammed Abdul is a Data Protection Architect with more than 10 years of experience in Hybrid Cloud environments, having worked with global clients across various industries including financial services, healthcare, manufacturing, and technology.</p>
+            <p style="margin-bottom:18px;">With extensive expertise in enterprise backup and recovery solutions, Mohammed specializes in helping organizations design and implement robust, scalable data protection strategies aligned with business continuity requirements.</p>
+
+            <!-- Tech specializations -->
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:10px;">Technology Specializations</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+              <span class="badge badge-blue">AWS</span>
+              <span class="badge badge-teal">Azure</span>
+              <span class="badge badge-green">GCP</span>
+              <span class="badge badge-orange">Commvault</span>
+              <span class="badge badge-purple">Veeam</span>
+              <span class="badge badge-yellow">NetBackup</span>
+              <span class="badge badge-blue">NetApp ONTAP</span>
+              <span class="badge badge-green">SAN · NAS</span>
+              <span class="badge badge-teal">Data Architecture</span>
+            </div>
+
+            <!-- Email contact -->
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:10px;">Contact &amp; Queries</div>
+            <a href="mailto:abdul.md.20000102@gmail.com" style="display:inline-flex;align-items:center;gap:10px;background:rgba(88,166,255,0.08);border:1px solid rgba(88,166,255,0.35);border-radius:10px;padding:12px 20px;text-decoration:none;transition:all 0.2s;margin-bottom:0;">
+              <span style="font-size:18px;">✉️</span>
+              <div>
+                <div style="font-size:12px;color:var(--text-muted);font-weight:500;margin-bottom:2px;">Email</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent-blue);font-weight:600;">abdul.md.20000102@gmail.com</div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div style="margin-top:32px;border-radius:10px;padding:18px 22px;background:rgba(227,179,65,0.07);border:1px solid rgba(227,179,65,0.3);display:flex;gap:14px;align-items:flex-start;">
+          <span style="font-size:20px;flex-shrink:0;margin-top:2px;">⚠️</span>
+          <div>
+            <div style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--accent-yellow);margin-bottom:8px;">Disclaimer</div>
+            <div style="font-size:13px;color:var(--text-secondary);line-height:1.75;">
+              This content is for <strong style="color:var(--text-primary);">educational purposes and knowledge sharing</strong> only. Always refer to official NetApp documentation and follow your organization's procedures for production implementations.<br><br>
+              I am not affiliated with or endorsed by NetApp, Inc. <strong style="color:var(--text-primary);">NetApp®</strong> and <strong style="color:var(--text-primary);">ONTAP®</strong> are registered trademarks of NetApp, Inc. All references are made purely for learning purposes. All IP addresses, hostnames, SVM names, and configuration parameters used in this tutorial are illustrative examples only and do not reflect any real environment.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      darkMode: true,
+      background: '#1c2333',
+      primaryColor: '#1c2333',
+      primaryTextColor: '#e6edf3',
+      primaryBorderColor: '#30363d',
+      lineColor: '#8b949e',
+      secondaryColor: '#161b22',
+      tertiaryColor: '#0d1117',
+      edgeLabelBackground: '#1c2333',
+      clusterBkg: '#1c2333',
+      clusterBorder: '#30363d',
+      titleColor: '#e6edf3',
+      fontFamily: "'Inter', sans-serif",
+      fontSize: '13px'
+    }
+  });
+
+  // Active TOC link on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const tocLinks = document.querySelectorAll('.toc-link');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.toc-link[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.2, rootMargin: '-30px 0px -60% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  // Reading progress bar
+  const progressBar = document.getElementById('reading-progress');
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = docHeight > 0 ? scrollTop / docHeight : 0;
+    progressBar.style.transform = `scaleX(${progress})`;
+  });
+</script>
+</body>
+</html>

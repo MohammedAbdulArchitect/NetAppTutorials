@@ -198,140 +198,108 @@
   .badge-gray { background: rgba(139,148,158,0.15); color: var(--text-secondary); border: 1px solid var(--border); }
 
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
-  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 20px 0; }
 
-  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; }
-  .stat-num { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 4px; }
-  .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+  .stat-num { font-family: 'Sora', sans-serif; font-size: 36px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
+  .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
 
-  .step-list { list-style: none; margin: 12px 0; }
-  .step-list li { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(48,54,61,0.5); font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; align-items: flex-start; }
-  .step-list li:last-child { border-bottom: none; }
-  .step-num { width: 22px; height: 22px; border-radius: 6px; background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.3); color: var(--accent-blue); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
-
-  .bullet-list { list-style: none; margin: 10px 0; }
-  .bullet-list li { padding: 6px 0 6px 20px; position: relative; font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; }
-  .bullet-list li::before { content: '▸'; position: absolute; left: 0; color: var(--accent-blue); font-size: 11px; top: 8px; }
-
-  h3 { font-family: 'Sora', sans-serif; font-size: 17px; font-weight: 600; color: var(--text-primary); margin: 24px 0 12px; }
-  h4 { font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 600; color: var(--accent-blue); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .svg-diagram { margin: 24px 0; }
+  .diagram-caption { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 10px; font-style: italic; }
 
   .mermaid-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 28px 20px 16px; margin: 20px 0; overflow-x: auto; }
-  .diagram-caption { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 10px; font-style: italic; }
 
-  /* SVG diagram containers */
-  .svg-diagram { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; overflow-x: auto; }
-  .svg-diagram svg { display: block; margin: 0 auto; }
+  h3 { font-family: 'Sora', sans-serif; font-size: 17px; font-weight: 600; color: var(--text-primary); margin: 28px 0 12px; }
+  h4 { font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
 
-  /* interview Q&A */
-  .qa-block { background: var(--bg-card); border: 1px solid rgba(188,140,255,0.3); border-radius: 12px; padding: 20px 24px; margin: 16px 0; }
-  .qa-q { font-size: 14px; font-weight: 600; color: var(--accent-purple); margin-bottom: 10px; display: flex; gap: 10px; }
-  .qa-a { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; padding-left: 26px; }
-  .qa-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; }
+  .hl { color: var(--accent-purple); font-weight: 500; }
+  .hl-green { color: var(--accent-green); font-weight: 500; }
+  .hl-blue { color: var(--accent-blue); font-weight: 500; }
+  .port { font-family: 'JetBrains Mono', monospace; background: rgba(88,166,255,0.1); color: var(--accent-blue); padding: 1px 6px; border-radius: 4px; font-size: 13px; }
 
-  /* author section */
-  .author-section { background: linear-gradient(135deg, #161b22, #1c2333); border: 1px solid var(--border); border-radius: 16px; padding: 36px; margin-top: 60px; }
-  .author-card { display: flex; gap: 28px; align-items: flex-start; }
-  .author-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0; border: 3px solid rgba(88,166,255,0.3); }
-  .author-name { font-family: 'Sora', sans-serif; font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
-  .author-title { font-size: 13px; color: var(--accent-blue); margin-bottom: 14px; font-weight: 500; }
-  .author-bio { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 16px; }
-  .tech-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-  .author-email { display: inline-flex; align-items: center; gap: 8px; background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.3); border-radius: 8px; padding: 8px 16px; font-size: 13px; color: var(--accent-blue); text-decoration: none; transition: all 0.2s; }
-  .author-email:hover { background: rgba(88,166,255,0.2); }
+  .bullet-list { list-style: none; padding: 0; }
+  .bullet-list li { padding: 6px 0 6px 20px; font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; position: relative; }
+  .bullet-list li::before { content: '▸'; position: absolute; left: 0; color: var(--accent-blue); font-size: 11px; top: 9px; }
+
+  .step-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .step-list li { display: flex; align-items: flex-start; gap: 14px; font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; }
+  .step-num { width: 24px; height: 24px; border-radius: 50%; background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--accent-blue); flex-shrink: 0; font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+
+  .qa-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .qa-q { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; display: flex; gap: 10px; align-items: flex-start; }
+  .qa-a { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; padding-left: 4px; }
+  .qa-label { background: rgba(88,166,255,0.15); color: var(--accent-blue); padding: 2px 8px; border-radius: 6px; font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
 
   .divider { height: 1px; background: var(--border); margin: 40px 0; }
 
-  /* progress bar in header */
-  .progress-bar-wrap { display: flex; gap: 6px; margin-top: 20px; position: relative; }
-  .prog-chip { background: rgba(88,166,255,0.12); border: 1px solid rgba(88,166,255,0.25); border-radius: 6px; padding: 4px 10px; font-size: 11px; color: var(--accent-blue); font-family: 'JetBrains Mono', monospace; }
+  .author-section { background: linear-gradient(135deg, #161b22, #1c2333); border: 1px solid var(--border); border-radius: 16px; padding: 36px; margin-top: 60px; }
+  .author-card { display: flex; gap: 20px; align-items: flex-start; }
+  .author-avatar { width: 56px; height: 56px; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+  .author-name { font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .author-title { font-size: 13px; color: var(--accent-blue); margin-bottom: 12px; }
+  .author-bio { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 14px; }
+  .tech-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .author-email { color: var(--accent-teal); font-size: 13px; text-decoration: none; }
 
-  /* port highlight inline */
-  .port { display: inline-block; background: rgba(57,211,195,0.12); border: 1px solid rgba(57,211,195,0.3); border-radius: 4px; padding: 1px 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent-teal); }
-
-  /* highlight text */
-  .hl { color: var(--accent-yellow); font-weight: 600; }
-  .hl-blue { color: var(--accent-blue); font-weight: 600; }
-  .hl-green { color: var(--accent-green); font-weight: 600; }
-
-  @media (max-width: 900px) {
+  @media (max-width: 768px) {
     .sidebar { display: none; }
     .main-content { margin-left: 0; max-width: 100vw; }
     .top-header { padding: 30px 20px; }
     .content-area { padding: 20px; }
     .grid-2, .grid-3 { grid-template-columns: 1fr; }
-    .author-card { flex-direction: column; }
   }
 </style>
 </head>
 <body>
 
-<!-- ══════════════════════════ SIDEBAR ══════════════════════════ -->
-<aside class="sidebar">
+<!-- ── SIDEBAR ── -->
+<nav class="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-logo">
       <div class="logo-icon">🗄️</div>
-      <span>ONTAP Tutorials</span>
+      <span>NetApp ONTAP</span>
     </div>
-    <div class="sidebar-subtitle">Tutorial 3 · Self-Paced</div>
+    <div class="sidebar-subtitle">Tutorial 3 — Controller Architecture</div>
   </div>
-  <nav class="toc-nav">
+  <div class="toc-nav">
     <div class="toc-section-label">Overview</div>
-    <a href="#intro" class="toc-link active"><span class="toc-num">00</span> Introduction</a>
+    <a href="#intro" class="toc-link"><span class="toc-num">00</span> What This Tutorial Covers</a>
 
     <div class="toc-section-label">Part I — Controller Anatomy</div>
     <a href="#ports" class="toc-link"><span class="toc-num">01</span> External Ports Overview</a>
     <a href="#console" class="toc-link sub"><span class="toc-num">↳</span> Console / Serial Port</a>
     <a href="#sp" class="toc-link sub"><span class="toc-num">↳</span> Service Processor (SP)</a>
-    <a href="#e0m" class="toc-link sub"><span class="toc-num">↳</span> Management Port E0M</a>
+    <a href="#e0m" class="toc-link sub"><span class="toc-num">↳</span> E0M Management Port</a>
     <a href="#net-san" class="toc-link sub"><span class="toc-num">↳</span> NAS, SAN & SAS Ports</a>
-    <a href="#unified" class="toc-link sub"><span class="toc-num">↳</span> Unified Ports</a>
 
     <div class="toc-section-label">Part II — Internal Components</div>
     <a href="#cache-nvram" class="toc-link"><span class="toc-num">02</span> Cache & NVRAM</a>
-    <a href="#write-flow" class="toc-link sub"><span class="toc-num">↳</span> Write I/O Flow & CP</a>
-    <a href="#read-flow" class="toc-link sub"><span class="toc-num">↳</span> Read I/O & Read Cache</a>
     <a href="#pam" class="toc-link"><span class="toc-num">03</span> Flash Cache (PAM2)</a>
     <a href="#boot" class="toc-link"><span class="toc-num">04</span> Boot / Flash Module</a>
 
     <div class="toc-section-label">Part III — Cluster Setup</div>
     <a href="#lab" class="toc-link"><span class="toc-num">05</span> Lab Environment</a>
     <a href="#initial-config" class="toc-link"><span class="toc-num">06</span> Initial Configuration</a>
-    <a href="#cluster-create" class="toc-link sub"><span class="toc-num">↳</span> Cluster Creation Wizard</a>
-    <a href="#add-node" class="toc-link sub"><span class="toc-num">↳</span> Adding a Second Node</a>
-    <a href="#licenses" class="toc-link sub"><span class="toc-num">↳</span> License Management</a>
-    <a href="#mgmt-ip" class="toc-link sub"><span class="toc-num">↳</span> Node vs Cluster Mgmt IPs</a>
 
     <div class="toc-section-label">Part IV — CLI Essentials</div>
-    <a href="#cli" class="toc-link"><span class="toc-num">07</span> CLI Navigation Tips</a>
-    <a href="#commands" class="toc-link sub"><span class="toc-num">↳</span> Key Show Commands</a>
+    <a href="#cli" class="toc-link"><span class="toc-num">07</span> CLI Navigation & Commands</a>
 
     <div class="toc-section-label">Exam Prep</div>
-    <a href="#interview" class="toc-link"><span class="toc-num">08</span> Interview Q&amp;A</a>
+    <a href="#interview" class="toc-link"><span class="toc-num">08</span> Interview & Exam Q&A</a>
     <a href="#bestpractice" class="toc-link"><span class="toc-num">09</span> Best Practices</a>
-    <a href="#about" class="toc-link"><span class="toc-num">10</span> About the Author</a>
-  </nav>
-</aside>
+  </div>
+</nav>
 
-<!-- ══════════════════════════ MAIN ══════════════════════════ -->
+<!-- ── MAIN ── -->
 <div class="main-content">
-
-  <!-- Hero Header -->
   <header class="top-header">
-    <div class="header-badge">📘 TUTORIAL 3 · ONTAP FUNDAMENTALS</div>
-    <h1 class="main-title">NetApp Controller Architecture<br>&amp; Cluster Setup</h1>
-    <p class="header-desc">A deep-dive into how NetApp ONTAP storage controllers are structured internally — every port, every component — followed by a hands-on walkthrough of building a two-node cluster from scratch using the CLI.</p>
+    <div class="header-badge">📘 TUTORIAL 03 · ONTAP SERIES</div>
+    <h1 class="main-title">Controller Architecture<br>&amp; Cluster Setup</h1>
+    <p class="header-desc">Physical anatomy of an ONTAP controller, I/O internals, and building a two-node cluster from scratch via CLI.</p>
     <div class="header-meta">
-      <div class="meta-chip"><div class="dot" style="background:var(--accent-blue)"></div>Intermediate Level</div>
-      <div class="meta-chip"><div class="dot" style="background:var(--accent-green)"></div>~60 min read</div>
-      <div class="meta-chip"><div class="dot" style="background:var(--accent-purple)"></div>ONTAP 9.x</div>
-      <div class="meta-chip"><div class="dot" style="background:var(--accent-orange)"></div>FAS · AFF · All-Flash</div>
-    </div>
-    <div class="progress-bar-wrap">
-      <div class="prog-chip">Controller Anatomy</div>
-      <div class="prog-chip">Write &amp; Read I/O</div>
-      <div class="prog-chip">Cluster CLI Setup</div>
-      <div class="prog-chip">CLI Mastery</div>
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-blue)"></span> Intermediate Level</div>
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-green)"></span> FAS &amp; AFF Platforms</div>
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-purple)"></span> ONTAP 9.7+</div>
     </div>
   </header>
 
@@ -346,9 +314,7 @@
           <h2>What This Tutorial Covers</h2>
         </div>
       </div>
-      <p>Whether you work with FAS (Fabric-Attached Storage) or AFF (All-Flash FAS) systems, understanding what's inside the controller chassis — and why each component exists — is foundational to operating, troubleshooting, and architecting NetApp environments confidently.</p>
-      <p>In this tutorial, we walk through the physical and logical anatomy of an ONTAP storage controller, explore how read and write I/O are handled internally, and then move into the lab to build a two-node cluster using the command-line interface.</p>
-
+      <p>This tutorial covers the physical and logical anatomy of an ONTAP storage controller — ports, cache, NVRAM, PAM2, and the boot module — then walks through building a two-node HA cluster via CLI.</p>
       <div class="grid-3">
         <div class="stat-card"><div class="stat-num" style="color:var(--accent-blue)">3</div><div class="stat-label">Key Ports on Every Controller</div></div>
         <div class="stat-card"><div class="stat-num" style="color:var(--accent-green)">4</div><div class="stat-label">Core Internal Components</div></div>
@@ -365,58 +331,42 @@
           <h2>External Ports Overview</h2>
         </div>
       </div>
-      <p>Every NetApp controller — regardless of model — exposes a consistent set of ports across three functional categories: <span class="hl">management &amp; console access</span>, <span class="hl-green">data connectivity</span> (NAS and SAN), and <span class="hl-blue">backend shelf connectivity</span>. The exact number of data ports scales with the controller model, but the management port topology remains consistent.</p>
+      <p>Every NetApp controller exposes ports across three categories: <span class="hl">management &amp; console</span>, <span class="hl-green">data connectivity</span> (NAS/SAN), and <span class="hl-blue">backend shelf connectivity</span>.</p>
 
-      <!-- SVG: Port Overview Diagram -->
       <div class="svg-diagram">
         <svg viewBox="0 0 820 220" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:820px">
-          <!-- Controller chassis -->
           <rect x="20" y="40" width="780" height="140" rx="12" fill="#1c2333" stroke="#30363d" stroke-width="2"/>
           <text x="410" y="30" text-anchor="middle" font-family="Sora,sans-serif" font-size="13" fill="#8b949e" font-weight="600">ONTAP STORAGE CONTROLLER — EXTERNAL PORTS</text>
-
-          <!-- Console Port -->
           <rect x="50" y="70" width="110" height="80" rx="8" fill="#0d2035" stroke="#39d3c3" stroke-width="1.5"/>
           <text x="105" y="95" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#39d3c3" font-weight="700">CONSOLE</text>
           <text x="105" y="110" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681">Serial / RS-232</text>
           <rect x="88" y="118" width="34" height="20" rx="4" fill="#30363d" stroke="#39d3c3" stroke-width="1"/>
           <text x="105" y="132" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#39d3c3">e0c</text>
-
-          <!-- SP -->
           <rect x="185" y="70" width="110" height="80" rx="8" fill="#0d2035" stroke="#bc8cff" stroke-width="1.5"/>
           <text x="240" y="95" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#bc8cff" font-weight="700">SERVICE PROC</text>
           <text x="240" y="110" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681">SP / RLM / BMC</text>
           <rect x="222" y="118" width="34" height="20" rx="4" fill="#30363d" stroke="#bc8cff" stroke-width="1"/>
           <text x="240" y="132" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#bc8cff">chip</text>
-
-          <!-- E0M -->
           <rect x="320" y="70" width="110" height="80" rx="8" fill="#0d2035" stroke="#58a6ff" stroke-width="1.5"/>
           <text x="375" y="95" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#58a6ff" font-weight="700">E0M</text>
           <text x="375" y="110" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681">Mgmt Port</text>
           <rect x="357" y="118" width="34" height="20" rx="4" fill="#30363d" stroke="#58a6ff" stroke-width="1"/>
           <text x="375" y="132" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#58a6ff">100Mb</text>
-
-          <!-- NAS Ports -->
           <rect x="455" y="70" width="110" height="80" rx="8" fill="#0d2035" stroke="#3fb950" stroke-width="1.5"/>
           <text x="510" y="95" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#3fb950" font-weight="700">NAS PORTS</text>
           <text x="510" y="110" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681">e0a/e0b/e0d…</text>
           <rect x="488" y="118" width="44" height="20" rx="4" fill="#30363d" stroke="#3fb950" stroke-width="1"/>
           <text x="510" y="132" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#3fb950">1/10/25GbE</text>
-
-          <!-- SAN Ports -->
           <rect x="590" y="70" width="80" height="80" rx="8" fill="#0d2035" stroke="#f78166" stroke-width="1.5"/>
           <text x="630" y="95" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#f78166" font-weight="700">SAN</text>
           <text x="630" y="110" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681">FC / iSCSI</text>
           <rect x="614" y="118" width="32" height="20" rx="4" fill="#30363d" stroke="#f78166" stroke-width="1"/>
           <text x="630" y="132" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#f78166">HBA</text>
-
-          <!-- SAS Ports -->
           <rect x="690" y="70" width="85" height="80" rx="8" fill="#0d2035" stroke="#e3b341" stroke-width="1.5"/>
           <text x="733" y="95" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#e3b341" font-weight="700">SAS</text>
           <text x="733" y="110" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681">Disk Shelves</text>
           <rect x="715" y="118" width="36" height="20" rx="4" fill="#30363d" stroke="#e3b341" stroke-width="1"/>
           <text x="733" y="132" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#e3b341">backend</text>
-
-          <!-- Labels below -->
           <text x="105" y="175" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#6e7681">Initial config</text>
           <text x="240" y="175" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#6e7681">Remote console</text>
           <text x="375" y="175" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#6e7681">Day-to-day mgmt</text>
@@ -427,23 +377,13 @@
         <div class="diagram-caption">Figure 1 — Controller external ports grouped by function</div>
       </div>
 
-      <!-- Console -->
       <div id="console"></div>
       <h3>🖥️ Console / Serial Port</h3>
-      <p>The console (serial) port is used for <span class="hl">initial, out-of-band access</span> to the controller — before any IP address has been assigned. By connecting a laptop directly to this port via a serial cable, an administrator can launch the cluster setup wizard and bootstrap the entire configuration.</p>
+      <p>Used for <span class="hl">initial out-of-band access</span> before any IP is assigned. Connect via serial cable to launch the cluster setup wizard. Baud rate must be set to <strong>115200</strong>. In production, this port is used only during first setup or emergency recovery.</p>
 
-      <div class="callout info">
-        <div class="callout-icon">💡</div>
-        <div class="callout-content">
-          <div class="callout-title">Real-World Usage</div>
-          <div class="callout-text">In most production deployments, the console port is only used during the very first setup, or when recovering a controller that cannot be reached over the network. Once a management IP is assigned, day-to-day operations shift entirely to the network interface. The serial baud rate must be set to <strong>115200</strong> (not the 9600 default) for clean character output.</div>
-        </div>
-      </div>
-
-      <!-- SP -->
       <div id="sp"></div>
       <h3>🔧 Service Processor (SP / RLM / BMC)</h3>
-      <p>The Service Processor is a dedicated management chip embedded on the controller motherboard. It is <em>not</em> a physical port in the traditional sense — it exposes connectivity through a dedicated 1GbE interface but operates independently from the main ONTAP OS.</p>
+      <p>An independent management chip embedded on the controller board. Operates via a dedicated 1GbE interface, independently from ONTAP — so it remains accessible even when the OS is offline, rebooting, or during hardware POST.</p>
 
       <div class="card">
         <div class="card-title">🆚 SP vs E0M — When to Use Which</div>
@@ -454,34 +394,23 @@
             <tr><td>Controller rebooting / upgrading</td><td><span class="badge badge-blue">✓ Required</span></td><td>—</td></tr>
             <tr><td>Controller powered off</td><td><span class="badge badge-blue">✓ Works</span></td><td><span class="badge badge-orange">✗ Offline</span></td></tr>
             <tr><td>Hardware POST monitoring</td><td><span class="badge badge-blue">✓ Works</span></td><td>—</td></tr>
-            <tr><td>Log and event collection</td><td><span class="badge badge-purple">✓ Supports</span></td><td><span class="badge badge-green">✓ Supports</span></td></tr>
           </tbody>
         </table>
       </div>
 
-      <div class="callout warning">
-        <div class="callout-icon">⚠️</div>
-        <div class="callout-content">
-          <div class="callout-title">Naming Variants</div>
-          <div class="callout-text">In older hardware (e.g., FAS3100 series), this chip was called <strong>RLM</strong> (Remote LAN Manager) or <strong>BMC</strong> (Baseboard Management Controller). On modern controllers it is uniformly called <strong>SP</strong>. Always check your platform documentation.</div>
-        </div>
-      </div>
-
-      <!-- E0M -->
       <div id="e0m"></div>
       <h3>🌐 Management Port — E0M</h3>
-      <p>The <span class="port">E0M</span> port is a dedicated 100 Mbps management-only interface. It cannot carry data traffic, which is by design — keeping management traffic isolated from the data path prevents administrative access from being disrupted during heavy I/O. Once an IP is configured on E0M during initial setup, <span class="hl-green">90% of daily operations</span> are handled through SSH sessions over this port.</p>
+      <p>The <span class="port">E0M</span> is a dedicated 100 Mbps management-only interface — it cannot carry data traffic by design. Once an IP is configured during initial setup, <span class="hl-green">90% of daily operations</span> use SSH over this port.</p>
 
-      <!-- NAS/SAN/SAS -->
       <div id="net-san"></div>
       <h3>📡 NAS, SAN &amp; SAS Ports</h3>
       <table class="spec-table">
         <thead><tr><th>Port Type</th><th>Protocol</th><th>Purpose</th><th>Port Count</th></tr></thead>
         <tbody>
-          <tr><td><span class="badge badge-green">NAS Ports</span></td><td>NFS, CIFS/SMB, HTTP</td><td>File-level storage over Ethernet LAN</td><td>4–12 (model dependent)</td></tr>
-          <tr><td><span class="badge badge-orange">SAN Ports</span></td><td>Fibre Channel, iSCSI, FCoE</td><td>Block-level storage over SAN fabric</td><td>2–8 (HBA slots)</td></tr>
-          <tr><td><span class="badge badge-yellow">SAS Ports</span></td><td>SAS</td><td>Disk shelf back-end connectivity</td><td>2–4 per shelf loop</td></tr>
-          <tr><td><span class="badge badge-blue">Cluster Ports</span></td><td>Cluster Private (10GbE)</td><td>Node-to-node HA heartbeat &amp; NVRAM sync</td><td>2–4 per node</td></tr>
+          <tr><td><span class="badge badge-green">NAS Ports</span></td><td>NFS, CIFS/SMB</td><td>File-level storage over Ethernet</td><td>4–12</td></tr>
+          <tr><td><span class="badge badge-orange">SAN Ports</span></td><td>FC, iSCSI, FCoE</td><td>Block-level storage over SAN</td><td>2–8 (HBA)</td></tr>
+          <tr><td><span class="badge badge-yellow">SAS Ports</span></td><td>SAS</td><td>Disk shelf back-end connectivity</td><td>2–4 per loop</td></tr>
+          <tr><td><span class="badge badge-blue">Cluster Ports</span></td><td>10GbE private</td><td>HA heartbeat &amp; NVRAM sync</td><td>2–4 per node</td></tr>
         </tbody>
       </table>
 
@@ -490,7 +419,7 @@
         <div class="callout-icon">🔮</div>
         <div class="callout-content">
           <div class="callout-title">Unified Ports (UTA2)</div>
-          <div class="callout-text">Some controllers feature <strong>Unified Target Adapters (UTA2)</strong> — SFP+ slots that can operate as either a 10GbE NAS port or a 16Gb FC SAN port, depending on the transceiver module inserted and the software persona configured. One physical port, two possible identities — but not simultaneously.</div>
+          <div class="callout-text">Some controllers feature <strong>Unified Target Adapters (UTA2)</strong> — SFP+ slots that can operate as either 10GbE NAS or 16Gb FC SAN, depending on the transceiver and software persona. One physical port, two identities — but not simultaneously.</div>
         </div>
       </div>
     </section>
@@ -504,18 +433,13 @@
           <h2>Cache &amp; NVRAM — The I/O Engine</h2>
         </div>
       </div>
-      <p>Two components sit at the core of ONTAP's I/O performance strategy: <span class="hl-blue">Cache (DRAM)</span> and <span class="hl">NVRAM (Non-Volatile RAM)</span>. Together they form a high-speed staging layer that absorbs client writes, acknowledges them quickly, and then persists data to disk in the background — all while protecting against data loss during unexpected failures.</p>
+      <p><span class="hl-blue">Cache (DRAM)</span> and <span class="hl">NVRAM</span> form ONTAP's high-speed staging layer — absorbing writes, acknowledging them immediately, and persisting to disk in the background while protecting against data loss.</p>
 
-      <!-- Architecture Block Diagram -->
       <div class="svg-diagram">
         <svg viewBox="0 0 820 340" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:820px">
           <text x="410" y="22" text-anchor="middle" font-family="Sora,sans-serif" font-size="13" fill="#8b949e" font-weight="600">HA PAIR — CACHE &amp; NVRAM INTERNAL LAYOUT</text>
-
-          <!-- CTRL 1 box -->
           <rect x="20" y="35" width="360" height="280" rx="12" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
           <text x="200" y="60" text-anchor="middle" font-family="Sora,sans-serif" font-size="12" fill="#58a6ff" font-weight="700">CONTROLLER-A (stor-a01)</text>
-
-          <!-- Cache Ctrl1 -->
           <rect x="40" y="75" width="155" height="100" rx="8" fill="#1c2333" stroke="#bc8cff" stroke-width="1.5"/>
           <text x="118" y="97" text-anchor="middle" font-family="Sora,sans-serif" font-size="11" fill="#bc8cff" font-weight="600">CACHE (DRAM)</text>
           <rect x="50" y="105" width="63" height="55" rx="5" fill="#21283a" stroke="#bc8cff" stroke-width="1"/>
@@ -524,8 +448,6 @@
           <rect x="125" y="105" width="60" height="55" rx="5" fill="#21283a" stroke="#bc8cff" stroke-width="1"/>
           <text x="155" y="121" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#bc8cff">READ</text>
           <text x="155" y="134" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#6e7681">partition</text>
-
-          <!-- NVRAM Ctrl1 -->
           <rect x="210" y="75" width="150" height="100" rx="8" fill="#1c2333" stroke="#3fb950" stroke-width="1.5"/>
           <text x="285" y="97" text-anchor="middle" font-family="Sora,sans-serif" font-size="11" fill="#3fb950" font-weight="600">NVRAM</text>
           <rect x="218" y="105" width="62" height="55" rx="5" fill="#21283a" stroke="#3fb950" stroke-width="1"/>
@@ -534,27 +456,20 @@
           <rect x="290" y="105" width="62" height="55" rx="5" fill="#21283a" stroke="#3fb950" stroke-width="1"/>
           <text x="321" y="118" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#3fb950">LOCAL P2</text>
           <text x="321" y="130" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6e7681">standby</text>
-          <!-- Remote reserve labels -->
           <rect x="40" y="195" width="155" height="50" rx="6" fill="#0d1f12" stroke="#3fb950" stroke-width="1" stroke-dasharray="4,3"/>
           <text x="118" y="216" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#3fb950">NVRAM REMOTE RESERVE</text>
           <text x="118" y="230" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6e7681">for CONTROLLER-B data</text>
           <rect x="210" y="195" width="150" height="50" rx="6" fill="#0d1f12" stroke="#e3b341" stroke-width="1" stroke-dasharray="4,3"/>
           <text x="285" y="216" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#e3b341">BATTERY BACKUP</text>
           <text x="285" y="230" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6e7681">protects uncommitted data</text>
-
-          <!-- CTRL 2 box -->
           <rect x="440" y="35" width="360" height="280" rx="12" fill="#161b22" stroke="#f78166" stroke-width="1.5"/>
           <text x="620" y="60" text-anchor="middle" font-family="Sora,sans-serif" font-size="12" fill="#f78166" font-weight="700">CONTROLLER-B (stor-b01)</text>
-
-          <!-- Cache Ctrl2 -->
           <rect x="460" y="75" width="155" height="100" rx="8" fill="#1c2333" stroke="#bc8cff" stroke-width="1.5"/>
           <text x="538" y="97" text-anchor="middle" font-family="Sora,sans-serif" font-size="11" fill="#bc8cff" font-weight="600">CACHE (DRAM)</text>
           <rect x="470" y="105" width="63" height="55" rx="5" fill="#21283a" stroke="#bc8cff" stroke-width="1"/>
           <text x="502" y="121" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#bc8cff">WRITE</text>
           <rect x="545" y="105" width="60" height="55" rx="5" fill="#21283a" stroke="#bc8cff" stroke-width="1"/>
           <text x="575" y="121" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#bc8cff">READ</text>
-
-          <!-- NVRAM Ctrl2 -->
           <rect x="630" y="75" width="150" height="100" rx="8" fill="#1c2333" stroke="#3fb950" stroke-width="1.5"/>
           <text x="705" y="97" text-anchor="middle" font-family="Sora,sans-serif" font-size="11" fill="#3fb950" font-weight="600">NVRAM</text>
           <rect x="638" y="105" width="62" height="55" rx="5" fill="#21283a" stroke="#3fb950" stroke-width="1"/>
@@ -566,15 +481,11 @@
           <text x="538" y="230" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6e7681">for CONTROLLER-A data</text>
           <rect x="630" y="195" width="150" height="50" rx="6" fill="#0d1f12" stroke="#e3b341" stroke-width="1" stroke-dasharray="4,3"/>
           <text x="705" y="216" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#e3b341">BATTERY BACKUP</text>
-
-          <!-- HA Interconnect arrow -->
           <line x1="380" y1="180" x2="440" y2="180" stroke="#58a6ff" stroke-width="2" stroke-dasharray="5,3"/>
           <polygon points="440,175 450,180 440,185" fill="#58a6ff"/>
           <polygon points="380,175 370,180 380,185" fill="#58a6ff"/>
           <text x="410" y="173" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#58a6ff">HA INTERCONNECT</text>
           <text x="410" y="198" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#6e7681">NVRAM mirror sync</text>
-
-          <!-- Disk Shelves -->
           <rect x="130" y="270" width="140" height="35" rx="6" fill="#161b22" stroke="#e3b341" stroke-width="1.5"/>
           <text x="200" y="291" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#e3b341">💾 DISK SHELVES</text>
           <line x1="200" y1="265" x2="200" y2="270" stroke="#e3b341" stroke-width="1.5"/>
@@ -585,10 +496,9 @@
         <div class="diagram-caption">Figure 2 — HA pair cache &amp; NVRAM layout with mirrored remote reserves</div>
       </div>
 
-      <!-- Write Flow -->
       <div id="write-flow"></div>
       <h3>✍️ Write I/O Flow &amp; Consistency Point (CP)</h3>
-      <p>When a host writes data to a NetApp volume, the data does <em>not</em> go directly to disk. Instead, ONTAP uses a multi-stage staging pipeline to maximise throughput while ensuring durability:</p>
+      <p>Writes never go directly to disk. ONTAP stages data through Cache and NVRAM, then commits to disk every 10 seconds via the Consistency Point process. While one NVRAM partition flushes to disk, the other absorbs new writes — ensuring zero-interruption throughput.</p>
 
       <div class="mermaid-wrap">
         <div class="mermaid">
@@ -614,29 +524,17 @@ flowchart LR
         <div class="diagram-caption">Figure 3 — Write I/O flow from host to disk, including CP trigger cycle</div>
       </div>
 
-      <div class="card">
-        <div class="card-title">⏱️ Consistency Point (CP) — How It Works</div>
-        <ul class="step-list">
-          <li><div class="step-num">1</div>Incoming write data from hosts is absorbed into the <strong>write partition of Cache</strong> and simultaneously journaled into the active <strong>NVRAM partition</strong>.</li>
-          <li><div class="step-num">2</div>The same journal entry is mirrored across the <strong>HA interconnect</strong> to the partner controller's remote NVRAM reserve — three copies total.</li>
-          <li><div class="step-num">3</div>After <strong>10 seconds</strong>, the Consistency Point background process triggers, committing all buffered data from Cache + NVRAM to disk shelves via SAS links.</li>
-          <li><div class="step-num">4</div>While P1 is committing to disk, <strong>P2 becomes the active intake partition</strong>, ensuring zero-latency acknowledgement to clients continues uninterrupted.</li>
-          <li><div class="step-num">5</div>Once the disk write completes, both Cache and the active NVRAM partition are flushed and made available for the next cycle.</li>
-        </ul>
-      </div>
-
       <div class="callout danger">
         <div class="callout-icon">🔴</div>
         <div class="callout-content">
-          <div class="callout-title">What Happens on Sudden Power Loss?</div>
-          <div class="callout-text">If the primary controller fails mid-cycle, data in the local NVRAM is still present on the partner's NVRAM remote reserve. The partner automatically takes over and commits the pending writes. If <strong>both</strong> controllers lose power simultaneously, ONTAP's NVRAM battery backup kicks in and uses unused (spare) disks as vault drives to offload uncommitted data. On restart, it reads those vault drives and completes the commit.</div>
+          <div class="callout-title">Power Loss Protection</div>
+          <div class="callout-text">On primary controller failure, the partner reads its NVRAM remote reserve and commits pending writes. If both controllers lose power, NVRAM battery backup offloads data to vault drives; on restart, ONTAP reads the vault and completes the commit.</div>
         </div>
       </div>
 
-      <!-- Read Flow -->
       <div id="read-flow"></div>
       <h3>📖 Read I/O &amp; the Read Cache</h3>
-      <p>Read requests take a different path from writes. ONTAP maintains a separate read partition in cache that acts as a <span class="hl">hot-data tier</span>: files accessed frequently are cached here so subsequent reads return from DRAM instead of spinning through all disk shelves.</p>
+      <p>Read requests are served from the DRAM read cache when hot data is available. On a cache miss, ONTAP uses PAM logs to locate data on the exact shelf/disk, avoiding a full scan.</p>
 
       <div class="mermaid-wrap">
         <div class="mermaid">
@@ -658,14 +556,6 @@ flowchart TD
         </div>
         <div class="diagram-caption">Figure 4 — Read I/O path: cache hit vs. miss, and PAM-assisted lookup</div>
       </div>
-
-      <div class="callout success">
-        <div class="callout-icon">✅</div>
-        <div class="callout-content">
-          <div class="callout-title">Read Hit vs Read Miss</div>
-          <div class="callout-text"><strong>Read Hit</strong>: Data served directly from DRAM cache — microsecond latency. <strong>Read Miss</strong>: Data not in cache; ONTAP uses PAM logs (if available) to locate the data on the exact shelf/disk without a full scan, dramatically reducing seek time. Maximising read hits is the key to ONTAP read performance.</div>
-        </div>
-      </div>
     </section>
 
     <!-- ════════ PAM ════════ -->
@@ -677,27 +567,27 @@ flowchart TD
           <h2>Flash Cache — Performance Acceleration Module (PAM2)</h2>
         </div>
       </div>
-      <p>The <span class="hl-blue">PAM2</span> (Performance Acceleration Module, generation 2), also called <strong>Flash Cache</strong>, is a large NAND-based read-acceleration card installed in the controller's PCIe slot. Think of it as a massive index — when the read cache misses, ONTAP consults PAM's NV logs instead of scanning every drive shelf blindly.</p>
+      <p><span class="hl-blue">PAM2</span> is a large NAND-based PCIe card that acts as a read-acceleration index. On a cache miss, ONTAP queries PAM's NV logs to locate data on the exact shelf and disk — skipping a full shelf scan.</p>
 
       <div class="grid-2">
         <div class="card">
-          <div class="card-title">📊 PAM2 Sizing by Controller Tier</div>
+          <div class="card-title">📊 PAM2 Sizing</div>
           <table class="spec-table">
-            <thead><tr><th>Controller Class</th><th>PAM2 Capacity</th></tr></thead>
+            <thead><tr><th>Controller Tier</th><th>PAM2 Capacity</th></tr></thead>
             <tbody>
-              <tr><td>Entry (e.g., FAS2600 series)</td><td><span class="badge badge-gray">512 GB</span></td></tr>
-              <tr><td>Mid-Range (e.g., FAS8200)</td><td><span class="badge badge-blue">1 TB</span></td></tr>
-              <tr><td>High-End (e.g., FAS9000)</td><td><span class="badge badge-purple">2 TB</span></td></tr>
+              <tr><td>Entry (FAS2600)</td><td><span class="badge badge-gray">512 GB</span></td></tr>
+              <tr><td>Mid-Range (FAS8200)</td><td><span class="badge badge-blue">1 TB</span></td></tr>
+              <tr><td>High-End (FAS9000)</td><td><span class="badge badge-purple">2 TB</span></td></tr>
             </tbody>
           </table>
         </div>
         <div class="card">
           <div class="card-title">📋 What PAM Stores (NV Logs)</div>
           <ul class="bullet-list">
-            <li>Metadata logs of data flushed from NVRAM after each CP cycle</li>
-            <li>Metadata logs of data evicted from the read cache (cold-down events)</li>
-            <li>Exact shelf and disk location pointers for cached-out data</li>
-            <li>Acts like a book index: skip to page 950 instead of reading cover-to-cover</li>
+            <li>Metadata of data flushed from NVRAM after each CP cycle</li>
+            <li>Metadata of data evicted from the read cache</li>
+            <li>Exact shelf and disk location pointers</li>
+            <li>Analogy: a book index — jump to page 950, don't read cover-to-cover</li>
           </ul>
         </div>
       </div>
@@ -707,7 +597,7 @@ flowchart TD
         <div class="callout-content">
           <div class="callout-title">Component Roles — Quick Reference</div>
           <div class="callout-text">
-            <strong>Cache (DRAM)</strong>: Both reads &amp; writes — hot staging layer.<br>
+            <strong>Cache (DRAM)</strong>: Reads &amp; writes — hot staging layer.<br>
             <strong>NVRAM</strong>: Write path only — durability journal + HA mirror.<br>
             <strong>PAM2 / Flash Cache</strong>: Read path only — NV log index for cache misses.
           </div>
@@ -724,7 +614,7 @@ flowchart TD
           <h2>Boot / Flash Module — Where ONTAP Lives</h2>
         </div>
       </div>
-      <p>Every NetApp controller contains a dedicated <span class="hl">Flash Module</span> (also called the Boot Module) — a PCIe card or embedded flash that stores the ONTAP operating system image. Its design mirrors how a laptop's BIOS bootstraps the OS from internal storage, but with an important dual-partition twist for safe upgrades and rollbacks.</p>
+      <p>A dedicated PCIe flash module stores the ONTAP OS image with a <span class="hl">dual-partition design</span>: one active partition runs the current version; the other holds the previous version for instant rollback.</p>
 
       <div class="mermaid-wrap">
         <div class="mermaid">
@@ -756,7 +646,7 @@ flowchart LR
         <div class="callout-icon">🔄</div>
         <div class="callout-content">
           <div class="callout-title">Why Two Partitions?</div>
-          <div class="callout-text">The dual-partition model eliminates the risk of overwriting a running OS during an upgrade. The inactive partition receives the new version; after a reboot, the controller boots from the new partition and re-labels it as current. The old partition remains intact, enabling a one-reboot rollback if the new version has issues.</div>
+          <div class="callout-text">The new ONTAP image is written to the inactive partition; the controller keeps running the current version. After a reboot, the updated partition becomes active. The previous partition remains intact for a one-reboot rollback if issues arise.</div>
         </div>
       </div>
     </section>
@@ -770,7 +660,7 @@ flowchart LR
           <h2>Hands-On Lab Environment</h2>
         </div>
       </div>
-      <p>NetApp provides a virtual lab portal where partners and employees can spin up pre-configured ONTAP environments for practice. For this tutorial, we work with the <strong>"Cluster Setup — ONTAP 9.7"</strong> lab template, which provisions a complete two-node HA environment with shared disk shelves, a jump host, domain controller, Linux client, and a Windows/Active Directory server.</p>
+      <p>Use the <strong>"Cluster Setup — ONTAP 9.7"</strong> lab template from NetApp's virtual lab portal. It provisions a two-node HA pair with shared disk shelves, a jump host, domain controller, Linux client, and Windows/AD server.</p>
 
       <div class="card">
         <div class="card-title">🏗️ Lab Topology</div>
@@ -795,14 +685,6 @@ graph TB
         </div>
         <div class="diagram-caption">Figure 6 — Lab network topology (IPs are representative examples)</div>
       </div>
-
-      <div class="callout warning">
-        <div class="callout-icon">⚠️</div>
-        <div class="callout-content">
-          <div class="callout-title">Lab Guidelines</div>
-          <div class="callout-text">Only one active lab per user. If you want to practice a different scenario, delete your existing lab before requesting a new one to avoid resource exhaustion. Set lab duration to the maximum (7 days) and select <strong>Self-Education</strong> as the purpose.</div>
-        </div>
-      </div>
     </section>
 
     <!-- ════════ INITIAL CONFIG ════════ -->
@@ -814,23 +696,16 @@ graph TB
           <h2>Initial Configuration &amp; Cluster Setup</h2>
         </div>
       </div>
-      <p>When a NetApp controller ships from the factory, it carries no configuration — no cluster, no IP address, no hostname. The first access must be over the <strong>console/serial port</strong>. In a production environment, this means physically cabling your laptop to the controller; in a lab, a pre-built console connection is provided.</p>
+      <p>A factory-fresh controller has no configuration. First access is always via the console port. The setup wizard guides you through assigning IPs, naming the cluster, and installing licenses.</p>
 
       <div id="cluster-create"></div>
-      <h3>🔨 Step-by-Step: Creating the First Cluster Node</h3>
-
+      <h3>🔨 Creating the First Cluster Node (Key Steps)</h3>
       <ul class="step-list">
-        <li><div class="step-num">1</div>Connect to the controller console. Hit <strong>Enter</strong> to trigger the cluster setup wizard. Type <code style="color:var(--accent-green)">yes</code> to proceed.</li>
-        <li><div class="step-num">2</div>Select the node management port. Use <span class="port">E0M</span> in production; in lab use the equivalent available interface (e.g., <span class="port">e0c</span>).</li>
-        <li><div class="step-num">3</div>Assign the node management IP, subnet mask, and gateway (obtain from your network team in production).</li>
-        <li><div class="step-num">4</div>Choose <strong>Create</strong> (not Join) to initialise a new cluster.</li>
-        <li><div class="step-num">5</div>Select <strong>No</strong> for single-node cluster — we are building a two-node HA pair.</li>
-        <li><div class="step-num">6</div>Accept the auto-assigned cluster private network IPs (169.254.x.x range) or enter custom ones.</li>
-        <li><div class="step-num">7</div>Set the <code style="color:var(--accent-orange)">admin</code> password for the cluster.</li>
-        <li><div class="step-num">8</div>Enter the cluster name (follow your organisation's naming convention, e.g., <code style="color:var(--accent-blue)">stor-cluster01</code>).</li>
-        <li><div class="step-num">9</div>Enter the cluster management IP, subnet mask, and gateway (can be the same port as node management).</li>
-        <li><div class="step-num">10</div>Enter DNS domain name and DNS server IP (from your Windows/AD team in production).</li>
-        <li><div class="step-num">11</div>Install required protocol licenses (NFS, CIFS, FCP, iSCSI, SnapMirror, etc.) when prompted.</li>
+        <li><div class="step-num">1</div>Connect console → hit <strong>Enter</strong> → type <code style="color:var(--accent-green)">yes</code> to start wizard.</li>
+        <li><div class="step-num">2</div>Select node management port (<span class="port">E0M</span> in production, <span class="port">e0c</span> in lab). Assign node mgmt IP, mask, gateway.</li>
+        <li><div class="step-num">3</div>Choose <strong>Create</strong> (not Join). Select <strong>No</strong> for single-node — we're building an HA pair.</li>
+        <li><div class="step-num">4</div>Set <code style="color:var(--accent-orange)">admin</code> password, cluster name, cluster management IP, DNS domain &amp; server.</li>
+        <li><div class="step-num">5</div>Install required protocol licenses (NFS, CIFS, FCP, iSCSI, SnapMirror) when prompted.</li>
       </ul>
 
       <div class="code-block">
@@ -840,54 +715,25 @@ graph TB
         </div>
         <div class="code-body">
 <span class="comment"># Console login — hit Enter to start wizard</span>
-<span class="cmd">Welcome to the cluster setup wizard.</span>
 <span class="output">Do you want to proceed? {yes}: </span><span class="value">yes</span>
-
-<span class="comment"># Select node management port</span>
 <span class="output">Enter the node management interface port [e0M]: </span><span class="value">e0c</span>
-
-<span class="comment"># Assign node management IP</span>
 <span class="output">Enter the node management interface IP address: </span><span class="value">10.50.1.11</span>
 <span class="output">Enter the node management interface netmask: </span><span class="value">255.255.255.0</span>
 <span class="output">Enter the node management interface default gateway: </span><span class="value">10.50.1.1</span>
-
-<span class="comment"># Create new cluster</span>
 <span class="output">Create a new cluster or join an existing cluster? {create, join}: </span><span class="value">create</span>
-
-<span class="comment"># HA pair — not single node</span>
 <span class="output">Use as single-node cluster? {yes, no} [no]: </span><span class="value">no</span>
-
-<span class="comment"># Set admin password</span>
 <span class="output">Enter the cluster administrator password: </span><span class="value">************</span>
-
-<span class="comment"># Name the cluster</span>
 <span class="output">Enter the cluster name: </span><span class="value">stor-cluster01</span>
-
-<span class="comment"># Cluster management IP (can reuse same port)</span>
-<span class="output">Enter the cluster management interface port [e0c]: </span><span class="value">e0c</span>
 <span class="output">Enter the cluster management interface IP: </span><span class="value">10.50.1.100</span>
-<span class="output">Enter the cluster management interface netmask: </span><span class="value">255.255.255.0</span>
-<span class="output">Enter the cluster management interface gateway: </span><span class="value">10.50.1.1</span>
-
-<span class="comment"># DNS domain and server</span>
 <span class="output">DNS domain names: </span><span class="value">lab.internal</span>
 <span class="output">Name server IP addresses: </span><span class="value">10.50.1.5</span>
-
-<span class="comment"># Install NFS and CIFS licenses</span>
-<span class="output">Enter additional licenses: </span><span class="value">AAAA-BBBB-CCCC-DDDD</span>
-<span class="output">NFS license installed.</span>
-<span class="output">Enter additional licenses: </span><span class="value">EEEE-FFFF-GGGG-HHHH</span>
-<span class="output">CIFS license installed.</span>
-
-<span class="comment"># Done — log in</span>
 <span class="cmd">stor-cluster01::> </span>
         </div>
       </div>
 
-      <!-- Add Node -->
       <div id="add-node"></div>
-      <h3>➕ Adding the Second Node to the Cluster</h3>
-      <p>Open a separate console session to Controller B. The wizard will prompt for node management IP and then ask whether to Create or Join. Select <strong>Join</strong> and provide any one of Controller A's cluster private network IPs so that Controller B can discover the existing cluster.</p>
+      <h3>➕ Adding the Second Node</h3>
+      <p>Open a console to Controller B. When prompted, choose <strong>Join</strong> and provide a cluster private network IP from Controller A (169.254.x.x range) so the node can discover the existing cluster.</p>
 
       <div class="code-block">
         <div class="code-header">
@@ -895,81 +741,49 @@ graph TB
           <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
         </div>
         <div class="code-body">
-<span class="comment"># Controller B console — hit Enter to trigger wizard</span>
 <span class="output">Enter the node management interface port [e0M]: </span><span class="value">e0c</span>
 <span class="output">Enter the node management interface IP address: </span><span class="value">10.50.1.12</span>
-<span class="output">Enter the node management interface netmask: </span><span class="value">255.255.255.0</span>
-<span class="output">Enter the node management interface default gateway: </span><span class="value">10.50.1.1</span>
-
-<span class="comment"># Join the existing cluster</span>
 <span class="output">Create a new cluster or join an existing cluster? {create, join}: </span><span class="value">join</span>
-
-<span class="comment"># Provide cluster-A private network IP so node-B can discover the cluster</span>
 <span class="output">Enter IP of an interface on the private cluster network: </span><span class="value">169.254.10.1</span>
-
-<span class="output">Joining cluster stor-cluster01...</span>
-<span class="output">This node has joined the cluster. </span>
-
-<span class="comment"># Login using cluster management IP</span>
+<span class="output">This node has joined the cluster.</span>
 <span class="cmd">ssh admin@10.50.1.100</span>
-<span class="output">Password: ************</span>
 <span class="cmd">stor-cluster01::> </span>
         </div>
       </div>
 
-      <!-- Licenses -->
       <div id="licenses"></div>
       <h3>🔑 License Management</h3>
-      <p>ONTAP uses feature-based licensing. Core protocols (NFS, CIFS/SMB, FCP, iSCSI) and data management features (SnapMirror, SnapVault, FlexClone) each require a separate license key. Licenses are installed without any downtime or reboot.</p>
+      <p>ONTAP uses feature-based licensing. Core protocols (NFS, CIFS, FCP, iSCSI) and data features (SnapMirror, FlexClone) each require a separate key. Licenses are installed with no downtime.</p>
 
       <div class="code-block">
         <div class="code-header">
-          <span class="code-lang">ONTAP CLI — Add License Post-Setup</span>
+          <span class="code-lang">ONTAP CLI — License Commands</span>
           <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
         </div>
         <div class="code-body">
-<span class="comment"># Add a license key after cluster creation</span>
 <span class="cmd">system license add</span> <span class="param">-license-code</span> <span class="value">XXXX-YYYY-ZZZZ-AAAA</span>
-
-<span class="comment"># View all installed licenses</span>
 <span class="cmd">system license show</span>
-
-<span class="comment"># Example output</span>
-<span class="output">Package           Type     Description</span>
-<span class="output">------------      ------   ---------------------------</span>
-<span class="output">NFS               license  NFS Protocol</span>
-<span class="output">CIFS              license  CIFS Protocol</span>
-<span class="output">iSCSI             license  iSCSI Protocol</span>
-<span class="output">FCP               license  Fibre Channel Protocol</span>
-<span class="output">SnapMirror        license  SnapMirror Replication</span>
         </div>
       </div>
 
-      <!-- Mgmt IPs -->
       <div id="mgmt-ip"></div>
       <h3>🌐 Node Management IP vs Cluster Management IP</h3>
-      <p>This is a commonly misunderstood distinction. Every node has its own management IP; the cluster as a whole gets one additional management IP. Understanding the difference is key for administration and automation.</p>
 
       <div class="svg-diagram">
         <svg viewBox="0 0 740 200" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:740px">
           <text x="370" y="20" text-anchor="middle" font-family="Sora,sans-serif" font-size="13" fill="#8b949e" font-weight="600">CLUSTER vs NODE MANAGEMENT IPs</text>
-          <!-- Cluster mgmt -->
           <rect x="260" y="35" width="220" height="55" rx="8" fill="#0d2035" stroke="#58a6ff" stroke-width="2"/>
           <text x="370" y="57" text-anchor="middle" font-family="Sora,sans-serif" font-size="12" fill="#58a6ff" font-weight="700">Cluster Management IP</text>
           <text x="370" y="75" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#a5d6ff">10.50.1.100</text>
           <text x="370" y="103" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#6e7681">One per cluster — accesses any node</text>
-          <!-- Node A -->
           <rect x="60" y="120" width="200" height="55" rx="8" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
           <text x="160" y="142" text-anchor="middle" font-family="Sora,sans-serif" font-size="12" fill="#3fb950" font-weight="700">stor-a01 Node Mgmt</text>
           <text x="160" y="160" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#79c0ff">10.50.1.11</text>
-          <!-- Node B -->
           <rect x="480" y="120" width="200" height="55" rx="8" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
           <text x="580" y="142" text-anchor="middle" font-family="Sora,sans-serif" font-size="12" fill="#3fb950" font-weight="700">stor-b01 Node Mgmt</text>
           <text x="580" y="160" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#79c0ff">10.50.1.12</text>
-          <!-- Lines -->
           <line x1="300" y1="90" x2="200" y2="120" stroke="#484f58" stroke-width="1.5" stroke-dasharray="4,3"/>
           <line x1="440" y1="90" x2="540" y2="120" stroke="#484f58" stroke-width="1.5" stroke-dasharray="4,3"/>
-          <!-- Labels -->
           <text x="160" y="190" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#6e7681">Reach even when cluster mgmt moves</text>
           <text x="580" y="190" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#6e7681">Reach even when cluster mgmt moves</text>
         </svg>
@@ -979,7 +793,7 @@ graph TB
       <table class="spec-table">
         <thead><tr><th>IP Type</th><th>Count</th><th>Port Used</th><th>Survives Node Failover?</th></tr></thead>
         <tbody>
-          <tr><td><span class="badge badge-blue">Cluster Management</span></td><td>1 per cluster</td><td>E0M (or any mgmt port) on any node</td><td>Can be relocated to another node</td></tr>
+          <tr><td><span class="badge badge-blue">Cluster Management</span></td><td>1 per cluster</td><td>E0M on any node</td><td>Can be relocated to another node</td></tr>
           <tr><td><span class="badge badge-green">Node Management</span></td><td>1 per node</td><td>E0M on that specific node</td><td>Tied to that node's hardware</td></tr>
         </tbody>
       </table>
@@ -994,73 +808,44 @@ graph TB
           <h2>ONTAP CLI Navigation &amp; Key Commands</h2>
         </div>
       </div>
-      <p>ONTAP's CLI is a hierarchical command shell — similar to navigating a directory tree. You don't need to memorise every command. The <span class="hl-green">Tab key</span> is your best friend: at any point, pressing Tab reveals all available sub-commands at that level.</p>
+      <p>ONTAP's CLI is a hierarchical shell. Use <span class="hl-green">Tab</span> at any point to see all available sub-commands. Use <code style="color:var(--accent-teal)">top</code> to jump to the root shell instantly.</p>
 
       <div id="commands"></div>
 
-      <div class="callout tip">
-        <div class="callout-icon">💡</div>
-        <div class="callout-content">
-          <div class="callout-title">Tab-First Philosophy</div>
-          <div class="callout-text">Type the first letter or two and hit Tab. ONTAP auto-completes or shows all matching commands. For example, <code style="color:var(--accent-green)">cl</code> + Tab → <code style="color:var(--accent-teal)">cluster</code>. Then <code>cluster</code> + Tab shows all cluster sub-commands. This is faster than memorising hundreds of commands.</div>
-        </div>
-      </div>
-
       <h3>📋 Essential Cluster &amp; Node Commands</h3>
-
       <div class="code-block">
         <div class="code-header">
           <span class="code-lang">ONTAP CLI — Essential Commands</span>
           <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
         </div>
         <div class="code-body">
-<span class="comment"># ── Cluster Health ──────────────────────────────────</span>
+<span class="comment"># Cluster health</span>
 <span class="cmd">cluster show</span>
-<span class="output">Node           Health  Eligibility</span>
-<span class="output">-----------    ------  -----------</span>
-<span class="output">stor-a01       true    true</span>
-<span class="output">stor-b01       true    true</span>
 
-<span class="comment"># ── Node Details (basic) ───────────────────────────</span>
+<span class="comment"># Node summary</span>
 <span class="cmd">system node show</span>
-<span class="output">Node      Model          Uptime     Health</span>
-<span class="output">-------   -----------    ---------  ------</span>
-<span class="output">stor-a01  FAS8200        5d 3h 22m  true</span>
-<span class="output">stor-b01  FAS8200        5d 3h 21m  true</span>
 
-<span class="comment"># ── Node Details (full — including serial number) ──</span>
+<span class="comment"># Full node details (all attributes)</span>
 <span class="cmd">system node show</span> <span class="param">-instance</span>
-<span class="output">(Shows all attributes for every node)</span>
 
-<span class="comment"># ── Select specific fields ─────────────────────────</span>
+<span class="comment"># Select specific fields</span>
 <span class="cmd">system node show</span> <span class="param">-fields</span> <span class="value">model,serial-number</span>
-<span class="output">Node      Model     Serial-Number</span>
-<span class="output">-------   -------   ----------------</span>
-<span class="output">stor-a01  FAS8200   701234567890</span>
-<span class="output">stor-b01  FAS8200   701234567891</span>
 
-<span class="comment"># ── Installed Licenses ─────────────────────────────</span>
+<span class="comment"># Installed licenses</span>
 <span class="cmd">system license show</span>
 
-<span class="comment"># ── Navigate CLI directories ───────────────────────</span>
-<span class="cmd">cluster</span>               <span class="comment"># Enter cluster context</span>
-<span class="cmd">cd ..</span>                 <span class="comment"># Go up one level (Linux-style)</span>
-<span class="cmd">top</span>                   <span class="comment"># Jump directly to root shell</span>
-<span class="cmd">&lt;Tab&gt;</span>                 <span class="comment"># Show all available commands at current level</span>
+<span class="comment"># CLI navigation</span>
+<span class="cmd">cd ..</span>   <span class="comment"># Go up one level</span>
+<span class="cmd">top</span>     <span class="comment"># Jump to root shell</span>
+<span class="cmd">&lt;Tab&gt;</span>   <span class="comment"># Show all commands at current level</span>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-title">🧩 The -instance and -fields Flags</div>
-        <div class="grid-2">
-          <div>
-            <h4>-instance</h4>
-            <p>Appending <code style="color:var(--accent-teal)">-instance</code> to any <strong>show</strong> command expands the output to include all available attributes — useful when you need deep detail like serial numbers, firmware versions, or port statistics.</p>
-          </div>
-          <div>
-            <h4>-fields</h4>
-            <p>Use <code style="color:var(--accent-teal)">-fields field1,field2</code> to filter output to only the columns you care about. Ideal for scripting, reporting, or quickly pulling specific values without drowning in a wall of text.</p>
-          </div>
+      <div class="callout tip">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <div class="callout-title">-instance vs -fields</div>
+          <div class="callout-text"><strong>-instance</strong>: Expands any <em>show</em> command to all attributes — useful for serial numbers, firmware, port stats. <strong>-fields</strong>: Filters output to specific columns — ideal for scripting and reporting.</div>
         </div>
       </div>
     </section>
@@ -1076,33 +861,33 @@ graph TB
       </div>
 
       <div class="qa-block">
-        <div class="qa-q"><span class="qa-label">Q1</span> Explain the purpose of each of the three main management-related ports on a NetApp controller.</div>
-        <div class="qa-a"><strong>Console port</strong>: Used for initial out-of-band configuration before any IP is assigned; requires physical cable connection. <strong>E0M</strong>: Dedicated 100 Mbps management port used for day-to-day SSH/HTTPS access once the cluster is online. <strong>Service Processor (SP)</strong>: An independent management chip that provides remote console access even when the ONTAP OS is offline — critical during reboots, upgrades, or hardware faults.</div>
+        <div class="qa-q"><span class="qa-label">Q1</span> Explain the three main management ports on a NetApp controller.</div>
+        <div class="qa-a"><strong>Console port</strong>: Initial out-of-band config before any IP is assigned; physical cable required. <strong>E0M</strong>: Dedicated 100 Mbps management port for daily SSH/HTTPS access. <strong>SP</strong>: Independent management chip accessible even when ONTAP is offline — critical during reboots, upgrades, or hardware faults.</div>
       </div>
 
       <div class="qa-block">
-        <div class="qa-q"><span class="qa-label">Q2</span> How does ONTAP protect uncommitted write data in the event of a controller failure?</div>
-        <div class="qa-a">ONTAP writes incoming data simultaneously to three locations: the write partition of local Cache, the local NVRAM partition, and the partner controller's NVRAM remote reserve (via HA interconnect). If the local controller fails before a Consistency Point, the partner reads its NVRAM reserve and commits the pending data on behalf of the failed node. If both controllers lose power simultaneously, ONTAP's NVRAM battery backup offloads data to vault drives for recovery on restart.</div>
+        <div class="qa-q"><span class="qa-label">Q2</span> How does ONTAP protect uncommitted write data on controller failure?</div>
+        <div class="qa-a">Writes are simultaneously staged to local Cache, local NVRAM, and the partner's NVRAM remote reserve via the HA interconnect. If the local controller fails, the partner commits pending data from its reserve. If both controllers lose power, NVRAM battery backup offloads data to vault drives for recovery on restart.</div>
       </div>
 
       <div class="qa-block">
-        <div class="qa-q"><span class="qa-label">Q3</span> What is a Consistency Point and how frequently does it occur?</div>
-        <div class="qa-a">A Consistency Point (CP) is a background ONTAP process that commits buffered write data from Cache and NVRAM to persistent disk storage. It triggers every <strong>10 seconds</strong> by default. While one NVRAM partition is flushing to disk, the second partition simultaneously absorbs new incoming writes from clients, ensuring zero-interruption performance.</div>
+        <div class="qa-q"><span class="qa-label">Q3</span> What is a Consistency Point and how often does it occur?</div>
+        <div class="qa-a">A CP is a background process that commits buffered writes from Cache and NVRAM to disk every <strong>10 seconds</strong>. While one NVRAM partition flushes to disk, the second simultaneously absorbs new client writes, ensuring continuous performance.</div>
       </div>
 
       <div class="qa-block">
-        <div class="qa-q"><span class="qa-label">Q4</span> What is the difference between Node Management IP and Cluster Management IP?</div>
-        <div class="qa-a">A <strong>Node Management IP</strong> is assigned to each individual controller and is permanently tied to that node's hardware — even if the cluster is reconfigured, you can always reach a specific node via its node management IP. A <strong>Cluster Management IP</strong> is a single floating IP representing the entire cluster. It is initially hosted on the first node but can be migrated to another node without changing the IP itself. For most administrative tasks, you connect via the Cluster Management IP.</div>
+        <div class="qa-q"><span class="qa-label">Q4</span> Node Management IP vs Cluster Management IP — what's the difference?</div>
+        <div class="qa-a">A <strong>Node Management IP</strong> is tied to a specific controller's hardware and always reaches that node. A <strong>Cluster Management IP</strong> is a single floating IP for the entire cluster — it's hosted on one node but can be relocated without changing the address. Most admin tasks use the cluster management IP.</div>
       </div>
 
       <div class="qa-block">
-        <div class="qa-q"><span class="qa-label">Q5</span> What is Flash Cache (PAM2) and how does it improve read performance?</div>
-        <div class="qa-a">PAM2 (Performance Acceleration Module) is a large NAND flash card installed in the controller. It stores NV logs — metadata that records the exact disk shelf and drive location of data that has been flushed from the read cache or from NVRAM. On a read miss, ONTAP queries PAM's NV logs to obtain the data's precise location, allowing it to seek directly to that disk rather than scanning every shelf. This is analogous to using an index rather than reading a book cover to cover.</div>
+        <div class="qa-q"><span class="qa-label">Q5</span> What is Flash Cache (PAM2) and how does it improve reads?</div>
+        <div class="qa-a">PAM2 is a NAND flash PCIe card that stores NV logs — metadata recording exact shelf and disk locations of data flushed from cache or NVRAM. On a read miss, ONTAP queries PAM to seek directly to the data's location rather than scanning every shelf — like using an index instead of reading a book cover to cover.</div>
       </div>
 
       <div class="qa-block">
         <div class="qa-q"><span class="qa-label">Q6</span> Why does the ONTAP boot module have two partitions?</div>
-        <div class="qa-a">The dual-partition design supports <strong>safe non-disruptive upgrades</strong> and <strong>instant rollback</strong>. During an upgrade, the new ONTAP image is written to the inactive partition while the controller continues running from the current partition. After a planned reboot, the controller starts from the updated partition. If issues are discovered, the previous partition (with the older version) is still intact and can be booted immediately without re-downloading.</div>
+        <div class="qa-a">The dual-partition design enables <strong>safe upgrades and instant rollback</strong>. The new image is written to the inactive partition while the controller runs from the current one. After a reboot, the updated partition becomes active. The previous partition remains intact for a one-reboot rollback.</div>
       </div>
     </section>
 
@@ -1120,37 +905,37 @@ graph TB
         <div class="card">
           <div class="card-title">🔌 Port Management</div>
           <ul class="bullet-list">
-            <li>Always configure both Node Management and Cluster Management IPs on E0M — its isolation from data traffic prevents mgmt blackouts during I/O storms.</li>
-            <li>Configure a dedicated SP IP on every controller; it is your lifeline during upgrades and hardware faults.</li>
-            <li>Use unified ports (UTA2) strategically — assign the persona before cabling to avoid reconfiguration downtime.</li>
-            <li>Document all port-to-IP mappings immediately after initial setup, before the environment grows complex.</li>
+            <li>Configure both Node and Cluster Management IPs on E0M — isolation from data traffic prevents mgmt blackouts.</li>
+            <li>Always assign a dedicated SP IP — it's your lifeline during upgrades and faults.</li>
+            <li>Assign UTA2 persona before cabling to avoid reconfiguration downtime.</li>
+            <li>Document all port-to-IP mappings immediately after initial setup.</li>
           </ul>
         </div>
         <div class="card">
           <div class="card-title">🧠 Cache &amp; NVRAM</div>
           <ul class="bullet-list">
-            <li>Do not attempt to manually tune NVRAM partition assignments — these are NetApp factory-configured and model-specific.</li>
-            <li>Ensure NVRAM battery health is included in your monitoring dashboard — a degraded battery can cause data loss during simultaneous node failures.</li>
-            <li>High read-hit rates (measured in ONTAP statistics) indicate good workload-to-cache fit — monitor this metric weekly.</li>
-            <li>Flash Cache (PAM2) is especially impactful for mixed random-read workloads with large working sets that exceed DRAM cache size.</li>
+            <li>Never manually tune NVRAM partition assignments — these are factory-configured.</li>
+            <li>Monitor NVRAM battery health — a degraded battery risks data loss on dual-node failure.</li>
+            <li>Track read-hit rates weekly — high rates indicate good cache fit.</li>
+            <li>PAM2 is most impactful for large random-read working sets exceeding DRAM size.</li>
           </ul>
         </div>
         <div class="card">
           <div class="card-title">⚙️ Cluster Setup</div>
           <ul class="bullet-list">
-            <li>Follow your organisation's naming convention for cluster and node names — renaming later is disruptive.</li>
-            <li>Always obtain IP assignments from the network team before starting cluster setup; IP conflicts cause hard-to-debug failures.</li>
-            <li>Install all required protocol licenses before provisioning storage — adding licenses after workloads go live requires brief service interruptions.</li>
-            <li>Validate HA pair health (<code>storage failover show</code>) immediately after adding the second node.</li>
+            <li>Follow naming conventions — renaming cluster/nodes later is disruptive.</li>
+            <li>Obtain all IP assignments from the network team before starting setup.</li>
+            <li>Install all protocol licenses before provisioning storage.</li>
+            <li>Validate HA pair health (<code>storage failover show</code>) immediately after joining the second node.</li>
           </ul>
         </div>
         <div class="card">
           <div class="card-title">💻 CLI Productivity</div>
           <ul class="bullet-list">
-            <li>Use <code>-instance</code> for full attribute output when troubleshooting; use <code>-fields</code> for targeted reporting.</li>
-            <li>Use <code>top</code> to jump to root shell instantly rather than typing multiple <code>cd ..</code> commands.</li>
-            <li>Pipe show commands to <code>| grep</code> for fast pattern matching across large output sets.</li>
-            <li>Explore commands with Tab completion — ONTAP's CLI is self-documenting if you use Tab consistently.</li>
+            <li>Use <code>-instance</code> for deep troubleshooting, <code>-fields</code> for targeted reporting.</li>
+            <li>Use <code>top</code> to jump to root shell instead of multiple <code>cd ..</code> commands.</li>
+            <li>Pipe show commands to <code>| grep</code> for fast pattern matching.</li>
+            <li>Explore with Tab — ONTAP CLI is self-documenting.</li>
           </ul>
         </div>
       </div>
@@ -1166,7 +951,7 @@ graph TB
           <div style="flex:1">
             <div class="author-name">Mohammed Abdul</div>
             <div class="author-title">Data Protection Architect · Hybrid Cloud Specialist</div>
-            <div class="author-bio">Mohammed Abdul is a Data Protection Architect with more than 10 years of experience in Hybrid Cloud, having worked with global clients across various industries. With extensive expertise in enterprise backup and recovery solutions, Mohammed specialises in helping organisations design and implement robust data protection strategies across on-premises and cloud environments.</div>
+            <div class="author-bio">Mohammed Abdul is a Data Protection Architect with more than 10 years of experience in Hybrid Cloud, having worked with global clients across various industries. Specialises in enterprise backup, recovery, and data protection strategy across on-premises and cloud environments.</div>
             <div class="tech-badges">
               <span class="badge badge-blue">AWS</span>
               <span class="badge badge-teal">Azure</span>
@@ -1176,17 +961,14 @@ graph TB
               <span class="badge badge-yellow">NetBackup</span>
               <span class="badge badge-gray">NetApp ONTAP</span>
             </div>
-            <a class="author-email" href="mailto:abdul.md.20000102@gmail.com">
-              ✉️ abdul.md.20000102@gmail.com
-            </a>
+            <a class="author-email" href="mailto:abdul.md.20000102@gmail.com">✉️ abdul.md.20000102@gmail.com</a>
           </div>
         </div>
-
         <div class="callout warning" style="margin-top: 28px">
           <div class="callout-icon">📢</div>
           <div class="callout-content">
             <div class="callout-title">Disclaimer</div>
-            <div class="callout-text">This content is for educational purposes and self-paced learning material. All IP addresses, hostnames, and configuration values used in examples are representative and must be replaced with your environment's actual values. Always refer to the official NetApp documentation and follow your organisation's change management procedures for any production implementations. NetApp, ONTAP, FAS, AFF and related product names are trademarks of NetApp, Inc.</div>
+            <div class="callout-text">This content is for educational purposes. All IPs, hostnames, and values are representative — replace with your environment's actual values. Always refer to official NetApp documentation and your organisation's change management procedures for production implementations. NetApp, ONTAP, FAS, AFF are trademarks of NetApp, Inc.</div>
           </div>
         </div>
       </div>
@@ -1196,7 +978,6 @@ graph TB
 </div><!-- /main-content -->
 
 <script>
-  // Mermaid init
   mermaid.initialize({
     startOnLoad: true,
     theme: 'dark',
@@ -1217,7 +998,6 @@ graph TB
     }
   });
 
-  // Active TOC link tracking
   const sections = document.querySelectorAll('section[id], div[id]');
   const tocLinks = document.querySelectorAll('.toc-link');
 

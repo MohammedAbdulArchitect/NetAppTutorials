@@ -25,11 +25,9 @@
     --border: #30363d;
     --border-bright: #484f58;
     --sidebar-width: 280px;
-    --header-height: 64px;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   html { scroll-behavior: smooth; }
 
   body {
@@ -40,14 +38,12 @@
     min-height: 100vh;
   }
 
-  /* ─── SIDEBAR ─── */
   .sidebar {
     width: var(--sidebar-width);
     background: var(--bg-secondary);
     border-right: 1px solid var(--border);
     position: fixed;
-    top: 0;
-    left: 0;
+    top: 0; left: 0;
     height: 100vh;
     overflow-y: auto;
     z-index: 100;
@@ -59,196 +55,64 @@
     padding: 20px 16px;
     border-bottom: 1px solid var(--border);
     background: var(--bg-secondary);
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    position: sticky; top: 0; z-index: 10;
   }
 
-  .sidebar-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 4px;
-  }
-
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
   .sidebar-logo .logo-icon {
-    width: 32px;
-    height: 32px;
+    width: 32px; height: 32px;
     background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
     border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     font-size: 16px;
   }
-
-  .sidebar-logo span {
-    font-family: 'Sora', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-    color: var(--text-primary);
-    letter-spacing: 0.5px;
-  }
-
-  .sidebar-subtitle {
-    font-size: 11px;
-    color: var(--text-muted);
-    padding-left: 42px;
-  }
-
+  .sidebar-logo span { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px; color: var(--text-primary); letter-spacing: 0.5px; }
+  .sidebar-subtitle { font-size: 11px; color: var(--text-muted); padding-left: 42px; }
   .toc-nav { padding: 12px 0; flex: 1; }
-
-  .toc-section-label {
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    color: var(--text-muted);
-    padding: 12px 16px 6px;
-  }
-
+  .toc-section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); padding: 12px 16px 6px; }
   .toc-link {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 7px 16px;
-    font-size: 12.5px;
-    color: var(--text-secondary);
-    text-decoration: none;
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 16px; font-size: 12.5px;
+    color: var(--text-secondary); text-decoration: none;
     transition: all 0.2s ease;
-    border-left: 2px solid transparent;
-    line-height: 1.4;
+    border-left: 2px solid transparent; line-height: 1.4;
   }
-
-  .toc-link:hover {
-    background: var(--bg-card);
-    color: var(--text-primary);
-    border-left-color: var(--accent-blue);
-  }
-
-  .toc-link.active {
-    background: rgba(88,166,255,0.1);
-    color: var(--accent-blue);
-    border-left-color: var(--accent-blue);
-    font-weight: 500;
-  }
-
-  .toc-link .toc-num {
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--text-muted);
-    min-width: 18px;
-    font-family: 'JetBrains Mono', monospace;
-  }
-
+  .toc-link:hover { background: var(--bg-card); color: var(--text-primary); border-left-color: var(--accent-blue); }
+  .toc-link.active { background: rgba(88,166,255,0.1); color: var(--accent-blue); border-left-color: var(--accent-blue); font-weight: 500; }
+  .toc-link .toc-num { font-size: 10px; font-weight: 700; color: var(--text-muted); min-width: 18px; font-family: 'JetBrains Mono', monospace; }
   .toc-link.sub { padding-left: 32px; font-size: 12px; }
 
-  /* ─── MAIN CONTENT ─── */
-  .main-content {
-    margin-left: var(--sidebar-width);
-    flex: 1;
-    max-width: calc(100vw - var(--sidebar-width));
-  }
+  .main-content { margin-left: var(--sidebar-width); flex: 1; max-width: calc(100vw - var(--sidebar-width)); }
 
-  /* ─── TOP HEADER ─── */
   .top-header {
     background: linear-gradient(135deg, #0d1117 0%, #1a2744 50%, #0d2035 100%);
     border-bottom: 1px solid var(--border);
     padding: 60px 60px 50px;
-    position: relative;
-    overflow: hidden;
+    position: relative; overflow: hidden;
   }
-
   .top-header::before {
-    content: '';
-    position: absolute;
-    inset: 0;
+    content: ''; position: absolute; inset: 0;
     background: radial-gradient(ellipse at 70% 50%, rgba(88,166,255,0.08) 0%, transparent 60%),
                 radial-gradient(ellipse at 20% 80%, rgba(63,185,80,0.06) 0%, transparent 50%);
   }
 
-  .header-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(88,166,255,0.12);
-    border: 1px solid rgba(88,166,255,0.3);
-    border-radius: 20px;
-    padding: 4px 14px;
-    font-size: 12px;
-    color: var(--accent-blue);
-    font-weight: 500;
-    margin-bottom: 18px;
-    font-family: 'JetBrains Mono', monospace;
-  }
-
   .main-title {
-    font-family: 'Sora', sans-serif;
-    font-size: 38px;
-    font-weight: 800;
-    line-height: 1.15;
-    margin-bottom: 16px;
+    font-family: 'Sora', sans-serif; font-size: 38px; font-weight: 800;
+    line-height: 1.15; margin-bottom: 16px;
     background: linear-gradient(135deg, #e6edf3 30%, #58a6ff 70%, #bc8cff 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    position: relative;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; position: relative;
   }
 
-  .header-meta {
-    display: flex;
-    gap: 24px;
-    flex-wrap: wrap;
-    margin-top: 20px;
-    position: relative;
-  }
+  .header-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.7; max-width: 680px; position: relative; }
+  .header-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 20px; position: relative; }
+  .meta-chip { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-secondary); }
+  .meta-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
 
-  .meta-chip {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12.5px;
-    color: var(--text-secondary);
-  }
-
-  .meta-chip .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-  }
-
-  /* ─── CONTENT AREA ─── */
-  .content-area {
-    padding: 40px 60px 80px;
-    max-width: 1000px;
-  }
-
-  /* ─── SECTIONS ─── */
-  .section {
-    margin-bottom: 60px;
-    scroll-margin-top: 30px;
-  }
-
-  .section-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .section-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-
+  .content-area { padding: 40px 60px 80px; max-width: 1000px; }
+  .section { margin-bottom: 60px; scroll-margin-top: 30px; }
+  .section-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .section-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; margin-top: 2px; }
   .icon-blue { background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.3); }
   .icon-green { background: rgba(63,185,80,0.15); border: 1px solid rgba(63,185,80,0.3); }
   .icon-orange { background: rgba(247,129,102,0.15); border: 1px solid rgba(247,129,102,0.3); }
@@ -256,176 +120,49 @@
   .icon-teal { background: rgba(57,211,195,0.15); border: 1px solid rgba(57,211,195,0.3); }
   .icon-yellow { background: rgba(227,179,65,0.15); border: 1px solid rgba(227,179,65,0.3); }
 
-  .section-title-wrap h2 {
-    font-family: 'Sora', sans-serif;
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--text-primary);
-    line-height: 1.2;
-  }
+  .section-title-wrap h2 { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+  .section-title-wrap .section-num { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); font-weight: 400; margin-bottom: 4px; }
 
-  .section-title-wrap .section-num {
-    font-size: 11px;
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--text-muted);
-    font-weight: 400;
-    margin-bottom: 4px;
-  }
-
-  /* ─── CARDS ─── */
-  .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 20px;
-    transition: border-color 0.2s;
-  }
-
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; transition: border-color 0.2s; }
   .card:hover { border-color: var(--border-bright); }
+  .card-title { font-family: 'Sora', sans-serif; font-weight: 600; font-size: 15px; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
 
-  .card-title {
-    font-family: 'Sora', sans-serif;
-    font-weight: 600;
-    font-size: 15px;
-    color: var(--text-primary);
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+  p { font-size: 14.5px; line-height: 1.8; color: var(--text-secondary); margin-bottom: 14px; }
 
-  /* ─── PROSE ─── */
-  p {
-    font-size: 14.5px;
-    line-height: 1.8;
-    color: var(--text-secondary);
-    margin-bottom: 14px;
-  }
-
-  /* ─── CALLOUT BOXES ─── */
-  .callout {
-    border-radius: 10px;
-    padding: 16px 20px;
-    margin: 20px 0;
-    display: flex;
-    gap: 14px;
-    align-items: flex-start;
-  }
-
+  .callout { border-radius: 10px; padding: 16px 20px; margin: 20px 0; display: flex; gap: 14px; align-items: flex-start; }
   .callout-icon { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
-
   .callout-content { flex: 1; }
-
-  .callout-title {
-    font-weight: 600;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-  }
-
+  .callout-title { font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
   .callout-text { font-size: 13.5px; line-height: 1.7; color: var(--text-secondary); }
-
   .callout.info { background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.25); }
   .callout.info .callout-title { color: var(--accent-blue); }
-
   .callout.success { background: rgba(63,185,80,0.08); border: 1px solid rgba(63,185,80,0.25); }
   .callout.success .callout-title { color: var(--accent-green); }
-
   .callout.warning { background: rgba(227,179,65,0.08); border: 1px solid rgba(227,179,65,0.3); }
   .callout.warning .callout-title { color: var(--accent-yellow); }
-
   .callout.danger { background: rgba(247,129,102,0.08); border: 1px solid rgba(247,129,102,0.3); }
   .callout.danger .callout-title { color: var(--accent-orange); }
-
   .callout.tip { background: rgba(188,140,255,0.08); border: 1px solid rgba(188,140,255,0.25); }
   .callout.tip .callout-title { color: var(--accent-purple); }
 
-  /* ─── CODE BLOCKS ─── */
-  .code-block {
-    background: #0a0e13;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-    margin: 16px 0;
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  .code-header {
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border);
-    padding: 8px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .code-lang {
-    font-size: 11px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-  }
-
+  .code-block { background: #0a0e13; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 16px 0; font-family: 'JetBrains Mono', monospace; }
+  .code-header { background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .code-lang { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
   .code-dots { display: flex; gap: 5px; }
   .code-dots span { width: 10px; height: 10px; border-radius: 50%; }
-  .dot-red { background: #ff5f56; }
-  .dot-yellow { background: #ffbd2e; }
-  .dot-green { background: #27c93f; }
-
-  .code-body {
-    padding: 20px;
-    font-size: 13px;
-    line-height: 1.8;
-    color: #79c0ff;
-    overflow-x: auto;
-  }
-
+  .dot-red { background: #ff5f56; } .dot-yellow { background: #ffbd2e; } .dot-green { background: #27c93f; }
+  .code-body { padding: 20px; font-size: 13px; line-height: 1.8; color: #79c0ff; overflow-x: auto; }
   .code-body .cmd { color: #3fb950; }
   .code-body .comment { color: #6e7681; font-style: italic; }
-  .code-body .param { color: #ffa657; }
   .code-body .value { color: #a5d6ff; }
   .code-body .output { color: #8b949e; }
 
-  /* ─── SPEC TABLES ─── */
-  .spec-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 16px 0;
-    font-size: 13.5px;
-  }
-
-  .spec-table th {
-    background: var(--bg-secondary);
-    color: var(--text-secondary);
-    font-weight: 600;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 10px 16px;
-    text-align: left;
-    border-bottom: 2px solid var(--border);
-  }
-
-  .spec-table td {
-    padding: 11px 16px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text-secondary);
-    vertical-align: middle;
-  }
-
+  .spec-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; }
+  .spec-table th { background: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 16px; text-align: left; border-bottom: 2px solid var(--border); }
+  .spec-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
   .spec-table tr:hover td { background: rgba(255,255,255,0.02); }
 
-  .badge {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 20px;
-    font-size: 11.5px;
-    font-weight: 600;
-    font-family: 'JetBrains Mono', monospace;
-  }
-
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
   .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent-blue); border: 1px solid rgba(88,166,255,0.3); }
   .badge-green { background: rgba(63,185,80,0.15); color: var(--accent-green); border: 1px solid rgba(63,185,80,0.3); }
   .badge-orange { background: rgba(247,129,102,0.15); color: var(--accent-orange); border: 1px solid rgba(247,129,102,0.3); }
@@ -434,118 +171,31 @@
   .badge-teal { background: rgba(57,211,195,0.15); color: var(--accent-teal); border: 1px solid rgba(57,211,195,0.3); }
   .badge-gray { background: rgba(139,148,158,0.15); color: var(--text-secondary); border: 1px solid var(--border); }
 
-  /* ─── GRID ─── */
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
   .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0; }
 
-  /* ─── STAT BLOCKS ─── */
-  .stat-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 20px;
-    text-align: center;
-  }
-
-  .stat-num {
-    font-family: 'Sora', sans-serif;
-    font-size: 28px;
-    font-weight: 800;
-    margin-bottom: 4px;
-  }
-
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; }
+  .stat-num { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 4px; }
   .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
-  /* ─── STEP LIST ─── */
   .step-list { list-style: none; margin: 12px 0; }
-
-  .step-list li {
-    display: flex;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(48,54,61,0.5);
-    font-size: 13.5px;
-    color: var(--text-secondary);
-    line-height: 1.6;
-    align-items: flex-start;
-  }
-
+  .step-list li { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(48,54,61,0.5); font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; align-items: flex-start; }
   .step-list li:last-child { border-bottom: none; }
+  .step-num { width: 22px; height: 22px; border-radius: 6px; background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.3); color: var(--accent-blue); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
 
-  .step-num {
-    width: 22px;
-    height: 22px;
-    border-radius: 6px;
-    background: rgba(88,166,255,0.15);
-    border: 1px solid rgba(88,166,255,0.3);
-    color: var(--accent-blue);
-    font-size: 11px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    margin-top: 1px;
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  /* ─── BULLET LIST ─── */
   .bullet-list { list-style: none; margin: 10px 0; }
+  .bullet-list li { padding: 6px 0 6px 20px; position: relative; font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; }
+  .bullet-list li::before { content: '▸'; position: absolute; left: 0; color: var(--accent-blue); font-size: 12px; }
 
-  .bullet-list li {
-    padding: 6px 0 6px 20px;
-    position: relative;
-    font-size: 13.5px;
-    color: var(--text-secondary);
-    line-height: 1.6;
-  }
+  h3 { font-family: 'Sora', sans-serif; font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 24px 0 10px; }
+  h4 { font-size: 14px; font-weight: 600; color: var(--text-secondary); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.4px; }
 
-  .bullet-list li::before {
-    content: '▸';
-    position: absolute;
-    left: 0;
-    color: var(--accent-blue);
-    font-size: 12px;
-  }
+  .diagram-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin: 20px 0; overflow-x: auto; }
+  .diagram-caption { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 14px; font-style: italic; }
 
-  /* ─── MERMAID DIAGRAMS ─── */
-  .diagram-wrap {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 28px;
-    margin: 20px 0;
-    overflow-x: auto;
-  }
-
-  .diagram-caption {
-    text-align: center;
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 14px;
-    font-style: italic;
-  }
-
-  /* ─── RAID VISUAL GRID ─── */
-  .raid-visual {
-    display: flex;
-    gap: 6px;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    margin: 16px 0;
-  }
-
-  .raid-disk {
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    min-width: 70px;
-    text-align: center;
-  }
-
+  .raid-visual { display: flex; gap: 6px; align-items: flex-start; flex-wrap: wrap; margin: 16px 0; }
+  .raid-disk { border-radius: 8px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; min-width: 70px; text-align: center; }
   .raid-disk .disk-label { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-
   .disk-data { background: rgba(88,166,255,0.12); border: 1px solid rgba(88,166,255,0.3); color: var(--accent-blue); }
   .disk-parity { background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.3); color: var(--accent-green); }
   .disk-dparity { background: rgba(188,140,255,0.12); border: 1px solid rgba(188,140,255,0.3); color: var(--accent-purple); }
@@ -555,186 +205,40 @@
   .stripe-label { font-size: 10px; color: var(--text-muted); min-width: 50px; font-family: 'JetBrains Mono', monospace; }
   .stripe-cell { flex: 1; padding: 6px 8px; border-radius: 6px; font-size: 12px; font-family: 'JetBrains Mono', monospace; text-align: center; font-weight: 600; }
 
-  /* ─── INTERVIEW Q&A ─── */
-  .qa-block {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-    margin: 14px 0;
-  }
-
-  .qa-question {
-    background: rgba(88,166,255,0.08);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 18px;
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--accent-blue);
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-  }
-
+  .qa-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 14px 0; }
+  .qa-question { background: rgba(88,166,255,0.08); border-bottom: 1px solid var(--border); padding: 14px 18px; font-size: 13.5px; font-weight: 600; color: var(--accent-blue); display: flex; gap: 10px; align-items: flex-start; }
   .qa-q-icon { font-size: 14px; margin-top: 1px; }
+  .qa-answer { padding: 14px 18px; font-size: 13.5px; line-height: 1.7; color: var(--text-secondary); }
 
-  .qa-answer {
-    padding: 14px 18px;
-    font-size: 13.5px;
-    line-height: 1.7;
-    color: var(--text-secondary);
-  }
+  code { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: rgba(88,166,255,0.1); color: var(--accent-blue); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(88,166,255,0.2); }
 
-  /* ─── AUTHOR SECTION ─── */
-  .author-section {
-    margin-top: 80px;
-    padding: 40px 60px;
-    background: var(--bg-secondary);
-    border-top: 1px solid var(--border);
-  }
+  .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 32px 0; }
 
-  .author-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 32px;
-    display: flex;
-    gap: 24px;
-    align-items: flex-start;
-    margin-bottom: 20px;
-  }
-
-  .author-avatar {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    flex-shrink: 0;
-    font-family: 'Sora', sans-serif;
-    font-weight: 700;
-    color: white;
-  }
-
-  .author-info { flex: 1; }
-
-  .author-name {
-    font-family: 'Sora', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-  }
-
-  .author-title { font-size: 13px; color: var(--accent-blue); margin-bottom: 12px; font-weight: 500; }
-
-  .author-bio { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 16px; }
-
-  .tech-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-
-  .tech-badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-  }
-
-  .contact-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    background: rgba(88,166,255,0.1);
-    border: 1px solid rgba(88,166,255,0.3);
-    border-radius: 8px;
-    color: var(--accent-blue);
-    text-decoration: none;
-    font-size: 13.5px;
-    font-weight: 500;
-    transition: all 0.2s;
-  }
-
-  .contact-link:hover { background: rgba(88,166,255,0.2); }
-
-  .disclaimer {
-    background: rgba(227,179,65,0.06);
-    border: 1px solid rgba(227,179,65,0.2);
-    border-radius: 10px;
-    padding: 16px 20px;
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.7;
-    margin-top: 16px;
-  }
-
-  .disclaimer strong { color: var(--accent-yellow); }
-
-  /* ─── SUBHEADINGS ─── */
-  h3 {
-    font-family: 'Sora', sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 24px 0 10px;
-  }
-
-  h4 {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    margin: 16px 0 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-  }
-
-  /* ─── INLINE CODE ─── */
-  code {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12.5px;
-    background: rgba(88,166,255,0.1);
-    color: var(--accent-blue);
-    padding: 2px 7px;
-    border-radius: 4px;
-    border: 1px solid rgba(88,166,255,0.2);
-  }
-
-  /* ─── DIVIDER ─── */
-  .divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--border), transparent);
-    margin: 32px 0;
-  }
-
-  /* ─── PROGRESS BAR ─── */
-  .progress-bar {
-    height: 6px;
-    background: var(--border);
-    border-radius: 3px;
-    overflow: hidden;
-    margin-top: 4px;
-  }
-
+  .progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 4px; }
   .progress-fill { height: 100%; border-radius: 3px; }
 
-  /* ─── SCROLLBAR ─── */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg-primary); }
-  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
-  /* ─── HIGHLIGHT ─── */
   .highlight { color: var(--accent-blue); font-weight: 600; }
   .highlight-green { color: var(--accent-green); font-weight: 600; }
   .highlight-orange { color: var(--accent-orange); font-weight: 600; }
-  .highlight-purple { color: var(--accent-purple); font-weight: 600; }
 
-  /* responsive */
+  .author-section { margin-top: 80px; padding: 40px 60px; background: var(--bg-secondary); border-top: 1px solid var(--border); }
+  .author-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; display: flex; gap: 24px; align-items: flex-start; margin-bottom: 20px; }
+  .author-avatar { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; font-family: 'Sora', sans-serif; font-weight: 700; color: white; }
+  .author-info { flex: 1; }
+  .author-name { font-family: 'Sora', sans-serif; font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .author-title { font-size: 13px; color: var(--accent-blue); margin-bottom: 12px; font-weight: 500; }
+  .author-bio { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 16px; }
+  .tech-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .tech-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-secondary); }
+  .contact-link { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.3); border-radius: 8px; color: var(--accent-blue); text-decoration: none; font-size: 13.5px; font-weight: 500; transition: all 0.2s; }
+  .contact-link:hover { background: rgba(88,166,255,0.2); }
+  .disclaimer { background: rgba(227,179,65,0.06); border: 1px solid rgba(227,179,65,0.2); border-radius: 10px; padding: 16px 20px; font-size: 13px; color: var(--text-muted); line-height: 1.7; margin-top: 16px; }
+  .disclaimer strong { color: var(--accent-yellow); }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+
   @media (max-width: 900px) {
     .sidebar { transform: translateX(-100%); }
     .main-content { margin-left: 0; max-width: 100vw; }
@@ -747,9 +251,6 @@
 </head>
 <body>
 
-<!-- ════════════════════════════════
-     SIDEBAR TABLE OF CONTENTS
-════════════════════════════════ -->
 <aside class="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-logo">
@@ -758,70 +259,48 @@
     </div>
     <div class="sidebar-subtitle">Deep Dive Tutorial Series</div>
   </div>
-
   <nav class="toc-nav">
     <div class="toc-section-label">Module 1 · Cluster Architecture</div>
     <a class="toc-link active" href="#intro"><span class="toc-num">01</span>What is a Cluster?</a>
     <a class="toc-link" href="#cluster-specs"><span class="toc-num">02</span>Cluster Specifications</a>
     <a class="toc-link sub" href="#node-rules">Node Count Rules</a>
-    <a class="toc-link sub" href="#ontap-ver">ONTAP Version Notes</a>
     <a class="toc-link sub" href="#mix-models">Mixing Node Models</a>
     <a class="toc-link" href="#cluster-network"><span class="toc-num">03</span>Cluster Network</a>
-    <a class="toc-link sub" href="#clus-ports">Cluster Interconnect Ports</a>
-    <a class="toc-link sub" href="#clus-ips">Cluster IP Addressing</a>
     <a class="toc-link" href="#cluster-types"><span class="toc-num">04</span>Switched vs Switchless</a>
     <a class="toc-link sub" href="#switchless">Switchless Cluster</a>
     <a class="toc-link sub" href="#switched">Switched Cluster</a>
-    <a class="toc-link sub" href="#migration">Migrating Between Types</a>
-    <a class="toc-link" href="#switches"><span class="toc-num">05</span>Cluster Switch Selection</a>
-
+    <a class="toc-link sub" href="#migration">Migration</a>
+    <a class="toc-link" href="#switches"><span class="toc-num">05</span>Switch Selection</a>
     <div class="toc-section-label">Module 2 · Disks & RAID</div>
     <a class="toc-link" href="#disk-anatomy"><span class="toc-num">06</span>Disk Anatomy</a>
-    <a class="toc-link" href="#disk-types"><span class="toc-num">07</span>Disk Types Supported</a>
-    <a class="toc-link sub" href="#ata-sata">ATA & SATA (NLSAS/BSAS)</a>
-    <a class="toc-link sub" href="#sas-fc">SAS & Fibre Channel</a>
-    <a class="toc-link sub" href="#fsas">FSAS Hybrid Drives</a>
-    <a class="toc-link sub" href="#ssd">SSD / Flash Drives</a>
-    <a class="toc-link sub" href="#disk-selection">Choosing the Right Disk</a>
-    <a class="toc-link" href="#writing-techniques"><span class="toc-num">08</span>Data Writing Techniques</a>
-    <a class="toc-link sub" href="#concatenation">Concatenation</a>
-    <a class="toc-link sub" href="#striping">Striping</a>
-    <a class="toc-link" href="#raid"><span class="toc-num">09</span>RAID Types in ONTAP</a>
+    <a class="toc-link" href="#disk-types"><span class="toc-num">07</span>Disk Types</a>
+    <a class="toc-link" href="#writing-techniques"><span class="toc-num">08</span>Writing Techniques</a>
+    <a class="toc-link" href="#raid"><span class="toc-num">09</span>RAID Types</a>
     <a class="toc-link sub" href="#raid0">RAID 0</a>
     <a class="toc-link sub" href="#raid4">RAID 4</a>
     <a class="toc-link sub" href="#raidDP">RAID-DP</a>
     <a class="toc-link sub" href="#raidTEC">RAID-TEC</a>
-    <a class="toc-link sub" href="#raid6comp">RAID-DP vs RAID 6</a>
     <a class="toc-link" href="#reconstruction"><span class="toc-num">10</span>Disk Reconstruction</a>
-    <a class="toc-link" href="#interview"><span class="toc-num">11</span>Interview Q&A</a>
+    <a class="toc-link" href="#interview"><span class="toc-num">11</span>Interview Q&amp;A</a>
     <a class="toc-link" href="#about"><span class="toc-num">★</span>About the Author</a>
   </nav>
 </aside>
 
-<!-- ════════════════════════════════
-     MAIN CONTENT
-════════════════════════════════ -->
 <main class="main-content">
-
-  <!-- TOP HEADER -->
   <header class="top-header">
     <h1 class="main-title">Cluster Architecture, Disk Types &amp; RAID in NetApp ONTAP — Tutorial 2</h1>
-    <p style="color:var(--text-secondary);font-size:15px;line-height:1.7;max-width:680px;position:relative;">
-      A comprehensive self-paced technical guide covering NetApp cluster design principles, HA pair mechanics, disk type specifications, data writing strategies, and all four RAID types — from RAID 0 to RAID-TEC.
-    </p>
+    <p class="header-desc">A technical guide covering NetApp cluster design, HA pair mechanics, disk types, data writing strategies, and all four RAID types — RAID 0 through RAID-TEC.</p>
     <div class="header-meta">
       <div class="meta-chip"><div class="dot" style="background:var(--accent-green)"></div>Self-Paced Tutorial</div>
       <div class="meta-chip"><div class="dot" style="background:var(--accent-blue)"></div>Intermediate Level</div>
       <div class="meta-chip"><div class="dot" style="background:var(--accent-purple)"></div>NetApp ONTAP 9.x</div>
-      <div class="meta-chip"><div class="dot" style="background:var(--accent-yellow)"></div>~2.5 Hours Read</div>
+      <div class="meta-chip"><div class="dot" style="background:var(--accent-yellow)"></div>~90 min Read</div>
     </div>
   </header>
 
   <div class="content-area">
 
-  <!-- ═══════════════════════════════════════════
-       SECTION 1 · WHAT IS A CLUSTER?
-  ═══════════════════════════════════════════ -->
+  <!-- SECTION 1 -->
   <section class="section" id="intro">
     <div class="section-header">
       <div class="section-icon icon-blue">🔗</div>
@@ -831,13 +310,7 @@
       </div>
     </div>
 
-    <p>
-      In NetApp terminology, a <span class="highlight">cluster</span> is a logical grouping of storage controllers (also called nodes) that work together as a unified system. Think of it as a federation of intelligent storage heads sharing resources, configurations, and workloads.
-    </p>
-
-    <p>
-      While traditional non-clustered architectures in older 7-Mode systems limited you to one or two nodes in a High Availability (HA) pair, the modern <span class="highlight">ONTAP Cluster Mode</span> (cDOT) scales far beyond that, enabling enterprise-grade storage fabrics that grow with your business.
-    </p>
+    <p>A <span class="highlight">cluster</span> is a logical grouping of storage controllers (nodes) that work together as a unified system. Modern <span class="highlight">ONTAP Cluster Mode</span> (cDOT) scales far beyond the legacy 7-Mode limit of one or two nodes.</p>
 
     <div class="grid-3">
       <div class="stat-card">
@@ -846,7 +319,7 @@
       </div>
       <div class="stat-card">
         <div class="stat-num" style="color:var(--accent-blue)">24</div>
-        <div class="stat-label">Max Nodes in Cluster Mode</div>
+        <div class="stat-label">Max Nodes (Cluster Mode)</div>
       </div>
       <div class="stat-card">
         <div class="stat-num" style="color:var(--accent-green)">12</div>
@@ -858,14 +331,12 @@
       <div class="callout-icon">ℹ️</div>
       <div class="callout-content">
         <div class="callout-title">Cluster vs 7-Mode</div>
-        <div class="callout-text">NetApp 7-Mode is a legacy, single-controller or HA-pair architecture. Cluster Mode (ONTAP 8.x and later) introduces a distributed, scale-out model. All modern NetApp deployments use Cluster Mode. References to "7-Mode" are strictly historical context.</div>
+        <div class="callout-text">NetApp 7-Mode is a legacy single-controller architecture. Cluster Mode (ONTAP 8.x+) introduces a distributed, scale-out model. All modern deployments use Cluster Mode.</div>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════
-       SECTION 2 · CLUSTER SPECIFICATIONS
-  ═══════════════════════════════════════════ -->
+  <!-- SECTION 2 -->
   <section class="section" id="cluster-specs">
     <div class="section-header">
       <div class="section-icon icon-green">📐</div>
@@ -875,7 +346,6 @@
       </div>
     </div>
 
-    <!-- MERMAID: HA Pair Building Block -->
     <div class="diagram-wrap">
       <div class="mermaid">
 graph TD
@@ -910,13 +380,12 @@ graph TD
 
     <div class="card">
       <div class="card-title">⚡ The Even-Number Constraint</div>
-      <p>Every node in a cluster must belong to an HA pair. This means <span class="highlight">you can never have an odd number of nodes</span> in a production cluster. Valid configurations:</p>
+      <p>Every node must belong to an HA pair — <span class="highlight">odd node counts are not supported</span>. Valid configurations:</p>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
         <span class="badge badge-green">2 nodes</span>
         <span class="badge badge-green">4 nodes</span>
         <span class="badge badge-green">6 nodes</span>
         <span class="badge badge-green">8 nodes</span>
-        <span class="badge badge-green">10 nodes</span>
         <span class="badge badge-blue">... up to 24</span>
         <span class="badge badge-orange">✗ 3 nodes</span>
         <span class="badge badge-orange">✗ 5 nodes</span>
@@ -924,50 +393,30 @@ graph TD
       </div>
     </div>
 
-    <p>The reason behind this design is straightforward: when a controller experiences a failure, its <span class="highlight">HA partner</span> takes over its services — a process called <em>failover</em>. Without a paired partner, there is no safe handover mechanism. Each node can only fail over within its own HA pair.</p>
-
     <div class="callout warning">
       <div class="callout-icon">⚠️</div>
       <div class="callout-content">
         <div class="callout-title">HA Failover Scope</div>
-        <div class="callout-text">Failover happens only within the HA pair. If Node A fails, Node B (its partner) takes over Node A's workload. Node C or D from another pair does NOT participate in this failover. Design your cluster with this boundary in mind.</div>
+        <div class="callout-text">Failover happens only within the HA pair. If Node A fails, Node B takes over — Node C or D from another pair does not participate.</div>
       </div>
     </div>
 
-    <h3 id="ontap-ver">🔖 ONTAP Version Naming Note</h3>
-
-    <p>
-      NetApp rebranded its operating system over time. Up through version 8.3, it was called <code>Data ONTAP</code>. Starting from version 9.0, it was simplified to <code>ONTAP</code> (often written as "ONTAP 9"). Both terms refer to the same underlying OS family — do not let the naming difference confuse you in documentation or interviews.
-    </p>
-
-    <table class="spec-table">
-      <thead><tr><th>Version Range</th><th>OS Name</th><th>Key Milestone</th></tr></thead>
-      <tbody>
-        <tr><td>7.x</td><td>Data ONTAP 7-Mode</td><td>Single/dual controller only</td></tr>
-        <tr><td>8.0 – 8.3</td><td>Data ONTAP cDOT</td><td>Cluster Mode introduced</td></tr>
-        <tr><td>9.0+</td><td>ONTAP (ONTAP 9)</td><td>Renamed; scale-out mature</td></tr>
-      </tbody>
-    </table>
-
-    <h3 id="mix-models">🧩 Mixing Node Models in a Single Cluster</h3>
-
-    <p>ONTAP supports mixing different hardware models within one cluster, giving you flexibility during expansion or hardware refresh cycles. However, there are specific rules:</p>
+    <h3 id="mix-models">🧩 Mixing Node Models</h3>
 
     <div class="grid-2">
       <div class="card" style="border-color:rgba(63,185,80,0.4)">
-        <div class="card-title" style="color:var(--accent-green)">✅ Allowed Combinations</div>
+        <div class="card-title" style="color:var(--accent-green)">✅ Allowed</div>
         <ul class="bullet-list">
-          <li>FAS systems of different series (e.g., FAS8200 + FAS9500)</li>
-          <li>AFF systems of different series (e.g., AFF A300 + AFF A800)</li>
+          <li>FAS systems of different series</li>
+          <li>AFF systems of different series</li>
           <li>FAS and AFF together in the same cluster</li>
         </ul>
       </div>
       <div class="card" style="border-color:rgba(247,129,102,0.4)">
         <div class="card-title" style="color:var(--accent-orange)">❌ Not Allowed</div>
         <ul class="bullet-list">
-          <li>ASA (All-SAN Array) cannot be mixed with FAS or AFF</li>
+          <li>ASA cannot be mixed with FAS or AFF</li>
           <li>Nodes within the same HA pair must be identical models</li>
-          <li>Mixing ASA with non-ASA in any configuration</li>
         </ul>
       </div>
     </div>
@@ -975,23 +424,13 @@ graph TD
     <div class="callout tip">
       <div class="callout-icon">💡</div>
       <div class="callout-content">
-        <div class="callout-title">Critical Rule — HA Pair Model Matching</div>
-        <div class="callout-text">While you can mix models across HA pairs in a cluster, <strong>both nodes within a single HA pair must be identical hardware models</strong>. For example, a 6-node cluster could have HA Pair 1 as FAS9500 + FAS9500, HA Pair 2 as AFF A800 + AFF A800, and HA Pair 3 as FAS8200 + FAS8200.</div>
-      </div>
-    </div>
-
-    <div class="callout success">
-      <div class="callout-icon">✅</div>
-      <div class="callout-content">
-        <div class="callout-title">Same ONTAP Version Across the Cluster</div>
-        <div class="callout-text">All nodes in a cluster must run the <strong>same ONTAP version</strong>. Mixed-version clusters are not a supported configuration for steady-state operation (only during rolling upgrades within defined compatibility windows).</div>
+        <div class="callout-title">Critical — HA Pair Model Matching</div>
+        <div class="callout-text">Both nodes within an HA pair must be <strong>identical hardware models</strong>. All nodes in a cluster must run the <strong>same ONTAP version</strong>.</div>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════
-       SECTION 3 · CLUSTER NETWORK
-  ═══════════════════════════════════════════ -->
+  <!-- SECTION 3 -->
   <section class="section" id="cluster-network">
     <div class="section-header">
       <div class="section-icon icon-teal">🌐</div>
@@ -1001,15 +440,11 @@ graph TD
       </div>
     </div>
 
-    <p>
-      The <span class="highlight">Cluster Interconnect Network</span> is the private, high-speed backbone that lets nodes within a cluster communicate with each other. This network handles both configuration synchronization and data traffic — two critical functions that must work reliably for a healthy cluster.
-    </p>
-
-    <h3 id="clus-ports">Cluster Interconnect Ports</h3>
+    <p>The <span class="highlight">Cluster Interconnect</span> is the private, high-speed backbone for inter-node communication — handling both configuration synchronization and data traffic.</p>
 
     <div class="card">
       <div class="card-title">🔌 Port Speed Requirements</div>
-      <p style="margin-bottom:10px;">Each node must have a minimum of <strong>two dedicated cluster interconnect ports</strong>. Typical speeds include:</p>
+      <p style="margin-bottom:10px;">Each node requires a minimum of <strong>two dedicated cluster interconnect ports</strong>:</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="badge badge-blue">10 GbE (×4 ports)</span>
         <span class="badge badge-teal">25 GbE (×2 ports)</span>
@@ -1018,11 +453,7 @@ graph TD
       </div>
     </div>
 
-    <h3 id="clus-ips">Cluster IP Addressing — Link-Local Auto-Assignment</h3>
-
-    <p>
-      Cluster interconnect ports are <span class="highlight">pre-configured by NetApp</span> and automatically receive IP addresses in the <code>169.254.x.x/16</code> link-local range — no manual DHCP or static assignment needed. This self-assigning mechanism ensures nodes can reach each other immediately upon physical connection.
-    </p>
+    <p>Cluster interconnect ports are <span class="highlight">pre-configured by NetApp</span> and auto-assign IPs in the <code>169.254.x.x/16</code> link-local range — no manual assignment needed.</p>
 
     <div class="code-block">
       <div class="code-header">
@@ -1039,12 +470,8 @@ Vserver     Interface  Admin/Oper Address/Mask       Node          Port    Home
 Cluster
             node-05_clus1
                        up/up      169.254.32.10/16   node-05       e0a     true
-            node-05_clus2
-                       up/up      169.254.32.11/16   node-05       e0b     true
             node-06_clus1
-                       up/up      169.254.32.20/16   node-06       e0a     true
-            node-06_clus2
-                       up/up      169.254.32.21/16   node-06       e0b     true</span>
+                       up/up      169.254.32.20/16   node-06       e0a     true</span>
 
 <span class="comment"># Check cluster health</span>
 <span class="cmd">cluster-01::></span> <span class="value">cluster show</span>
@@ -1052,15 +479,12 @@ Cluster
 <span class="output">Node                  Health  Eligibility
 --------------------- ------- ------------
 node-05               true    true
-node-06               true    true
-2 entries were displayed.</span>
+node-06               true    true</span>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════
-       SECTION 4 · SWITCHED VS SWITCHLESS
-  ═══════════════════════════════════════════ -->
+  <!-- SECTION 4 -->
   <section class="section" id="cluster-types">
     <div class="section-header">
       <div class="section-icon icon-purple">🔄</div>
@@ -1070,67 +494,39 @@ node-06               true    true
       </div>
     </div>
 
-    <!-- MERMAID: Decision flowchart -->
     <div class="diagram-wrap">
       <div class="mermaid">
 flowchart TD
     A([Start: Plan Cluster]) --> B{How many nodes?}
-    B -->|1 node| C[Single Node\nNo cluster interconnect\nneeded]
     B -->|2 nodes| D{Future growth\nexpected?}
-    B -->|4+ nodes| E[Switched Cluster\nMandatory — use\ncertified switches]
-    D -->|No| F[Switchless Cluster\nDirect cable cross-connect\n169.254.x.x auto-IPs]
-    D -->|Yes| G[Switched Cluster\nBetter for future\nexpansion]
+    B -->|4+ nodes| E[Switched Cluster\nMandatory]
+    D -->|No| F[Switchless Cluster\nDirect cable cross-connect]
+    D -->|Yes| G[Switched Cluster\nBetter for expansion]
     F --> H[✅ Ready]
     G --> H
     E --> H
-    C --> I[✅ Standalone]
 
     style A fill:#1c2333,stroke:#58a6ff,color:#58a6ff
-    style B fill:#1c2333,stroke:#30363d,color:#e6edf3
     style E fill:#0d2035,stroke:#3fb950,color:#3fb950
     style F fill:#0d2035,stroke:#bc8cff,color:#bc8cff
     style G fill:#0d2035,stroke:#f78166,color:#f78166
-    style H fill:#0d2035,stroke:#3fb950,color:#3fb950
-    style I fill:#0d2035,stroke:#6e7681,color:#8b949e
       </div>
-      <div class="diagram-caption">Figure 2 — Decision flowchart: Switched vs Switchless cluster selection</div>
+      <div class="diagram-caption">Figure 2 — Switched vs Switchless cluster selection decision tree</div>
     </div>
 
     <h3 id="switchless">Option A: Switchless Cluster (Two-Node Only)</h3>
-
-    <p>
-      In a <span class="highlight">switchless cluster</span>, the cluster interconnect ports on Node 1 are connected <em>directly</em> to the corresponding ports on Node 2 using standard cables — no switches involved. The link-local <code>169.254.x.x</code> addresses are automatically assigned, and inter-node communication begins immediately.
-    </p>
-
-    <div class="card">
-      <div class="card-title">📡 How Switchless Cabling Works</div>
-      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:8px;">
-        <div style="background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.3);border-radius:8px;padding:12px 16px;text-align:center;">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent-blue)">Node Alpha</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Port e0a · Port e0b</div>
-        </div>
-        <div style="color:var(--accent-green);font-size:22px;">⟷<br>⟷</div>
-        <div style="background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);border-radius:8px;padding:12px 16px;text-align:center;">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent-green)">Node Beta</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Port e0a · Port e0b</div>
-        </div>
-      </div>
-      <p style="margin-top:12px;font-size:13px;">Two direct cable connections (one per port pair) provide full redundancy without any switch infrastructure.</p>
-    </div>
+    <p>Cluster interconnect ports are connected <em>directly</em> between Node 1 and Node 2 — no switches required. Link-local <code>169.254.x.x</code> addresses are automatically assigned.</p>
 
     <div class="callout warning">
       <div class="callout-icon">⚠️</div>
       <div class="callout-content">
         <div class="callout-title">HA Interconnect ≠ Cluster Interconnect</div>
-        <div class="callout-text">Nodes already have internal HA interconnect links (typically 100 MB links) used for heartbeat and storage failover signaling. These are <strong>not</strong> suitable for cluster traffic. The cluster interconnect must use the dedicated 10/25/40 GbE ports described above.</div>
+        <div class="callout-text">The internal HA interconnect (typically 100 MB, used for heartbeat) is <strong>not</strong> suitable for cluster traffic. Cluster interconnect must use dedicated 10/25/40 GbE ports.</div>
       </div>
     </div>
 
     <h3 id="switched">Option B: Switched Cluster (2–24 Nodes)</h3>
-
-    <p>
-      A <span class="highlight">switched cluster</span> uses dedicated, certified network switches to form the cluster interconnect fabric. While optional for two-node clusters, it becomes <strong>mandatory for three or more nodes</strong>.
-    </p>
+    <p>Mandatory for three or more nodes. Uses certified, dedicated network switches to form the cluster interconnect fabric.</p>
 
     <div class="diagram-wrap">
       <div class="mermaid">
@@ -1143,8 +539,8 @@ graph LR
     end
 
     subgraph SWITCHES["Cluster Switches — Dedicated"]
-      SW1[Cluster Switch 1\nCisco/Broadcom]
-      SW2[Cluster Switch 2\nCisco/Broadcom]
+      SW1[Cluster Switch 1]
+      SW2[Cluster Switch 2]
     end
 
     N1 -->|e0a| SW1
@@ -1155,97 +551,81 @@ graph LR
     N3 -->|e0b| SW2
     N4 -->|e0a| SW1
     N4 -->|e0b| SW2
-    SW1 <-->|ISL Links\nInter-Switch Link| SW2
+    SW1 <-->|ISL Links| SW2
 
     style NODES fill:#0d1117,stroke:#30363d,color:#e6edf3
     style SWITCHES fill:#0d2035,stroke:#58a6ff,color:#58a6ff
       </div>
-      <div class="diagram-caption">Figure 3 — Switched cluster architecture: each node connects one port to each switch (dual-homed) for redundancy</div>
+      <div class="diagram-caption">Figure 3 — Switched cluster: each node connects one port to each switch (dual-homed)</div>
     </div>
 
-    <h3 id="migration">Migrating from Switchless to Switched — Non-Disruptive</h3>
-
-    <p>When your switchless two-node cluster needs to grow, you can migrate to a switched topology without taking the cluster offline. Here is the safe, step-by-step approach:</p>
+    <h3 id="migration">Migrating Switchless → Switched (Non-Disruptive)</h3>
 
     <ul class="step-list">
-      <li><span class="step-num">1</span>Procure two certified cluster switches (Cisco or Broadcom) and rack them in your data center.</li>
-      <li><span class="step-num">2</span>While the direct cross-connect cable on Port 1 remains active, disconnect Port 2 from the direct link on both nodes.</li>
-      <li><span class="step-num">3</span>Connect the now-free Port 2 on each node to Switch 1 and Switch 2 respectively.</li>
-      <li><span class="step-num">4</span>Verify cluster communication is stable via the new switch path. Confirm both nodes see each other through the switches.</li>
-      <li><span class="step-num">5</span>Disconnect the remaining direct cable (Port 1 cross-connect) and connect those ports to the switches as well.</li>
-      <li><span class="step-num">6</span>Configure ISL (Inter-Switch Links) between the two cluster switches for redundancy.</li>
+      <li><span class="step-num">1</span>Procure two certified cluster switches and rack them.</li>
+      <li><span class="step-num">2</span>While Port 1 cross-connect remains active, disconnect Port 2 from both nodes.</li>
+      <li><span class="step-num">3</span>Connect Port 2 on each node to Switch 1 and Switch 2 respectively.</li>
+      <li><span class="step-num">4</span>Verify cluster communication via the new switch path.</li>
+      <li><span class="step-num">5</span>Disconnect Port 1 cross-connect and connect to the switches.</li>
+      <li><span class="step-num">6</span>Configure ISL (Inter-Switch Links) between the two cluster switches.</li>
     </ul>
 
     <div class="callout danger">
       <div class="callout-icon">🚨</div>
       <div class="callout-content">
         <div class="callout-title">Critical: One Cable at a Time</div>
-        <div class="callout-text">Never disconnect both cluster interconnect links simultaneously. Removing both cables at once breaks cluster communication entirely, causing the cluster to split or become unavailable. Always maintain at least one active interconnect path during migration.</div>
+        <div class="callout-text">Never disconnect both cluster interconnect links simultaneously — this breaks cluster communication entirely. Always maintain at least one active path during migration.</div>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════
-       SECTION 5 · CLUSTER SWITCH SELECTION
-  ═══════════════════════════════════════════ -->
+  <!-- SECTION 5 -->
   <section class="section" id="switches">
     <div class="section-header">
       <div class="section-icon icon-yellow">⚙️</div>
       <div class="section-title-wrap">
         <div class="section-num">SECTION 05</div>
-        <h2>Cluster Switch Selection Guide</h2>
+        <h2>Cluster Switch Selection</h2>
       </div>
     </div>
-
-    <p>Not all network switches are eligible for use as cluster interconnect switches. NetApp certifies specific switch models, and <span class="highlight">only certified switches should be used</span> for the cluster private network.</p>
 
     <div class="callout warning">
       <div class="callout-icon">⚠️</div>
       <div class="callout-content">
         <div class="callout-title">Dedicated Switches Only</div>
-        <div class="callout-text">Cluster interconnect switches must be <strong>dedicated exclusively</strong> to cluster traffic. They cannot be shared with the data LAN, management network, or any other purpose. Connecting them to your corporate LAN is unsupported and will degrade cluster stability.</div>
+        <div class="callout-text">Cluster switches must be <strong>dedicated exclusively</strong> to cluster traffic. They cannot be shared with the data LAN or management network.</div>
       </div>
     </div>
-
-    <h3>Certified Switch Vendors</h3>
 
     <div class="grid-3">
       <div class="card" style="text-align:center;">
         <div style="font-size:28px;margin-bottom:8px;">🔷</div>
         <div class="card-title" style="justify-content:center;">Cisco</div>
-        <p style="font-size:13px;">Nexus series switches certified for ONTAP cluster interconnect.</p>
+        <p style="font-size:13px;">Nexus series — certified for ONTAP cluster interconnect.</p>
         <span class="badge badge-blue">Recommended</span>
       </div>
       <div class="card" style="text-align:center;">
         <div style="font-size:28px;margin-bottom:8px;">🟡</div>
         <div class="card-title" style="justify-content:center;">Broadcom</div>
-        <p style="font-size:13px;">Specific Broadcom switch models certified and supported.</p>
+        <p style="font-size:13px;">Specific models certified and supported.</p>
         <span class="badge badge-yellow">Supported</span>
       </div>
       <div class="card" style="text-align:center;">
         <div style="font-size:28px;margin-bottom:8px;">⭕</div>
         <div class="card-title" style="justify-content:center;">NetApp (Legacy)</div>
-        <p style="font-size:13px;">NetApp CN1610 switches — discontinued, no longer purchasable.</p>
+        <p style="font-size:13px;">CN1610 — discontinued, no longer purchasable.</p>
         <span class="badge badge-gray">End of Sale</span>
       </div>
     </div>
 
-    <h3>How to Size Your Cluster Switch</h3>
-
     <table class="spec-table">
       <thead>
-        <tr>
-          <th>Switch Model Example</th>
-          <th>Total Ports</th>
-          <th>ISL Ports Reserved</th>
-          <th>Usable Node Ports</th>
-          <th>Max Nodes (1 port/node)</th>
-        </tr>
+        <tr><th>Switch Model</th><th>Total Ports</th><th>ISL Reserved</th><th>Usable Node Ports</th></tr>
       </thead>
       <tbody>
-        <tr><td>NetApp CN1610 (Legacy)</td><td>16</td><td>4</td><td>12</td><td>12 nodes</td></tr>
-        <tr><td>Cisco Nexus (32-port)</td><td>32</td><td>4</td><td>28</td><td>28 node-ports</td></tr>
-        <tr><td>Cisco Nexus (48-port)</td><td>48</td><td>4</td><td>44</td><td>44 node-ports</td></tr>
+        <tr><td>NetApp CN1610 (Legacy)</td><td>16</td><td>4</td><td>12</td></tr>
+        <tr><td>Cisco Nexus (32-port)</td><td>32</td><td>4</td><td>28</td></tr>
+        <tr><td>Cisco Nexus (48-port)</td><td>48</td><td>4</td><td>44</td></tr>
       </tbody>
     </table>
 
@@ -1253,63 +633,33 @@ graph LR
       <div class="callout-icon">💡</div>
       <div class="callout-content">
         <div class="callout-title">Port Calculation Tip</div>
-        <div class="callout-text">Some high-performance controllers use <strong>two cluster ports per switch</strong> instead of one. Factor this in when calculating switch capacity: a 12-node cluster using dual-port controllers will consume 24 switch ports (not 12). Always consult the Hardware Universe for your specific controller model.</div>
-      </div>
-    </div>
-
-    <div class="code-block">
-      <div class="code-header">
-        <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span></div>
-        <span class="code-lang">ONTAP CLI — Cluster Switch Discovery</span>
-      </div>
-      <div class="code-body">
-<span class="comment"># Display all cluster switches detected by ONTAP</span>
-<span class="cmd">cluster-prod::></span> <span class="value">system cluster-switch show</span>
-
-<span class="output">Switch                      Type               Address          Model
---------------------------- ------------------ ---------------- ---------------
-cs-clus-1                   cluster-network    10.10.50.100     CN1610
-     Serial Number: FGL123456789
-      Is Monitored: true
-            Reason:
-  Software Version: 1.3.0.3
-    Version Source: CDP
-
-cs-clus-2                   cluster-network    10.10.50.101     CN1610
-     Serial Number: FGL987654321
-      Is Monitored: true
-            Reason:
-  Software Version: 1.3.0.3
-    Version Source: CDP</span>
+        <div class="callout-text">Some high-performance controllers use <strong>two cluster ports per switch</strong> instead of one. A 12-node cluster with dual-port controllers will consume 24 switch ports, not 12. Always consult the NetApp Hardware Universe for your specific model.</div>
       </div>
     </div>
   </section>
 
   <div class="divider"></div>
 
-  <!-- ═══════════════════════════════════════════
-       SECTION 6 · DISK ANATOMY
-  ═══════════════════════════════════════════ -->
+  <!-- SECTION 6 -->
   <section class="section" id="disk-anatomy">
     <div class="section-header">
       <div class="section-icon icon-orange">💿</div>
       <div class="section-title-wrap">
         <div class="section-num">SECTION 06</div>
-        <h2>Hard Disk Anatomy &amp; Key Concepts</h2>
+        <h2>Hard Disk Anatomy</h2>
       </div>
     </div>
 
-    <p>Before selecting disk types for your NetApp storage, it helps to understand the physical architecture of a spinning hard disk drive (HDD) — because the internal mechanics directly govern performance characteristics like IOPS and RPM.</p>
+    <p>Understanding the physical architecture of a spinning HDD helps clarify performance characteristics like IOPS and RPM.</p>
 
-    <!-- MERMAID: Disk anatomy -->
     <div class="diagram-wrap">
       <div class="mermaid">
 graph TD
     subgraph DISK["🖥️ Hard Disk Drive — Internal Components"]
-      SHAFT["🔩 Shaft (Spindle)\nCentral rotating axis\nthat all platters attach to"]
-      PLATTERS["💿 Platters (Blocks)\nMultiple magnetic disks\nstacked on the shaft\n— where data is stored"]
-      HEAD["📍 Read/Write Head (Pointer)\nMoves across platters\nto read and write data\nto specific sectors"]
-      SECTORS["📦 Sectors\nLogical storage units\nwithin each platter\n— smallest addressable unit"]
+      SHAFT["🔩 Shaft (Spindle)\nCentral rotating axis"]
+      PLATTERS["💿 Platters\nMagnetic disks stacked on shaft\n— where data is stored"]
+      HEAD["📍 Read/Write Head\nMoves across platters\nto read and write data"]
+      SECTORS["📦 Sectors\nSmallest addressable unit\non each platter"]
       SHAFT -->|"Rotates platters"| PLATTERS
       PLATTERS -->|"Divided into"| SECTORS
       HEAD -->|"Accesses data on"| SECTORS
@@ -1317,8 +667,6 @@ graph TD
 
     subgraph PERF["📊 Performance Impact"]
       RPM["RPM (Rotational Speed)\n= Determines IOPS capacity"]
-      LOAD["Disk Load\n= Higher load → more heat\nand vibration noise"]
-      RPM --- LOAD
     end
 
     PLATTERS --> RPM
@@ -1331,35 +679,17 @@ graph TD
 
     <div class="grid-2">
       <div class="card">
-        <div class="card-title">🔩 Shaft (Spindle)</div>
-        <p>The central axis on which all platters are mounted. All platters rotate together around this shaft. Higher quality bearings mean smoother and faster rotation.</p>
+        <div class="card-title">🔩 Shaft & Platters</div>
+        <p>The shaft is the central axis; all platters spin together around it. Data is magnetically encoded onto platter surfaces in concentric tracks.</p>
       </div>
       <div class="card">
-        <div class="card-title">💿 Platters (Blocks)</div>
-        <p>Circular magnetic disks — similar in appearance to stacked CDs — that spin around the shaft. Data is magnetically encoded onto their surfaces in concentric tracks.</p>
-      </div>
-      <div class="card">
-        <div class="card-title">📍 Read/Write Head</div>
-        <p>A mechanical arm (pointer) that floats nanometers above the platter surface, writing and reading data as the platter spins beneath it. Never physically contacts the disk.</p>
-      </div>
-      <div class="card">
-        <div class="card-title">📦 Sectors</div>
-        <p>Logical subdivisions of each platter. The smallest addressable storage unit. Data is stored in sectors; block-level storage operations reference sectors through the file system.</p>
-      </div>
-    </div>
-
-    <div class="callout info">
-      <div class="callout-icon">🔊</div>
-      <div class="callout-content">
-        <div class="callout-title">Why Your Disk Makes Noise Under Load</div>
-        <div class="callout-text">When you run heavy workloads (video editing, high-graphics applications, large database queries), the platters spin at maximum RPM, the read/write head seeks rapidly across tracks, and the mechanical vibration becomes audible. This is the physical limit of the drive being approached — not a hardware fault.</div>
+        <div class="card-title">📍 Read/Write Head & Sectors</div>
+        <p>The head floats nanometers above the platter, writing and reading data as the platter spins. Sectors are the smallest addressable storage units on each platter.</p>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════
-       SECTION 7 · DISK TYPES
-  ═══════════════════════════════════════════ -->
+  <!-- SECTION 7 -->
   <section class="section" id="disk-types">
     <div class="section-header">
       <div class="section-icon icon-blue">🗄️</div>
@@ -1369,110 +699,28 @@ graph TD
       </div>
     </div>
 
-    <p>NetApp ONTAP supports several disk technologies, each suited to different workload profiles based on capacity, performance, and cost considerations. Understanding these helps you make informed purchasing decisions.</p>
-
     <table class="spec-table">
       <thead>
-        <tr>
-          <th>Disk Type</th>
-          <th>Full Name</th>
-          <th>RPM</th>
-          <th>Approx. IOPS</th>
-          <th>Status</th>
-        </tr>
+        <tr><th>Disk Type</th><th>Full Name</th><th>RPM</th><th>Approx. IOPS</th><th>Status</th></tr>
       </thead>
       <tbody>
-        <tr>
-          <td><span class="badge badge-gray">ATA</span></td>
-          <td>Advanced Technology Attachment</td>
-          <td>5,400 RPM</td>
-          <td>~50</td>
-          <td><span class="badge badge-orange">Legacy</span></td>
-        </tr>
-        <tr>
-          <td><span class="badge badge-gray">SATA / NLSAS / BSAS</span></td>
-          <td>Serial Advanced Technology Attachment</td>
-          <td>7,200 RPM</td>
-          <td>~75</td>
-          <td><span class="badge badge-orange">Legacy</span></td>
-        </tr>
-        <tr>
-          <td><span class="badge badge-blue">SAS (10K)</span></td>
-          <td>Serial Attached SCSI — 10K</td>
-          <td>10,000 RPM</td>
-          <td>~125</td>
-          <td><span class="badge badge-green">Current</span></td>
-        </tr>
-        <tr>
-          <td><span class="badge badge-blue">SAS (15K)</span></td>
-          <td>Serial Attached SCSI — 15K</td>
-          <td>15,000 RPM</td>
-          <td>~175</td>
-          <td><span class="badge badge-green">Current</span></td>
-        </tr>
-        <tr>
-          <td><span class="badge badge-gray">FC (10K)</span></td>
-          <td>Fibre Channel — 10K</td>
-          <td>10,000 RPM</td>
-          <td>~125</td>
-          <td><span class="badge badge-orange">Legacy</span></td>
-        </tr>
-        <tr>
-          <td><span class="badge badge-gray">FC (15K)</span></td>
-          <td>Fibre Channel — 15K</td>
-          <td>15,000 RPM</td>
-          <td>~175</td>
-          <td><span class="badge badge-orange">Legacy</span></td>
-        </tr>
-        <tr>
-          <td><span class="badge badge-purple">FSAS (7.2K)</span></td>
-          <td>Flash-optimized SAS — 7.2K</td>
-          <td>7,200 RPM</td>
-          <td>~125</td>
-          <td><span class="badge badge-green">Current</span></td>
-        </tr>
-        <tr>
-          <td><span class="badge badge-purple">FSAS (10K)</span></td>
-          <td>Flash-optimized SAS — 10K</td>
-          <td>10,000 RPM</td>
-          <td>~150</td>
-          <td><span class="badge badge-green">Current</span></td>
-        </tr>
-        <tr>
-          <td><span class="badge badge-teal">SSD / Flash</span></td>
-          <td>Solid State Drive</td>
-          <td>0 RPM (no moving parts)</td>
-          <td>3,200–3,500+</td>
-          <td><span class="badge badge-teal">Preferred</span></td>
-        </tr>
+        <tr><td><span class="badge badge-gray">ATA</span></td><td>Advanced Technology Attachment</td><td>5,400 RPM</td><td>~50</td><td><span class="badge badge-orange">Legacy</span></td></tr>
+        <tr><td><span class="badge badge-gray">SATA / NLSAS / BSAS</span></td><td>Serial Advanced Technology Attachment</td><td>7,200 RPM</td><td>~75</td><td><span class="badge badge-orange">Legacy</span></td></tr>
+        <tr><td><span class="badge badge-blue">SAS (10K)</span></td><td>Serial Attached SCSI — 10K</td><td>10,000 RPM</td><td>~125</td><td><span class="badge badge-green">Current</span></td></tr>
+        <tr><td><span class="badge badge-blue">SAS (15K)</span></td><td>Serial Attached SCSI — 15K</td><td>15,000 RPM</td><td>~175</td><td><span class="badge badge-green">Current</span></td></tr>
+        <tr><td><span class="badge badge-gray">FC (10K/15K)</span></td><td>Fibre Channel</td><td>10,000–15,000 RPM</td><td>~125–175</td><td><span class="badge badge-orange">Legacy</span></td></tr>
+        <tr><td><span class="badge badge-purple">FSAS</span></td><td>Flash-optimized SAS — 7.2K/10K</td><td>7,200–10,000 RPM</td><td>~125–150</td><td><span class="badge badge-green">Current</span></td></tr>
+        <tr><td><span class="badge badge-teal">SSD / Flash</span></td><td>Solid State Drive</td><td>0 RPM</td><td>3,200–3,500+</td><td><span class="badge badge-teal">Preferred</span></td></tr>
       </tbody>
     </table>
-
-    <h3 id="ata-sata">ATA &amp; SATA — The Legacy Spinning Drives</h3>
-
-    <p><span class="highlight">ATA</span> (5,400 RPM, ~50 IOPS) and <span class="highlight">SATA</span> (7,200 RPM, ~75 IOPS) represent the oldest supported disk technologies. In NetApp's nomenclature, SATA drives are referred to as <span class="highlight">NLSAS</span> (Near-Line SAS) or <span class="highlight">BSAS</span> (Bridged SAS). This naming can cause confusion since the physical interface differs from the logical name.</p>
 
     <div class="callout danger">
       <div class="callout-icon">🚫</div>
       <div class="callout-content">
         <div class="callout-title">FC and ATA: End of Availability</div>
-        <div class="callout-text">Fibre Channel and ATA hard drives are <strong>no longer sold by NetApp</strong>. They are only supported in legacy systems (e.g., older FAS3200-series platforms). If you encounter these in a customer environment, they are running legacy hardware and should be flagged for a refresh discussion.</div>
+        <div class="callout-text">FC and ATA drives are <strong>no longer sold by NetApp</strong> — only supported in legacy FAS3200-series platforms. Flag these for hardware refresh.</div>
       </div>
     </div>
-
-    <h3 id="sas-fc">SAS — The Enterprise Workhorse</h3>
-
-    <p><span class="highlight">Serial Attached SCSI (SAS)</span> drives come in two variants: 10K RPM (~125 IOPS) and 15K RPM (~175 IOPS). SAS is the most widely deployed spinning disk type in modern NetApp environments. When placing an order, you must specify the RPM variant explicitly.</p>
-
-    <h3 id="fsas">FSAS — The Hybrid Innovation</h3>
-
-    <p><span class="highlight">FSAS (Flash-optimized SAS)</span> is a newer hybrid disk type that combines SATA-class capacity economics with SAS-class interface reliability. NetApp designed FSAS to bridge the gap between high-capacity SATA drives and high-performance SAS drives. Available at 7,200 RPM or 10,000 RPM.</p>
-
-    <h3 id="ssd">SSD / Flash — The Performance Standard</h3>
-
-    <p>
-      <span class="highlight">Solid State Drives (SSDs)</span>, also called flash drives, contain <em>no moving parts</em>. Because there is no rotating platter and no mechanical read/write head, SSDs deliver dramatically better performance than any spinning disk:
-    </p>
 
     <div class="card">
       <div class="card-title">⚡ SSD vs Best Spinning Disk</div>
@@ -1487,24 +735,20 @@ graph TD
           <span class="badge badge-teal">3,400</span>
         </div>
         <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--accent-teal)"></div></div>
-        <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">SSD delivers ~20× more IOPS than the best spinning disk option</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">SSD delivers ~20× more IOPS than the best spinning disk</p>
       </div>
     </div>
-
-    <p>In <span class="highlight">AFF (All Flash FAS)</span> systems, every storage shelf is populated exclusively with SSDs. This is why AFF systems are positioned for latency-sensitive, high-throughput workloads like databases, VDI, and real-time analytics.</p>
-
-    <h3 id="disk-selection">How to Choose the Right Disk for Your Workload</h3>
 
     <div class="diagram-wrap">
       <div class="mermaid">
 flowchart TD
     A([New Storage Project]) --> B{Primary Concern?}
-    B -->|Maximum Performance\nLow Latency| C[SSD / Flash Drive\nAFF Platform\n3200+ IOPS per disk]
-    B -->|Balanced\nPerformance + Cost| D{IOPS Requirement?}
-    B -->|Maximum Capacity\nArchival / Backup| E[SATA / NLSAS\nNearline Tier\n75 IOPS per disk]
-    D -->|>125 IOPS needed| F[SAS 15K\n175 IOPS per disk\nFAS Platform]
-    D -->|75-125 IOPS| G[SAS 10K or FSAS\n125 IOPS per disk]
-    C --> H([Size your pool &\ncalculate total IOPS])
+    B -->|Maximum Performance| C[SSD / Flash\nAFF Platform\n3200+ IOPS per disk]
+    B -->|Balanced Cost & Performance| D{IOPS Needed?}
+    B -->|Maximum Capacity / Archival| E[SATA / NLSAS\n75 IOPS per disk]
+    D -->|>125 IOPS| F[SAS 15K\n175 IOPS per disk]
+    D -->|75–125 IOPS| G[SAS 10K or FSAS\n125 IOPS per disk]
+    C --> H([Size pool & calculate total IOPS])
     E --> H
     F --> H
     G --> H
@@ -1513,27 +757,20 @@ flowchart TD
     style C fill:#0d2035,stroke:#39d3c3,color:#39d3c3
     style E fill:#0d2035,stroke:#f78166,color:#f78166
     style F fill:#0d2035,stroke:#3fb950,color:#3fb950
-    style G fill:#0d2035,stroke:#bc8cff,color:#bc8cff
-    style H fill:#0d2035,stroke:#3fb950,color:#3fb950
       </div>
-      <div class="diagram-caption">Figure 5 — Disk type selection decision tree based on workload requirements</div>
+      <div class="diagram-caption">Figure 5 — Disk type selection decision tree</div>
     </div>
 
     <div class="callout success">
       <div class="callout-icon">🎯</div>
       <div class="callout-content">
         <div class="callout-title">IOPS Capacity Planning Formula</div>
-        <div class="callout-text">
-          <strong>Total Pool IOPS = Number of Disks × IOPS per Disk</strong><br><br>
-          Example: 24 × SAS 15K disks = 24 × 175 = <strong>4,200 IOPS maximum for that aggregate</strong>. Subtract RAID overhead and use this as your baseline for application sizing discussions.
-        </div>
+        <div class="callout-text"><strong>Total Pool IOPS = Number of Disks × IOPS per Disk</strong><br>Example: 24 × SAS 15K = 24 × 175 = <strong>4,200 IOPS</strong>. Subtract RAID overhead for the usable baseline.</div>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════
-       SECTION 8 · DATA WRITING TECHNIQUES
-  ═══════════════════════════════════════════ -->
+  <!-- SECTION 8 -->
   <section class="section" id="writing-techniques">
     <div class="section-header">
       <div class="section-icon icon-purple">✍️</div>
@@ -1543,9 +780,8 @@ flowchart TD
       </div>
     </div>
 
-    <p>Before diving into RAID types, it is essential to understand the two foundational data distribution strategies used across the storage industry. RAID types are built on top of these techniques.</p>
+    <p>RAID types are built on two foundational data distribution strategies:</p>
 
-    <!-- MERMAID: Concatenation vs Striping -->
     <div class="diagram-wrap">
       <div class="mermaid">
 block-beta
@@ -1585,48 +821,30 @@ block-beta
     S3["Disk 3\n█C █F █I"]
   end
       </div>
-      <div class="diagram-caption">Figure 6 — Concatenation writes sequentially disk-by-disk; Striping distributes data across all disks simultaneously</div>
+      <div class="diagram-caption">Figure 6 — Concatenation fills disk-by-disk; Striping distributes across all disks simultaneously</div>
     </div>
-
-    <h3 id="concatenation">Concatenation — Sequential Disk Filling</h3>
-
-    <p>In <span class="highlight">concatenation</span>, data is written to the first disk in the pool until it is completely full, then overflows to the second disk, and so on. Think of stacking buckets in a waterfall — all water fills the top bucket before flowing down to the next.</p>
 
     <div class="grid-2">
       <div class="card">
-        <div class="card-title">✅ Advantages</div>
-        <ul class="bullet-list">
-          <li>Simpler implementation logic</li>
-          <li>Predictable data location</li>
-          <li>Good for archival-style sequential access</li>
-        </ul>
+        <div class="card-title">🔄 Concatenation</div>
+        <p>Data fills Disk 1 completely, then overflows to Disk 2. Only one disk is active at a time — poor performance, uneven wear.</p>
       </div>
       <div class="card">
-        <div class="card-title">❌ Disadvantages</div>
-        <ul class="bullet-list">
-          <li>Poor performance — only one disk active at a time</li>
-          <li>Uneven disk wear</li>
-          <li>Not used by NetApp (informational only)</li>
-        </ul>
+        <div class="card-title">⚡ Striping</div>
+        <p>Data is distributed in stripes across all disks simultaneously — all disks work in parallel, maximizing throughput.</p>
       </div>
     </div>
-
-    <h3 id="striping">Striping — Parallel Distribution</h3>
-
-    <p>In <span class="highlight">striping</span>, data is distributed in stripes across all disks in the pool <em>simultaneously</em>. A stripe is written to the first block of each disk before moving to the second block of each disk. All disks work in parallel — dramatically increasing throughput.</p>
 
     <div class="callout success">
       <div class="callout-icon">⚡</div>
       <div class="callout-content">
         <div class="callout-title">NetApp Uses Striping Exclusively</div>
-        <div class="callout-text">NetApp ONTAP automatically applies the striping technique across all aggregates. You cannot configure concatenation in ONTAP — it is not an option. Some other vendors (like legacy EMC systems) allow you to choose between the two, but NetApp determined striping is always the superior choice for storage workloads.</div>
+        <div class="callout-text">ONTAP automatically applies striping across all aggregates. Concatenation is not an option — NetApp determined striping is always the superior choice for storage workloads.</div>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════
-       SECTION 9 · RAID TYPES
-  ═══════════════════════════════════════════ -->
+  <!-- SECTION 9 -->
   <section class="section" id="raid">
     <div class="section-header">
       <div class="section-icon icon-teal">🛡️</div>
@@ -1636,86 +854,52 @@ block-beta
       </div>
     </div>
 
-    <p>
-      <span class="highlight">RAID</span> — Redundant Array of Independent Disks — is the technology that protects your data when physical drives fail. Without RAID, a single disk failure means data loss. NetApp ONTAP supports four distinct RAID types, each offering different fault tolerance, capacity efficiency, and performance characteristics.
-    </p>
+    <p><span class="highlight">RAID</span> (Redundant Array of Independent Disks) protects data when physical drives fail. ONTAP supports four RAID types, each offering different fault tolerance and capacity efficiency.</p>
 
     <div class="callout info">
       <div class="callout-icon">📌</div>
       <div class="callout-content">
         <div class="callout-title">RAID Is Mandatory in ONTAP</div>
-        <div class="callout-text">You cannot create a storage aggregate (pool) in ONTAP without specifying a RAID type. Every aggregate must have one of the four supported RAID policies applied. You choose the RAID type at aggregate creation time.</div>
+        <div class="callout-text">Every aggregate must have a RAID policy. You cannot create a storage aggregate without specifying a RAID type at creation time.</div>
       </div>
     </div>
 
-    <!-- SVG: RAID Overview Quadrant -->
     <div class="diagram-wrap">
       <svg viewBox="0 0 620 420" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:620px;display:block;margin:0 auto;">
-        <!-- Background -->
         <rect width="620" height="420" fill="#161b22" rx="10"/>
-
-        <!-- Title -->
         <text x="310" y="30" text-anchor="middle" fill="#e6edf3" font-family="Sora,sans-serif" font-size="14" font-weight="700">RAID Types: Fault Tolerance vs Capacity Efficiency</text>
-
-        <!-- Plot area -->
-        <!-- Quadrant fills -->
         <rect x="80" y="50" width="230" height="190" fill="rgba(247,129,102,0.07)" stroke="none"/>
         <rect x="310" y="50" width="230" height="190" fill="rgba(63,185,80,0.07)" stroke="none"/>
         <rect x="80" y="240" width="230" height="130" fill="rgba(139,148,158,0.05)" stroke="none"/>
         <rect x="310" y="240" width="230" height="130" fill="rgba(227,179,65,0.06)" stroke="none"/>
-
-        <!-- Grid lines -->
         <line x1="80" y1="50" x2="80" y2="370" stroke="#30363d" stroke-width="1"/>
         <line x1="540" y1="50" x2="540" y2="370" stroke="#30363d" stroke-width="1"/>
         <line x1="80" y1="370" x2="540" y2="370" stroke="#30363d" stroke-width="1"/>
         <line x1="80" y1="50" x2="540" y2="50" stroke="#30363d" stroke-width="1"/>
-        <!-- Center dividers -->
         <line x1="310" y1="50" x2="310" y2="370" stroke="#484f58" stroke-width="1" stroke-dasharray="4,4"/>
         <line x1="80" y1="210" x2="540" y2="210" stroke="#484f58" stroke-width="1" stroke-dasharray="4,4"/>
-
-        <!-- Quadrant Labels -->
         <text x="195" y="75" text-anchor="middle" fill="#f78166" font-family="Inter,sans-serif" font-size="11" opacity="0.8">Storage Efficient · Risky</text>
         <text x="425" y="75" text-anchor="middle" fill="#3fb950" font-family="Inter,sans-serif" font-size="11" opacity="0.8">✦ Best Balance</text>
         <text x="195" y="390" text-anchor="middle" fill="#8b949e" font-family="Inter,sans-serif" font-size="11" opacity="0.7">Neither Optimal</text>
         <text x="425" y="390" text-anchor="middle" fill="#e3b341" font-family="Inter,sans-serif" font-size="11" opacity="0.8">Very Safe · Capacity Cost</text>
-
-        <!-- X Axis Arrow & Label -->
         <line x1="80" y1="370" x2="548" y2="370" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arrowX)"/>
         <text x="310" y="408" text-anchor="middle" fill="#8b949e" font-family="Inter,sans-serif" font-size="12">← Low Fault Tolerance ——————— High Fault Tolerance →</text>
-
-        <!-- Y Axis Arrow & Label -->
         <line x1="80" y1="370" x2="80" y2="42" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arrowY)"/>
         <text x="22" y="210" text-anchor="middle" fill="#8b949e" font-family="Inter,sans-serif" font-size="12" transform="rotate(-90,22,210)">← Low — Capacity Efficiency — High →</text>
-
-        <!-- Arrow markers -->
         <defs>
-          <marker id="arrowX" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L8,3 z" fill="#8b949e"/>
-          </marker>
-          <marker id="arrowY" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L8,3 z" fill="#8b949e"/>
-          </marker>
+          <marker id="arrowX" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#8b949e"/></marker>
+          <marker id="arrowY" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#8b949e"/></marker>
         </defs>
-
-        <!-- Data Points — mapped: x=fault tol (0→1 = 80→540), y=cap eff (0→1 = 370→50) -->
-        <!-- RAID 0: FT=0.05, CE=1.0 → x=103, y=50+2=52 -->
         <circle cx="103" cy="52" r="10" fill="#f78166" opacity="0.9"/>
         <text x="103" y="38" text-anchor="middle" fill="#f78166" font-family="Inter,sans-serif" font-size="12" font-weight="700">RAID 0</text>
         <text x="103" y="28" text-anchor="middle" fill="#f78166" font-family="Inter,sans-serif" font-size="10">FT: 0 disks · 100% usable</text>
-
-        <!-- RAID 4: FT=0.25, CE=0.85 → x=195, y=370-252=118 -->
         <circle cx="195" cy="118" r="10" fill="#58a6ff" opacity="0.9"/>
         <text x="195" y="104" text-anchor="middle" fill="#58a6ff" font-family="Inter,sans-serif" font-size="12" font-weight="700">RAID 4</text>
         <text x="195" y="94" text-anchor="middle" fill="#58a6ff" font-family="Inter,sans-serif" font-size="10">FT: 1 disk · N−1 usable</text>
-
-        <!-- RAID-DP: FT=0.65, CE=0.75 → x=379, y=370-240=130 wait recalc -->
-        <!-- x = 80 + 0.65*460 = 80+299=379, y = 370 - 0.75*320 = 370-240=130 -->
         <circle cx="379" cy="130" r="12" fill="#bc8cff" opacity="0.9"/>
         <text x="379" y="115" text-anchor="middle" fill="#bc8cff" font-family="Inter,sans-serif" font-size="13" font-weight="700">RAID-DP</text>
         <text x="379" y="104" text-anchor="middle" fill="#bc8cff" font-family="Inter,sans-serif" font-size="10">FT: 2 disks · N−2 usable</text>
         <text x="379" y="155" text-anchor="middle" fill="#bc8cff" font-family="Inter,sans-serif" font-size="10" opacity="0.8">⭐ Default</text>
-
-        <!-- RAID-TEC: FT=0.95, CE=0.55 → x=80+0.95*460=517, y=370-0.55*320=194 -->
         <circle cx="517" cy="194" r="10" fill="#3fb950" opacity="0.9"/>
         <text x="517" y="180" text-anchor="middle" fill="#3fb950" font-family="Inter,sans-serif" font-size="12" font-weight="700">RAID-TEC</text>
         <text x="517" y="170" text-anchor="middle" fill="#3fb950" font-family="Inter,sans-serif" font-size="10">FT: 3 disks · N−3 usable</text>
@@ -1735,7 +919,7 @@ block-beta
             <div class="raid-disk disk-data"><div class="disk-label">Disk 2</div>B · E · H</div>
             <div class="raid-disk disk-data"><div class="disk-label">Disk 3</div>C · F · I</div>
           </div>
-          <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">All disks are data disks — no parity</p>
+          <p style="font-size:12px;color:var(--text-muted);">All disks are data disks — no parity</p>
         </div>
         <div>
           <table class="spec-table" style="margin:0;">
@@ -1748,7 +932,7 @@ block-beta
       </div>
     </div>
 
-    <p>RAID 0 provides zero data protection. A single disk failure results in complete data loss for that aggregate. ONTAP does not use RAID 0 for normal data storage. Its sole use case in ONTAP is for <span class="highlight">Flash Pool cache aggregates</span> (SSD cache tier), where the data already exists on a protected spinning disk layer, making parity overhead unnecessary.</p>
+    <p>RAID 0 provides zero data protection — a single disk failure causes complete data loss. Its only use in ONTAP is for <span class="highlight">Flash Pool cache aggregates</span>, where data already exists on a protected spinning disk layer.</p>
 
     <h3 id="raid4">RAID 4 — Single Parity Protection</h3>
 
@@ -1769,12 +953,6 @@ block-beta
               <span class="stripe-cell disk-data">D</span>
               <span class="stripe-cell disk-parity">C+D</span>
             </div>
-            <div class="stripe-row">
-              <span class="stripe-label">Stripe 3:</span>
-              <span class="stripe-cell disk-data">E</span>
-              <span class="stripe-cell disk-data">F</span>
-              <span class="stripe-cell disk-parity">E+F</span>
-            </div>
             <div style="display:flex;gap:4px;margin-top:4px;">
               <span style="flex:1;text-align:center;font-size:10px;color:var(--accent-blue)">Data</span>
               <span style="flex:1;text-align:center;font-size:10px;color:var(--accent-blue)">Data</span>
@@ -1793,23 +971,17 @@ block-beta
       </div>
     </div>
 
-    <p>
-      RAID 4 dedicates one disk in the pool as a <span class="highlight">parity disk</span>. For each stripe, the parity disk stores a mathematical checksum (using XOR logic) of all data in that stripe across all data disks. This parity can reconstruct any single failed disk's data.
-    </p>
-
-    <p>
-      The parity disk does <em>not</em> need to be larger than the data disks to hold all that parity. Through XOR algorithm mechanics, one parity disk of equal size can logically represent the cumulative checksum of all data disks — it stores logical checksums, not physical copies of the data.
-    </p>
+    <p>One dedicated <span class="highlight">parity disk</span> stores an XOR checksum of each data stripe, enabling recovery of any single failed disk. Through XOR mechanics, one parity disk of equal size can represent all data disk checksums — it stores logical checksums, not copies of data.</p>
 
     <div class="callout info">
       <div class="callout-icon">🔧</div>
       <div class="callout-content">
         <div class="callout-title">Parity Reconstruction Logic</div>
-        <div class="callout-text">If Disk 1 (data=A) fails and is replaced: <code>Parity − B = A</code> (reconstructed A). If the Parity disk itself fails: <code>A + B = new Parity</code>. ONTAP handles all reconstruction automatically — no manual intervention or commands required.</div>
+        <div class="callout-text">If Disk 1 (data=A) fails: <code>Parity − B = A</code> (reconstructed). If the Parity disk fails: <code>A + B = new Parity</code>. ONTAP handles all reconstruction automatically.</div>
       </div>
     </div>
 
-    <h3 id="raidDP">RAID-DP — Dual Parity (The Default Choice)</h3>
+    <h3 id="raidDP">RAID-DP — Dual Parity (The Default)</h3>
 
     <div class="card">
       <div class="card-title">📊 RAID-DP Specifications (Dual/Diagonal Parity)</div>
@@ -1832,14 +1004,6 @@ block-beta
               <span class="stripe-cell disk-parity">P2</span>
               <span class="stripe-cell disk-dparity">DP2</span>
             </div>
-            <div class="stripe-row">
-              <span class="stripe-label">Stripe 3:</span>
-              <span class="stripe-cell disk-data">G</span>
-              <span class="stripe-cell disk-data">H</span>
-              <span class="stripe-cell disk-data">I</span>
-              <span class="stripe-cell disk-parity">P3</span>
-              <span class="stripe-cell disk-dparity">DP3</span>
-            </div>
             <div style="display:flex;gap:4px;margin-top:4px;">
               <span style="flex:1;text-align:center;font-size:10px;color:var(--accent-blue)">D</span>
               <span style="flex:1;text-align:center;font-size:10px;color:var(--accent-blue)">D</span>
@@ -1848,7 +1012,7 @@ block-beta
               <span style="flex:1;text-align:center;font-size:10px;color:var(--accent-purple)">DP</span>
             </div>
           </div>
-          <p style="font-size:11px;color:var(--text-muted)">P = Row Parity (horizontal) · DP = Diagonal Parity (diagonal across stripes)</p>
+          <p style="font-size:11px;color:var(--text-muted)">P = Row Parity · DP = Diagonal Parity</p>
         </div>
         <div>
           <table class="spec-table" style="margin:0;">
@@ -1862,22 +1026,32 @@ block-beta
       </div>
     </div>
 
-    <p>
-      <span class="highlight">RAID-DP</span> is NetApp's signature RAID implementation and the <strong>most commonly deployed RAID type</strong> in production environments. It maintains two dedicated parity disks per RAID group:
-    </p>
+    <p><span class="highlight">RAID-DP</span> is NetApp's default RAID type, maintaining two dedicated parity disks per RAID group: a <strong>Row Parity (P)</strong> disk using XOR across each stripe, and a <strong>Diagonal Parity (DP)</strong> disk computed diagonally across multiple stripes. This two-dimensional scheme survives any two simultaneous disk failures.</p>
 
-    <ul class="bullet-list">
-      <li><strong>Row Parity (P disk):</strong> Calculates the XOR sum of each horizontal stripe, identical to RAID 4.</li>
-      <li><strong>Diagonal Parity (DP disk):</strong> Calculates parity diagonally across multiple stripes — e.g., taking one block from each stripe in a staggered, diagonal pattern. This is the "dual" in RAID-DP.</li>
-    </ul>
+    <div class="grid-2">
+      <div class="card" style="border-color:rgba(88,166,255,0.4)">
+        <div class="card-title" style="color:var(--accent-blue)">🔷 NetApp RAID-DP</div>
+        <ul class="bullet-list">
+          <li>Two <strong>dedicated</strong> parity disks (fixed positions)</li>
+          <li>Higher write performance due to parity isolation</li>
+          <li>Parity disks see heavier write load</li>
+        </ul>
+      </div>
+      <div class="card" style="border-color:rgba(63,185,80,0.4)">
+        <div class="card-title" style="color:var(--accent-green)">🔷 RAID 6 (Other Vendors)</div>
+        <ul class="bullet-list">
+          <li>Parity <strong>distributed</strong> across all disks per stripe</li>
+          <li>Even write load distribution across all disks</li>
+          <li>Better performance under balanced load</li>
+        </ul>
+      </div>
+    </div>
 
-    <p>This two-dimensional parity scheme allows RAID-DP to survive the simultaneous failure of <span class="highlight">any two disks</span> in the RAID group without data loss.</p>
-
-    <div class="callout success">
-      <div class="callout-icon">✅</div>
+    <div class="callout info">
+      <div class="callout-icon">📝</div>
       <div class="callout-content">
-        <div class="callout-title">RAID-DP: Why It's the Default</div>
-        <div class="callout-text">RAID-DP protects against double-disk failure — a crucial feature in large capacity pools where the probability of a second failure during reconstruction of the first failure is non-trivial. For most workloads (NAS, SAN, mixed environments), RAID-DP delivers the best balance of protection, performance, and capacity efficiency.</div>
+        <div class="callout-title">Interview Insight: RAID-DP vs RAID 6</div>
+        <div class="callout-text">Key distinction: RAID-DP parity sits on <strong>fixed dedicated disks</strong>; RAID 6 parity <strong>rotates per stripe</strong>. Same protection goal, different mechanical approach. NetApp does not implement RAID 6.</div>
       </div>
     </div>
 
@@ -1898,16 +1072,6 @@ block-beta
               <span class="stripe-cell disk-dparity">DP1</span>
               <span class="stripe-cell disk-tparity">TP1</span>
             </div>
-            <div class="stripe-row">
-              <span class="stripe-label">Stripe 2:</span>
-              <span class="stripe-cell disk-data">E</span>
-              <span class="stripe-cell disk-data">F</span>
-              <span class="stripe-cell disk-data">G</span>
-              <span class="stripe-cell disk-data">H</span>
-              <span class="stripe-cell disk-parity">P2</span>
-              <span class="stripe-cell disk-dparity">DP2</span>
-              <span class="stripe-cell disk-tparity">TP2</span>
-            </div>
             <div style="display:flex;gap:4px;margin-top:4px;">
               <span style="flex:1;text-align:center;font-size:9px;color:var(--accent-blue)">D</span>
               <span style="flex:1;text-align:center;font-size:9px;color:var(--accent-blue)">D</span>
@@ -1918,7 +1082,7 @@ block-beta
               <span style="flex:1;text-align:center;font-size:9px;color:var(--accent-orange)">TP</span>
             </div>
           </div>
-          <p style="font-size:11px;color:var(--text-muted)">TP = T-Parity (reverse diagonal — counters DP direction)</p>
+          <p style="font-size:11px;color:var(--text-muted)">TP = T-Parity (reverse diagonal)</p>
         </div>
         <div>
           <table class="spec-table" style="margin:0;">
@@ -1931,114 +1095,31 @@ block-beta
       </div>
     </div>
 
-    <p>
-      <span class="highlight">RAID-TEC</span> adds a third parity dimension — the <span class="highlight-orange">T-Parity</span> — calculated in a <em>reverse diagonal</em> direction across the data drives. This third orthogonal parity stream enables the system to survive the simultaneous failure of up to three drives.
-    </p>
-
-    <p>
-      RAID-TEC was developed specifically to address the growing risk profile of very high-capacity drives (12 TB, 16 TB, and larger). When a 12 TB drive fails, reconstruction takes significantly longer than a 900 GB drive. During that lengthy reconstruction window, the probability of a second (or third) disk failure is meaningfully higher — making dual-parity RAID-DP potentially insufficient.
-    </p>
+    <p><span class="highlight">RAID-TEC</span> adds a third parity dimension — <span class="highlight-orange">T-Parity</span> — computed in a reverse diagonal direction, enabling survival of up to three simultaneous drive failures. Designed for very high-capacity drives (8 TB+) where reconstruction windows are long enough to raise the statistical risk of a second or third failure.</p>
 
     <div class="callout tip">
       <div class="callout-icon">💡</div>
       <div class="callout-content">
         <div class="callout-title">When to Choose RAID-TEC</div>
-        <div class="callout-text">
-          <strong>Use RAID-TEC when:</strong><br>
-          • Your individual disk capacity is 8 TB or larger<br>
-          • Reconstruction time on disk failure is measured in hours (not minutes)<br>
-          • You need three-disk fault tolerance for compliance or SLA requirements<br><br>
-          <strong>Also note:</strong> RAID-TEC has faster reconstruction times than RAID-DP due to newer parity calculation algorithms, making it efficient even on large drives.
-        </div>
+        <div class="callout-text">Use RAID-TEC when individual disk capacity is 8 TB or larger, reconstruction time is measured in hours, or three-disk fault tolerance is required for compliance. RAID-TEC also offers faster reconstruction than RAID-DP due to newer parity algorithms.</div>
       </div>
     </div>
 
-    <h3 id="raid6comp">RAID-DP vs RAID 6 — Key Comparison</h3>
-
-    <p>Engineers familiar with other vendors often ask how NetApp's RAID-DP compares to the industry-standard RAID 6. Both offer dual-parity protection, but they differ in parity placement:</p>
-
-    <div class="grid-2">
-      <div class="card" style="border-color:rgba(88,166,255,0.4)">
-        <div class="card-title" style="color:var(--accent-blue)">🔷 NetApp RAID-DP</div>
-        <ul class="bullet-list">
-          <li>Two <strong>dedicated</strong> parity disks (fixed positions)</li>
-          <li>All data disks write without parity overhead in their stripe</li>
-          <li>Higher write performance due to parity isolation</li>
-          <li>Parity disks see heavier write load</li>
-        </ul>
-      </div>
-      <div class="card" style="border-color:rgba(63,185,80,0.4)">
-        <div class="card-title" style="color:var(--accent-green)">🔷 RAID 6 (Other Vendors)</div>
-        <ul class="bullet-list">
-          <li>Parity is <strong>distributed</strong> across all disks</li>
-          <li>Each stripe's parity lands on a different disk</li>
-          <li>Even write load distribution across all disks</li>
-          <li>Better overall performance under balanced load</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="callout info">
-      <div class="callout-icon">📝</div>
-      <div class="callout-content">
-        <div class="callout-title">Interview Insight: RAID-DP vs RAID 6</div>
-        <div class="callout-text">This is a common interview question. The key answer: in RAID-DP, parity sits on <strong>fixed dedicated disks</strong>. In RAID 6, parity <strong>rotates across all disks per stripe</strong>. RAID 6 provides better load balancing; RAID-DP provides simpler implementation with similar protection. NetApp does not implement RAID 6 — it uses its own RAID-DP which achieves the same protection goal with a different mechanical approach.</div>
-      </div>
-    </div>
-
-    <!-- Summary Table -->
-    <h3>RAID Summary Comparison Table</h3>
+    <h3>RAID Summary</h3>
     <table class="spec-table">
       <thead>
-        <tr>
-          <th>RAID Type</th>
-          <th>Protection</th>
-          <th>Fault Tolerance</th>
-          <th>Min Disks (cMode)</th>
-          <th>Usable Capacity</th>
-          <th>Typical Use Case</th>
-        </tr>
+        <tr><th>RAID Type</th><th>Protection</th><th>Fault Tolerance</th><th>Min Disks (cMode)</th><th>Usable Capacity</th><th>Typical Use</th></tr>
       </thead>
       <tbody>
-        <tr>
-          <td><span class="badge badge-gray">RAID 0</span></td>
-          <td>None</td>
-          <td>0 disks</td>
-          <td>2</td>
-          <td>N (100%)</td>
-          <td>Flash Pool SSD cache only</td>
-        </tr>
-        <tr>
-          <td><span class="badge badge-blue">RAID 4</span></td>
-          <td>Single Parity</td>
-          <td>1 disk</td>
-          <td>3</td>
-          <td>N−1</td>
-          <td>Rarely used; legacy reference</td>
-        </tr>
-        <tr>
-          <td><span class="badge badge-purple">RAID-DP</span></td>
-          <td>Dual Parity</td>
-          <td>2 disks</td>
-          <td>5</td>
-          <td>N−2</td>
-          <td>Standard production default</td>
-        </tr>
-        <tr>
-          <td><span class="badge badge-orange">RAID-TEC</span></td>
-          <td>Triple Parity</td>
-          <td>3 disks</td>
-          <td>7</td>
-          <td>N−3</td>
-          <td>Large-capacity drives (8 TB+)</td>
-        </tr>
+        <tr><td><span class="badge badge-gray">RAID 0</span></td><td>None</td><td>0 disks</td><td>2</td><td>N (100%)</td><td>Flash Pool SSD cache only</td></tr>
+        <tr><td><span class="badge badge-blue">RAID 4</span></td><td>Single Parity</td><td>1 disk</td><td>3</td><td>N−1</td><td>Legacy / rarely used</td></tr>
+        <tr><td><span class="badge badge-purple">RAID-DP</span></td><td>Dual Parity</td><td>2 disks</td><td>5</td><td>N−2</td><td>Standard production default</td></tr>
+        <tr><td><span class="badge badge-orange">RAID-TEC</span></td><td>Triple Parity</td><td>3 disks</td><td>7</td><td>N−3</td><td>Large-capacity drives (8 TB+)</td></tr>
       </tbody>
     </table>
   </section>
 
-  <!-- ═══════════════════════════════════════════
-       SECTION 10 · DISK RECONSTRUCTION
-  ═══════════════════════════════════════════ -->
+  <!-- SECTION 10 -->
   <section class="section" id="reconstruction">
     <div class="section-header">
       <div class="section-icon icon-orange">🔄</div>
@@ -2048,80 +1129,45 @@ block-beta
       </div>
     </div>
 
-    <p>
-      When a disk fails in a RAID-protected aggregate, ONTAP automatically initiates a <span class="highlight">reconstruction process</span>. No administrator commands are needed — the system detects the failure, waits for a spare disk (or a manually inserted replacement), and begins recovering the lost data.
-    </p>
+    <p>When a disk fails, ONTAP automatically initiates <span class="highlight">reconstruction</span>. No admin commands needed — the system detects the failure and begins recovering lost data onto a spare or replacement disk.</p>
 
-    <!-- SVG: Reconstruction Flow -->
     <div class="diagram-wrap">
       <svg viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;display:block;margin:0 auto;">
         <defs>
-          <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#58a6ff"/>
-          </marker>
-          <marker id="arrG" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#3fb950"/>
-          </marker>
-          <marker id="arrO" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#f78166"/>
-          </marker>
+          <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#58a6ff"/></marker>
+          <marker id="arrG" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#3fb950"/></marker>
+          <marker id="arrO" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#f78166"/></marker>
         </defs>
-
-        <!-- Step 1: Disk Failure -->
         <rect x="10" y="120" width="110" height="56" rx="28" fill="#1c2333" stroke="#f78166" stroke-width="2"/>
         <text x="65" y="143" text-anchor="middle" fill="#f78166" font-family="Inter,sans-serif" font-size="11" font-weight="700">💥 Disk</text>
         <text x="65" y="158" text-anchor="middle" fill="#f78166" font-family="Inter,sans-serif" font-size="11" font-weight="700">Failure</text>
-
-        <!-- Arrow 1→2 -->
         <line x1="120" y1="148" x2="148" y2="148" stroke="#58a6ff" stroke-width="1.8" marker-end="url(#arr)"/>
-
-        <!-- Step 2: ONTAP marks failed -->
         <rect x="150" y="116" width="110" height="64" rx="8" fill="#1c2333" stroke="#58a6ff" stroke-width="1.5"/>
         <text x="205" y="140" text-anchor="middle" fill="#8b949e" font-family="Inter,sans-serif" font-size="10">ONTAP Marks</text>
         <text x="205" y="154" text-anchor="middle" fill="#e6edf3" font-family="Inter,sans-serif" font-size="11" font-weight="600">Disk as Failed</text>
         <text x="205" y="170" text-anchor="middle" fill="#8b949e" font-family="Inter,sans-serif" font-size="10">Aggregate degraded</text>
-
-        <!-- Arrow 2→3 -->
         <line x1="260" y1="148" x2="288" y2="148" stroke="#58a6ff" stroke-width="1.8" marker-end="url(#arr)"/>
-
-        <!-- Step 3: Diamond decision -->
         <polygon points="330,110 380,148 330,186 280,148" fill="#1c2333" stroke="#e3b341" stroke-width="1.8"/>
         <text x="330" y="144" text-anchor="middle" fill="#e3b341" font-family="Inter,sans-serif" font-size="10" font-weight="700">Spare</text>
         <text x="330" y="158" text-anchor="middle" fill="#e3b341" font-family="Inter,sans-serif" font-size="10" font-weight="700">Available?</text>
-
-        <!-- YES branch → right -->
         <line x1="380" y1="148" x2="408" y2="148" stroke="#3fb950" stroke-width="1.8" marker-end="url(#arrG)"/>
         <text x="394" y="140" text-anchor="middle" fill="#3fb950" font-family="Inter,sans-serif" font-size="10">Yes</text>
-
-        <!-- NO branch → down -->
         <line x1="330" y1="186" x2="330" y2="240" stroke="#f78166" stroke-width="1.8" marker-end="url(#arrO)"/>
         <text x="340" y="218" text-anchor="start" fill="#f78166" font-family="Inter,sans-serif" font-size="10">No</text>
-
-        <!-- Admin inserts disk (below diamond) -->
         <rect x="270" y="242" width="120" height="44" rx="8" fill="#1c2333" stroke="#f78166" stroke-width="1.5"/>
         <text x="330" y="260" text-anchor="middle" fill="#8b949e" font-family="Inter,sans-serif" font-size="10">Admin Inserts</text>
         <text x="330" y="276" text-anchor="middle" fill="#e6edf3" font-family="Inter,sans-serif" font-size="11" font-weight="600">Replacement Disk</text>
-
-        <!-- Admin → Step 4 (merge up) -->
         <line x1="390" y1="264" x2="450" y2="264" stroke="#58a6ff" stroke-width="1.8"/>
         <line x1="450" y1="264" x2="450" y2="148" stroke="#58a6ff" stroke-width="1.8" marker-end="url(#arr)"/>
-
-        <!-- Step 4: Reconstruction -->
         <rect x="410" y="116" width="120" height="64" rx="8" fill="#1c2333" stroke="#bc8cff" stroke-width="1.5"/>
         <text x="470" y="138" text-anchor="middle" fill="#8b949e" font-family="Inter,sans-serif" font-size="10">Reconstruction</text>
         <text x="470" y="152" text-anchor="middle" fill="#e6edf3" font-family="Inter,sans-serif" font-size="11" font-weight="600">Begins</text>
         <text x="470" y="166" text-anchor="middle" fill="#8b949e" font-family="Inter,sans-serif" font-size="10">Parity recalculated</text>
         <text x="470" y="178" text-anchor="middle" fill="#8b949e" font-family="Inter,sans-serif" font-size="10">in background</text>
-
-        <!-- Arrow 4→5 -->
         <line x1="530" y1="148" x2="558" y2="148" stroke="#58a6ff" stroke-width="1.8" marker-end="url(#arr)"/>
-
-        <!-- Step 5: Healthy -->
         <rect x="560" y="120" width="110" height="56" rx="28" fill="#0d2035" stroke="#3fb950" stroke-width="2"/>
         <text x="615" y="143" text-anchor="middle" fill="#3fb950" font-family="Inter,sans-serif" font-size="11" font-weight="700">✅ Aggregate</text>
         <text x="615" y="158" text-anchor="middle" fill="#3fb950" font-family="Inter,sans-serif" font-size="11" font-weight="700">Healthy</text>
-
-        <!-- Legend -->
         <rect x="10" y="10" width="660" height="28" rx="6" fill="rgba(88,166,255,0.05)" stroke="#30363d" stroke-width="1"/>
         <circle cx="30" cy="24" r="6" fill="#f78166" opacity="0.8"/>
         <text x="42" y="28" fill="#8b949e" font-family="Inter,sans-serif" font-size="11">Failure Event</text>
@@ -2138,11 +1184,11 @@ block-beta
     </div>
 
     <div class="card">
-      <div class="card-title">🔧 Reconstruction Mechanics by Disk Type</div>
+      <div class="card-title">🔧 Reconstruction Mechanics</div>
       <ul class="bullet-list">
-        <li><strong>Data disk failure:</strong> ONTAP uses parity calculations to reconstruct the lost data block-by-block onto the replacement disk. E.g., if Disk A failed: Parity − Disk B = Reconstructed Disk A.</li>
-        <li><strong>Parity disk failure:</strong> ONTAP recalculates parity by summing all remaining data disks in that stripe and writes the result to the new disk. No data is at risk.</li>
-        <li><strong>Spare disk pool:</strong> Most environments maintain a hot spare disk. When a failure occurs, reconstruction starts immediately using the spare — no manual disk insertion required.</li>
+        <li><strong>Data disk failure:</strong> ONTAP uses parity to reconstruct lost data block-by-block. E.g., if Disk A failed: <code>Parity − Disk B = Reconstructed A</code>.</li>
+        <li><strong>Parity disk failure:</strong> Parity is recalculated by summing all data disks — no data is at risk.</li>
+        <li><strong>Hot spare:</strong> Most environments maintain a spare disk. Reconstruction starts immediately upon failure — no manual intervention.</li>
       </ul>
     </div>
 
@@ -2150,7 +1196,7 @@ block-beta
       <div class="callout-icon">⚠️</div>
       <div class="callout-content">
         <div class="callout-title">Reconstruction Window Risk</div>
-        <div class="callout-text">During reconstruction, your RAID group has reduced fault tolerance. A RAID-DP aggregate normally tolerates 2 disk failures — but during reconstruction of the first failure, it temporarily operates with only 1-disk fault tolerance. This is why choosing RAID-TEC for large-capacity drives is critical: the longer reconstruction window on huge drives increases the statistical risk of a second failure.</div>
+        <div class="callout-text">During reconstruction, RAID-DP temporarily operates with only 1-disk fault tolerance instead of 2. For large-capacity drives with long rebuild times, this is why RAID-TEC is preferred — it maintains 2-disk tolerance even during a rebuild.</div>
       </div>
     </div>
 
@@ -2160,112 +1206,93 @@ block-beta
         <span class="code-lang">ONTAP CLI — Monitoring Aggregate and Disk Health</span>
       </div>
       <div class="code-body">
-<span class="comment"># Check aggregate status and reconstruction progress</span>
+<span class="comment"># Check aggregate reconstruction progress</span>
 <span class="cmd">cluster-prod::></span> <span class="value">storage aggregate show -fields state,raidstatus</span>
 
 <span class="output">aggregate         state  raidstatus
 ----------------- ------ ---------------------------------
 aggr_data_01      online raid_dp, normal
-aggr_data_02      online raid_dp, reconstruct 73% done
-aggr_flash_cache  online raid0, normal</span>
+aggr_data_02      online raid_dp, reconstruct 73% done</span>
 
-<span class="comment"># Identify failed or degraded disks</span>
+<span class="comment"># Identify broken disks</span>
 <span class="cmd">cluster-prod::></span> <span class="value">storage disk show -state broken</span>
 
-<span class="output">                     Usable           Disk   Container   Container
-Disk                   Size Shelf Bay Type    Type        Name      Owner
----------------- ---------- ----- --- ------ ----------- --------- --------
-1.0.14              3.49TB    0   14  SAS    broken      aggr_data_02  node-07</span>
+<span class="output">Disk             Size  Shelf Bay Type  Container  Name         Owner
+---------------- ----- ----- --- ----- ---------- ------------ -------
+1.0.14          3.49TB   0   14  SAS   broken     aggr_data_02 node-07</span>
 
-<span class="comment"># Show spare disks available for reconstruction</span>
+<span class="comment"># Show available spare disks</span>
 <span class="cmd">cluster-prod::></span> <span class="value">storage disk show -state spare</span>
 
-<span class="output">                     Usable           Disk   Container   Container
-Disk                   Size Shelf Bay Type    Type        Name      Owner
----------------- ---------- ----- --- ------ ----------- --------- --------
-1.0.15              3.49TB    0   15  SAS    spare       Pool0     node-07</span>
+<span class="output">Disk             Size  Shelf Bay Type  Container  Name   Owner
+---------------- ----- ----- --- ----- ---------- ------ -------
+1.0.15          3.49TB   0   15  SAS   spare      Pool0  node-07</span>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════
-       SECTION 11 · INTERVIEW Q&A
-  ═══════════════════════════════════════════ -->
+  <!-- SECTION 11 -->
   <section class="section" id="interview">
     <div class="section-header">
       <div class="section-icon icon-yellow">🎤</div>
       <div class="section-title-wrap">
         <div class="section-num">SECTION 11</div>
-        <h2>Scenario-Based Interview Questions &amp; Answers</h2>
-      </div>
-    </div>
-
-    <div class="callout tip">
-      <div class="callout-icon">🎯</div>
-      <div class="callout-content">
-        <div class="callout-title">Interview Preparation Note</div>
-        <div class="callout-text">These questions reflect real interview scenarios for NetApp storage engineer and data protection specialist roles. Focus on understanding the <em>why</em> behind each answer, not just memorizing the response.</div>
+        <h2>Interview Q&amp;A</h2>
       </div>
     </div>
 
     <div class="qa-block">
       <div class="qa-question"><span class="qa-q-icon">Q</span>Why must clusters always have an even number of nodes?</div>
-      <div class="qa-answer">Every node must be part of an HA pair so it has a failover partner. Without a partner, there is no node to take over services during a failure. ONTAP's architecture mandates HA-pair membership for all cluster nodes, which enforces even-numbered node counts. You cannot have a node without a partner.</div>
+      <div class="qa-answer">Every node must be part of an HA pair to have a failover partner. Without a partner, there is no node to take over services during a failure. ONTAP's architecture mandates HA-pair membership for all nodes, enforcing even node counts.</div>
     </div>
 
     <div class="qa-block">
-      <div class="qa-question"><span class="qa-q-icon">Q</span>Your customer wants to build a 4-node cluster using two FAS9500 HA pairs and one AFF A800 HA pair — but they want all 6 nodes in the same cluster. Is this supported? What are the rules?</div>
-      <div class="qa-answer">A 6-node cluster with mixed FAS and AFF hardware is supported, provided: (1) Each HA pair contains identical model controllers — the two FAS9500s are valid as a pair, and the two AFF A800s are valid as a pair. (2) ASA systems are not mixed in. (3) All nodes run the same ONTAP version. The cluster itself can contain the mixed HA pairs without issue.</div>
+      <div class="qa-question"><span class="qa-q-icon">Q</span>A customer wants a 6-node cluster using two FAS9500 HA pairs and one AFF A800 HA pair. Is this supported?</div>
+      <div class="qa-answer">Yes — mixed FAS and AFF hardware is supported when: (1) each HA pair contains identical model controllers, (2) ASA systems are not included, and (3) all nodes run the same ONTAP version.</div>
     </div>
 
     <div class="qa-block">
       <div class="qa-question"><span class="qa-q-icon">Q</span>What is the difference between the HA interconnect and the cluster interconnect?</div>
-      <div class="qa-answer">The HA interconnect is a low-bandwidth internal link (typically 100 MB) used for heartbeat signals and storage failover coordination between the two nodes of an HA pair. The cluster interconnect is a high-bandwidth network (10/25/40/100 GbE) that carries actual data traffic and configuration replication between all nodes in the cluster. The HA interconnect cannot substitute for the cluster interconnect due to insufficient bandwidth.</div>
+      <div class="qa-answer">The HA interconnect is a low-bandwidth internal link (~100 MB) for heartbeat and failover signaling within an HA pair. The cluster interconnect is a high-bandwidth network (10/25/40/100 GbE) for data traffic and configuration replication between all cluster nodes. They serve fundamentally different purposes and cannot substitute for each other.</div>
     </div>
 
     <div class="qa-block">
-      <div class="qa-question"><span class="qa-q-icon">Q</span>When would you recommend RAID-TEC over RAID-DP, and why?</div>
-      <div class="qa-answer">RAID-TEC is recommended when the aggregate uses large-capacity drives (8 TB and above). With high-capacity drives, reconstruction after a disk failure can take many hours. During this reconstruction window, the risk of a second disk failure is statistically elevated. RAID-TEC's triple parity provides a third layer of protection to survive this second failure during reconstruction. It also offers faster reconstruction due to optimized parity algorithms, making it practical even for very large drives.</div>
+      <div class="qa-question"><span class="qa-q-icon">Q</span>When would you recommend RAID-TEC over RAID-DP?</div>
+      <div class="qa-answer">RAID-TEC is recommended for aggregates using 8 TB+ drives, where reconstruction after failure takes many hours. The longer rebuild window increases the statistical risk of a second failure. RAID-TEC's triple parity provides an additional protection layer during reconstruction, and its optimized parity algorithms also deliver faster rebuild times.</div>
     </div>
 
     <div class="qa-block">
-      <div class="qa-question"><span class="qa-q-icon">Q</span>A junior engineer insists RAID 6 is better than RAID-DP. How would you respond?</div>
-      <div class="qa-answer">RAID 6 and RAID-DP offer the same fault tolerance (two simultaneous disk failures). The difference is parity placement. RAID 6 distributes parity across all disks per stripe, providing better write load balancing. RAID-DP uses dedicated parity disks, which simplifies design and delivers high performance for NetApp's specific caching and WAFL architecture. NetApp does not implement RAID 6; RAID-DP achieves equivalent protection with a design tailored to ONTAP's internal I/O patterns. Neither is categorically "better" — it depends on the implementation context.</div>
+      <div class="qa-question"><span class="qa-q-icon">Q</span>A junior engineer says RAID 6 is better than RAID-DP. How do you respond?</div>
+      <div class="qa-answer">RAID 6 and RAID-DP offer identical fault tolerance (two simultaneous disk failures). The difference is parity placement: RAID 6 distributes parity per stripe across all disks (better load balancing); RAID-DP uses dedicated parity disks (simpler design, optimized for ONTAP's WAFL architecture). Neither is categorically better — it depends on the implementation. NetApp uses RAID-DP, not RAID 6.</div>
     </div>
 
     <div class="qa-block">
-      <div class="qa-question"><span class="qa-q-icon">Q</span>A customer has a two-node switchless cluster and wants to add two more nodes. Walk me through how to do it without downtime.</div>
-      <div class="qa-answer">First, procure two certified cluster switches and two new controllers forming an HA pair. While one direct cable (the cross-connect on Port 2) remains active, remove the Port 1 cross-connect and cable both nodes' Port 1 to Switch 1 and Switch 2 respectively. Verify cluster communication through the switches is stable. Then remove the Port 2 cross-connect and connect Port 2 to the switches. Configure ISL between the switches. Finally, present the new HA pair to the switches and add those nodes to the cluster using the cluster join procedure. Never remove both direct cables simultaneously — this breaks cluster communication.</div>
+      <div class="qa-question"><span class="qa-q-icon">Q</span>Walk me through migrating a two-node switchless cluster to switched without downtime.</div>
+      <div class="qa-answer">Procure two certified switches. While Port 1 cross-connect remains active, disconnect Port 2 on both nodes and connect to the switches. Verify cluster communication, then disconnect Port 1 and connect to the switches. Configure ISL between switches. Finally, join the new HA pair. Never remove both direct cables simultaneously — this breaks cluster communication entirely.</div>
     </div>
 
     <div class="qa-block">
-      <div class="qa-question"><span class="qa-q-icon">Q</span>Your storage team receives a request for 4,200 IOPS from an Oracle DBA. How do you size the disk pool?</div>
-      <div class="qa-answer">With SAS 15K drives delivering approximately 175 IOPS each: 4,200 ÷ 175 = 24 drives needed for raw IOPS. However, you must account for RAID overhead (RAID-DP takes 2 disks for parity), leaving 22 usable data disks. Also factor in at least one spare disk. Total procurement recommendation: 27 SAS 15K drives (24 data + 2 parity + 1 spare). Additionally, discuss the workload type with the DBA — if it is latency-sensitive OLTP, SSDs may be the better solution despite higher cost.</div>
+      <div class="qa-question"><span class="qa-q-icon">Q</span>A DBA needs 4,200 IOPS from Oracle. How do you size the disk pool?</div>
+      <div class="qa-answer">With SAS 15K at ~175 IOPS each: 4,200 ÷ 175 = 24 drives for raw IOPS. Account for RAID-DP (2 parity disks) and at least 1 spare. Total recommendation: 27 SAS 15K drives (24 data + 2 parity + 1 spare). If the workload is latency-sensitive OLTP, also recommend evaluating SSDs despite higher cost.</div>
     </div>
 
     <div class="qa-block">
       <div class="qa-question"><span class="qa-q-icon">Q</span>What is NLSAS and how does it relate to SATA?</div>
-      <div class="qa-answer">NLSAS (Near-Line SAS) and BSAS (Bridged SAS) are NetApp's internal naming conventions for SATA drives. The underlying drive technology is SATA (Serial ATA), but NetApp uses its own terminology for internal classification in ONTAP. When you see NLSAS or BSAS on a NetApp shelf, you are looking at SATA-interface drives — not a different physical technology.</div>
+      <div class="qa-answer">NLSAS (Near-Line SAS) and BSAS (Bridged SAS) are NetApp's internal naming conventions for SATA drives. The underlying technology is SATA — NetApp uses its own terminology for internal classification in ONTAP. They are the same physical drive type.</div>
     </div>
   </section>
 
   </div><!-- end content-area -->
 
-  <!-- ═══════════════════════════════════════════
-       AUTHOR SECTION
-  ═══════════════════════════════════════════ -->
   <section class="author-section" id="about">
     <div style="max-width:1000px;margin:0 auto;">
       <div style="font-family:'Sora',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:20px;">About the Author</div>
-
       <div class="author-card">
         <div class="author-avatar">MA</div>
         <div class="author-info">
           <div class="author-name">Mohammed Abdul</div>
           <div class="author-title">Data Protection Architect · Hybrid Cloud Specialist</div>
-          <div class="author-bio">
-            Mohammed Abdul is a Data Protection Architect with more than 10 years of experience in Hybrid Cloud, having worked with global clients across industries including financial services, healthcare, retail, and manufacturing. With deep expertise in enterprise backup, recovery, and storage architecture, Mohammed helps organizations design resilient, cost-efficient data protection strategies that span on-premises and multi-cloud environments.
-          </div>
+          <div class="author-bio">Mohammed Abdul is a Data Protection Architect with more than 10 years of experience in Hybrid Cloud, working with global clients across financial services, healthcare, retail, and manufacturing. He specializes in enterprise backup, recovery, and storage architecture across on-premises and multi-cloud environments.</div>
           <div class="tech-badges">
             <span class="tech-badge">☁️ AWS</span>
             <span class="tech-badge">☁️ Azure</span>
@@ -2275,16 +1302,12 @@ Disk                   Size Shelf Bay Type    Type        Name      Owner
             <span class="tech-badge">🔒 Veeam</span>
             <span class="tech-badge">🔒 NetBackup</span>
           </div>
-          <a class="contact-link" href="mailto:abdul.md.20000102@gmail.com">
-            ✉️ &nbsp; abdul.md.20000102@gmail.com
-          </a>
+          <a class="contact-link" href="mailto:abdul.md.20000102@gmail.com">✉️ &nbsp; abdul.md.20000102@gmail.com</a>
         </div>
       </div>
-
       <div class="disclaimer">
-        <strong>⚠️ Disclaimer:</strong> This content is intended for educational purposes only as a self-paced learning resource. All IP addresses, hostnames, and system identifiers used throughout this guide are fictional examples created for illustration. Always refer to official NetApp documentation (docs.netapp.com) and your organization's approved change management procedures for any production implementation. The author does not represent NetApp, Inc. in any official capacity.
+        <strong>⚠️ Disclaimer:</strong> This content is for educational purposes only. All IP addresses and hostnames are fictional examples. Always refer to official NetApp documentation (docs.netapp.com) for production implementations. The author does not represent NetApp, Inc. in any official capacity.
       </div>
-
       <div style="text-align:center;margin-top:32px;padding-top:24px;border-top:1px solid var(--border);">
         <p style="font-size:12px;color:var(--text-muted);">© 2025 Mohammed Abdul · Tutorial Series: NetApp ONTAP Deep Dive · For Educational Use Only</p>
       </div>
@@ -2294,7 +1317,6 @@ Disk                   Size Shelf Bay Type    Type        Name      Owner
 </main>
 
 <script>
-  // Initialize Mermaid
   mermaid.initialize({
     startOnLoad: true,
     theme: 'dark',
@@ -2311,13 +1333,10 @@ Disk                   Size Shelf Bay Type    Type        Name      Owner
       clusterBkg: '#161b22',
       titleColor: '#e6edf3',
       edgeLabelBackground: '#1c2333',
-      attributeBackgroundColorEven: '#1c2333',
-      attributeBackgroundColorOdd: '#161b22',
       fontSize: '14px'
     }
   });
 
-  // Active TOC link on scroll
   const sections = document.querySelectorAll('.section[id], section[id]');
   const tocLinks = document.querySelectorAll('.toc-link');
 
@@ -2327,9 +1346,7 @@ Disk                   Size Shelf Bay Type    Type        Name      Owner
         const id = entry.target.id;
         tocLinks.forEach(link => {
           link.classList.remove('active');
-          if (link.getAttribute('href') === '#' + id) {
-            link.classList.add('active');
-          }
+          if (link.getAttribute('href') === '#' + id) link.classList.add('active');
         });
       }
     });

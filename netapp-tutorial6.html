@@ -162,7 +162,6 @@
   .code-body .param { color: #ffa657; }
   .code-body .value { color: #a5d6ff; }
   .code-body .output { color: #8b949e; }
-  .code-body .prompt { color: #e3b341; }
 
   .spec-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; }
   .spec-table th { background: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 16px; text-align: left; border-bottom: 2px solid var(--border); }
@@ -175,19 +174,11 @@
   .badge-orange { background: rgba(247,129,102,0.15); color: var(--accent-orange); border: 1px solid rgba(247,129,102,0.3); }
   .badge-purple { background: rgba(188,140,255,0.15); color: var(--accent-purple); border: 1px solid rgba(188,140,255,0.3); }
   .badge-yellow { background: rgba(227,179,65,0.15); color: var(--accent-yellow); border: 1px solid rgba(227,179,65,0.3); }
-  .badge-teal { background: rgba(57,211,195,0.15); color: var(--accent-teal); border: 1px solid rgba(57,211,195,0.3); }
 
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
   .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0; }
-
   .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; }
   .stat-num { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 4px; }
   .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-
-  .step-list { list-style: none; margin: 12px 0; }
-  .step-list li { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(48,54,61,0.5); font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; align-items: flex-start; }
-  .step-list li:last-child { border-bottom: none; }
-  .step-num { width: 22px; height: 22px; border-radius: 6px; background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.3); color: var(--accent-blue); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
 
   .bullet-list { list-style: none; margin: 10px 0; }
   .bullet-list li { padding: 6px 0 6px 20px; position: relative; font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; }
@@ -198,7 +189,6 @@
 
   .mermaid-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 28px 20px 16px; margin: 20px 0; overflow-x: auto; }
   .diagram-caption { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 10px; font-style: italic; }
-
   .svg-diagram { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; overflow-x: auto; }
 
   .qa-block { background: var(--bg-card); border: 1px solid rgba(188,140,255,0.3); border-radius: 12px; padding: 20px 24px; margin: 16px 0; }
@@ -208,9 +198,6 @@
 
   .divider { height: 1px; background: var(--border); margin: 40px 0; }
   .hl { background: rgba(88,166,255,0.12); color: var(--accent-blue); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
-  .hl-green { background: rgba(63,185,80,0.12); color: var(--accent-green); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
-  .hl-orange { background: rgba(247,129,102,0.12); color: var(--accent-orange); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
-  .hl-purple { background: rgba(188,140,255,0.12); color: var(--accent-purple); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
 
   /* Aggregate expansion visual */
   .aggr-expand-vis { display: flex; gap: 16px; align-items: stretch; flex-wrap: wrap; margin: 20px 0; }
@@ -253,7 +240,7 @@
   .svm-data .svm-count { background: rgba(188,140,255,0.15); color: var(--accent-purple); }
   .svm-system .svm-count { background: rgba(227,179,65,0.15); color: var(--accent-yellow); }
 
-  /* scrub visual */
+  /* scrub timeline */
   .scrub-timeline { display: flex; align-items: center; gap: 0; margin: 20px 0; overflow-x: auto; padding-bottom: 8px; }
   .scrub-step { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; min-width: 130px; text-align: center; flex-shrink: 0; }
   .scrub-arrow { color: var(--text-muted); font-size: 18px; padding: 0 8px; flex-shrink: 0; }
@@ -273,27 +260,33 @@
   .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
   .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
 
+  /* tech badges */
+  .tech-badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+
+  #reading-progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); z-index: 9999; width: 0%; transition: width 0.1s; }
+
   .author-section { background: linear-gradient(135deg, #161b22, #1c2333); border: 1px solid var(--border); border-radius: 16px; padding: 36px; margin-top: 60px; }
   .author-avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); display: flex; align-items: center; justify-content: center; font-size: 26px; border: 3px solid rgba(88,166,255,0.3); margin-bottom: 14px; }
   .author-name { font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
   .author-title { font-size: 13px; color: var(--accent-blue); margin-bottom: 12px; font-weight: 500; }
   .author-bio { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; }
-  .tech-badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-
-  .progress-bar-wrap { display: flex; gap: 6px; margin-top: 20px; position: relative; flex-wrap: wrap; }
-  .prog-chip { background: rgba(88,166,255,0.12); border: 1px solid rgba(88,166,255,0.25); border-radius: 6px; padding: 4px 10px; font-size: 11px; color: var(--accent-blue); font-family: 'JetBrains Mono', monospace; }
+  .contact-card { background: rgba(88,166,255,0.06); border: 1px solid rgba(88,166,255,0.25); border-radius: 10px; padding: 14px 20px; margin-top: 16px; display: flex; align-items: center; gap: 12px; }
+  .contact-text { font-size: 13.5px; color: var(--text-secondary); }
+  .contact-text a { color: var(--accent-blue); text-decoration: none; font-weight: 500; }
 
   @media (max-width: 900px) {
     .sidebar { display: none; }
     .main-content { margin-left: 0; max-width: 100vw; }
     .top-header { padding: 30px 20px; }
     .content-area { padding: 20px; }
-    .grid-2, .grid-3, .svm-grid, .plex-container { grid-template-columns: 1fr; }
+    .grid-3, .svm-grid, .plex-container { grid-template-columns: 1fr; }
     .main-title { font-size: 26px; }
   }
 </style>
 </head>
 <body>
+
+<div id="reading-progress"></div>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -302,64 +295,52 @@
       <div class="logo-icon">🗄️</div>
       <span>NetApp ONTAP</span>
     </div>
-    <div class="sidebar-subtitle">Deep-Dive Tutorial Series</div>
+    <div class="sidebar-subtitle">Tutorial 6 · Condensed</div>
   </div>
   <nav class="toc-nav">
     <div class="toc-section-label">Overview</div>
-    <a href="#intro" class="toc-link"><span class="toc-num">00</span> Introduction</a>
+    <a href="#intro" class="toc-link active"><span class="toc-num">00</span> Introduction</a>
+
     <div class="toc-section-label">Aggregate Management</div>
-    <a href="#disk-node-ownership" class="toc-link"><span class="toc-num">01</span> Disk Ownership & Node Pools</a>
+    <a href="#disk-node-ownership" class="toc-link"><span class="toc-num">01</span> Disk Ownership & Spare Pools</a>
     <a href="#aggr-expansion" class="toc-link"><span class="toc-num">02</span> Expanding Aggregates</a>
-    <a href="#rg-options" class="toc-link sub"><span class="toc-num">↳</span> RAID Group Strategies</a>
-    <a href="#rg-size-modify" class="toc-link sub"><span class="toc-num">↳</span> Modify RAID Group Size</a>
-    <a href="#auto-provision" class="toc-link"><span class="toc-num">03</span> Auto-Provisioning</a>
-    <a href="#aggr-ops" class="toc-link"><span class="toc-num">04</span> Aggregate Lifecycle Ops</a>
-    <a href="#reallocation" class="toc-link sub"><span class="toc-num">↳</span> Reallocation & Relocation</a>
-    <a href="#scrub" class="toc-link"><span class="toc-num">05</span> RAID Scrub & Media Scrub</a>
-    <a href="#space-model" class="toc-link"><span class="toc-num">06</span> Aggregate Space Model</a>
+    <a href="#aggr-ops" class="toc-link"><span class="toc-num">03</span> Aggregate Lifecycle Ops</a>
+    <a href="#scrub" class="toc-link"><span class="toc-num">04</span> RAID Scrub & Media Scrub</a>
+    <a href="#space-model" class="toc-link"><span class="toc-num">05</span> Aggregate Space Model</a>
+
     <div class="toc-section-label">Mirror Aggregates</div>
-    <a href="#mirror-intro" class="toc-link"><span class="toc-num">07</span> Mirror Aggregate Concepts</a>
-    <a href="#plex-pool" class="toc-link sub"><span class="toc-num">↳</span> Plexes & Spare Pools</a>
-    <a href="#mirror-ops" class="toc-link"><span class="toc-num">08</span> Mirror Aggregate Operations</a>
+    <a href="#mirror-intro" class="toc-link"><span class="toc-num">06</span> Mirror Aggregate Concepts</a>
+    <a href="#mirror-ops" class="toc-link"><span class="toc-num">07</span> Mirror Aggregate Operations</a>
+
     <div class="toc-section-label">SVM Architecture</div>
-    <a href="#svm-intro" class="toc-link"><span class="toc-num">09</span> SVM / vServer Overview</a>
-    <a href="#svm-types" class="toc-link sub"><span class="toc-num">↳</span> Four Types of SVMs</a>
-    <a href="#7mode-vs-cmode" class="toc-link"><span class="toc-num">10</span> 7-Mode vs Cluster-Mode</a>
-    <a href="#interview-qa" class="toc-link"><span class="toc-num">11</span> Interview Q&amp;A</a>
+    <a href="#svm-intro" class="toc-link"><span class="toc-num">08</span> SVM / vServer Overview</a>
+    <a href="#7mode-vs-cmode" class="toc-link"><span class="toc-num">09</span> 7-Mode vs Cluster-Mode</a>
+
+    <div class="toc-section-label">Reference</div>
+    <a href="#interview-qa" class="toc-link"><span class="toc-num">10</span> Interview Q&amp;A</a>
+    <a href="#author" class="toc-link"><span class="toc-num">11</span> About the Author</a>
   </nav>
 </aside>
 
 <!-- MAIN -->
 <main class="main-content">
-
-  <!-- HEADER -->
-  <div class="top-header">
-    <div class="header-badge">📚 ONTAP Storage · Tutorial Series</div>
+  <header class="top-header">
+    <div class="header-badge">📚 ONTAP Storage · Tutorial 6</div>
     <h1 class="main-title">Aggregate Expansion, Mirror Aggregates<br>&amp; SVM Architecture</h1>
     <p class="header-desc">
-      A comprehensive deep-dive into NetApp ONTAP aggregate lifecycle management — from RAID group expansion strategies and disk scrubbing internals, to mirror aggregate architecture and the pivotal role of Storage Virtual Machines in cluster-mode environments.
+      A focused deep-dive into NetApp ONTAP aggregate lifecycle management — RAID group expansion strategies, disk scrubbing, mirror aggregate architecture, and the foundational role of Storage Virtual Machines.
     </p>
     <div class="header-meta">
-      <div class="meta-chip"><span class="dot" style="background:var(--accent-blue)"></span>Intermediate–Advanced</div>
-      <div class="meta-chip"><span class="dot" style="background:var(--accent-green)"></span>ONTAP 9.x</div>
-      <div class="meta-chip"><span class="dot" style="background:var(--accent-purple)"></span>RAID-DP &amp; RAID-TEC</div>
-      <div class="meta-chip"><span class="dot" style="background:var(--accent-yellow)"></span>SVM / vServer</div>
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-blue)"></span> Intermediate–Advanced</div>
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-green)"></span> ONTAP 9.x</div>
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-purple)"></span> RAID-DP &amp; RAID-TEC</div>
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-yellow)"></span> SVM / vServer</div>
     </div>
-    <div class="progress-bar-wrap">
-      <span class="prog-chip">aggr expand</span>
-      <span class="prog-chip">raid group</span>
-      <span class="prog-chip">scrub</span>
-      <span class="prog-chip">mirror aggr</span>
-      <span class="prog-chip">plex</span>
-      <span class="prog-chip">spare pool</span>
-      <span class="prog-chip">SVM types</span>
-      <span class="prog-chip">7-mode vs cDOT</span>
-    </div>
-  </div>
+  </header>
 
   <div class="content-area">
 
-    <!-- INTRO -->
+    <!-- ═══ SECTION 0: INTRO ═══ -->
     <section class="section" id="intro">
       <div class="section-header">
         <div class="section-icon icon-blue">🎯</div>
@@ -368,7 +349,7 @@
           <h2>What You Will Learn</h2>
         </div>
       </div>
-      <p>This tutorial walks through the operational and architectural aspects of NetApp ONTAP storage management that every storage engineer needs to master. We cover three major pillars:</p>
+      <p>This tutorial covers three core ONTAP operational pillars every storage engineer must master:</p>
       <div class="grid-3">
         <div class="stat-card">
           <div class="stat-num" style="color:var(--accent-blue)">RAID</div>
@@ -383,28 +364,20 @@
           <div class="stat-label">Virtual Server Design</div>
         </div>
       </div>
-      <div class="callout info">
-        <div class="callout-icon">💡</div>
-        <div class="callout-content">
-          <div class="callout-title">Tutorial Approach</div>
-          <div class="callout-text">Each concept builds on the previous. Diagrams, CLI references, and real-world scenarios are included throughout. Interview Q&amp;A is provided at the end for exam and job-prep readiness.</div>
-        </div>
-      </div>
     </section>
 
-    <!-- DISK OWNERSHIP -->
+    <div class="divider"></div>
+
+    <!-- ═══ SECTION 1: DISK OWNERSHIP ═══ -->
     <section class="section" id="disk-node-ownership">
       <div class="section-header">
         <div class="section-icon icon-orange">🔑</div>
         <div class="section-title-wrap">
           <div class="section-num">SECTION 01</div>
-          <h2>Disk Ownership & Node-Level Spare Pools</h2>
+          <h2>Disk Ownership &amp; Node-Level Spare Pools</h2>
         </div>
       </div>
-      <p>In a ONTAP cluster, every physical disk is <strong style="color:var(--text-primary)">owned by exactly one node</strong>. This ownership determines which node's aggregates can consume that disk. Understanding this boundary is critical before any expansion activity.</p>
-
-      <h3>Why Ownership Matters for Expansion</h3>
-      <p>Spare disks are node-specific. If you intend to expand an aggregate on <span class="hl">stor-node-01</span>, every disk added must belong to <span class="hl">stor-node-01</span>'s spare pool. Disks assigned to <span class="hl">stor-node-02</span> cannot be directly added — ownership must be transferred first.</p>
+      <p>Every physical disk in an ONTAP cluster is <strong style="color:var(--text-primary)">owned by exactly one node</strong>. Spare disks are node-specific — to expand an aggregate on <span class="hl">stor-node-01</span>, every disk added must belong to that node's spare pool. Cross-node disk assignment is not permitted without first transferring ownership.</p>
 
       <div class="mermaid-wrap">
         <div class="mermaid">
@@ -429,17 +402,12 @@ flowchart LR
         <div class="diagram-caption">Figure 1 — Disk ownership is strictly per-node. Cross-node disk assignment to aggregates is not permitted.</div>
       </div>
 
-      <h3>Reassigning Disk Ownership</h3>
-      <p>To move disks between nodes, you first remove ownership, then reassign to the target node. This is a two-step process:</p>
       <div class="code-block">
-        <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
-        <div class="code-body"><span class="comment"># Step 1: Remove ownership from current node (multiple disks with comma-separation)</span>
+        <div class="code-header"><span class="code-lang">ONTAP CLI — Reassign Disk Ownership</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="comment"># Step 1: Remove ownership from current node</span>
 <span class="cmd">disk remove-ownership</span> <span class="param">-disk</span> <span class="value">2.0,2.1,2.2,2.3,2.4,2.5</span>
 
-<span class="comment"># Verify disks no longer appear in stor-node-02 spare pool</span>
-<span class="cmd">storage disk show</span> <span class="param">-owner</span> <span class="value">stor-node-02</span>
-
-<span class="comment"># Step 2: Assign disks to target node (stor-node-01)</span>
+<span class="comment"># Step 2: Assign to target node</span>
 <span class="cmd">disk assign</span> <span class="param">-disk-list</span> <span class="value">2.0,2.1,2.2,2.3,2.4,2.5</span> <span class="param">-owner</span> <span class="value">stor-node-01</span>
 
 <span class="comment"># Verify spare pool update</span>
@@ -449,13 +417,15 @@ flowchart LR
       <div class="callout warning">
         <div class="callout-icon">⚠️</div>
         <div class="callout-content">
-          <div class="callout-title">Warning — Production Impact</div>
-          <div class="callout-text">Removing disk ownership from a node temporarily reduces its spare capacity. Always verify the remaining spare count meets your protection threshold before proceeding. Never leave a node with zero spares.</div>
+          <div class="callout-title">Warning</div>
+          <div class="callout-text">Removing disk ownership temporarily reduces spare capacity. Always verify the remaining spare count meets your protection threshold before proceeding. Never leave a node with zero spares.</div>
         </div>
       </div>
     </section>
 
-    <!-- AGGREGATE EXPANSION -->
+    <div class="divider"></div>
+
+    <!-- ═══ SECTION 2: AGGREGATE EXPANSION ═══ -->
     <section class="section" id="aggr-expansion">
       <div class="section-header">
         <div class="section-icon icon-blue">📈</div>
@@ -464,7 +434,7 @@ flowchart LR
           <h2>Expanding an Aggregate — Three Strategies</h2>
         </div>
       </div>
-      <p>When an aggregate approaches capacity, you have three distinct expansion paths. Each is suited to a different operational situation. Choosing the right strategy requires understanding your current RAID group layout and available spare inventory.</p>
+      <p>When an aggregate approaches capacity, you have three expansion paths. Choosing the right one depends on your current RAID group layout and available spare inventory.</p>
 
       <div class="mermaid-wrap">
         <div class="mermaid">
@@ -476,7 +446,7 @@ flowchart TD
     Strategy1 --> Result1["New RGn created\nFull parity overhead applies"]
     Strategy2 --> ModRG["Increase max-raidgroup-size\nvia aggr modify first"]
     ModRG --> Result2["Disk added as data disk\nNo new parity overhead"]
-    Strategy3 --> Result3["ONTAP auto-fills\nAvailable slots in all RGs\nExcess disks returned to spare"]
+    Strategy3 --> Result3["ONTAP auto-fills slots\nExcess disks → spare pool"]
     style Start fill:#1c2333,stroke:#58a6ff,color:#e6edf3
     style Check fill:#1c2333,stroke:#e3b341,color:#e6edf3
     style Strategy1 fill:#1c2333,stroke:#3fb950,color:#e6edf3
@@ -486,222 +456,147 @@ flowchart TD
         <div class="diagram-caption">Figure 2 — Decision tree for selecting the right aggregate expansion strategy based on spare availability.</div>
       </div>
 
-      <div id="rg-options"></div>
       <h3>Strategy 1 — Create a New RAID Group</h3>
-      <p>When your spare pool is healthy and you have at least as many spares as your configured RAID group size, creating a new RAID group is the cleanest approach. This maintains consistent group sizing and preserves NetApp best practices.</p>
+      <p>When spare inventory is healthy, creating a new RAID group is the cleanest approach. Maintain the same disk count as existing groups to avoid performance imbalance.</p>
 
-      <div class="callout success">
-        <div class="callout-icon">✅</div>
-        <div class="callout-content">
-          <div class="callout-title">Best Practice</div>
-          <div class="callout-text">Maintain the same number of disks across all RAID groups within a single aggregate. Uneven RAID groups can create performance imbalance. If your existing groups have 8 disks each, add exactly 8 disks to the new group.</div>
-        </div>
-      </div>
-
-      <!-- Visual: Before/After RG expansion -->
-      <p>The following illustrates an aggregate with two existing RAID groups gaining a third:</p>
       <div class="aggr-expand-vis">
         <div class="rg-block">
           <div class="rg-title">RG0 (existing)</div>
           <div class="disk-row">
-            <div class="disk-chip disk-parity">P</div>
-            <div class="disk-chip disk-parity">DP</div>
-            <div class="disk-chip disk-data-c">D</div>
-            <div class="disk-chip disk-data-c">D</div>
-            <div class="disk-chip disk-data-c">D</div>
-            <div class="disk-chip disk-data-c">D</div>
+            <div class="disk-chip disk-parity">P</div><div class="disk-chip disk-parity">DP</div>
+            <div class="disk-chip disk-data-c">D</div><div class="disk-chip disk-data-c">D</div>
+            <div class="disk-chip disk-data-c">D</div><div class="disk-chip disk-data-c">D</div>
           </div>
           <div class="rg-label">6 disks · RAID-DP</div>
         </div>
         <div class="rg-block">
           <div class="rg-title">RG1 (existing)</div>
           <div class="disk-row">
-            <div class="disk-chip disk-parity">P</div>
-            <div class="disk-chip disk-parity">DP</div>
-            <div class="disk-chip disk-data-c">D</div>
-            <div class="disk-chip disk-data-c">D</div>
-            <div class="disk-chip disk-data-c">D</div>
-            <div class="disk-chip disk-data-c">D</div>
+            <div class="disk-chip disk-parity">P</div><div class="disk-chip disk-parity">DP</div>
+            <div class="disk-chip disk-data-c">D</div><div class="disk-chip disk-data-c">D</div>
+            <div class="disk-chip disk-data-c">D</div><div class="disk-chip disk-data-c">D</div>
           </div>
           <div class="rg-label">6 disks · RAID-DP</div>
         </div>
         <div class="rg-block highlight">
-          <div class="rg-title">RG2 (new)</div>
+          <div class="rg-title">RG2 (new ✨)</div>
           <div class="disk-row">
-            <div class="disk-chip disk-parity">P</div>
-            <div class="disk-chip disk-parity">DP</div>
-            <div class="disk-chip disk-new">D</div>
-            <div class="disk-chip disk-new">D</div>
-            <div class="disk-chip disk-new">D</div>
-            <div class="disk-chip disk-new">D</div>
+            <div class="disk-chip disk-parity">P</div><div class="disk-chip disk-parity">DP</div>
+            <div class="disk-chip disk-new">D</div><div class="disk-chip disk-new">D</div>
+            <div class="disk-chip disk-new">D</div><div class="disk-chip disk-new">D</div>
           </div>
-          <div class="rg-label">6 disks (4 new data + 2 parity)</div>
+          <div class="rg-label">6 disks (4 data + 2 parity)</div>
         </div>
       </div>
 
       <div class="code-block">
-        <div class="code-header"><span class="code-lang">ONTAP CLI · Strategy 1</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
-        <div class="code-body"><span class="comment"># Add 6 disks to aggr_data01 in a brand-new RAID group</span>
-<span class="cmd">storage aggregate add-disks</span> \
+        <div class="code-header"><span class="code-lang">Strategy 1 — New RAID Group</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="cmd">storage aggregate add-disks</span> \
   <span class="param">-aggregate</span> <span class="value">aggr_data01</span> \
-  <span class="param">-diskcount</span> <span class="value">6</span> \
-  <span class="param">-disktype</span> <span class="value">SSD</span> \
-  <span class="param">-raidgroup</span> <span class="value">new</span>
+  <span class="param">-diskcount</span>  <span class="value">6</span> \
+  <span class="param">-disktype</span>   <span class="value">SSD</span> \
+  <span class="param">-raidgroup</span>  <span class="value">new</span>
 
-<span class="comment"># Verify new RAID group was created</span>
 <span class="cmd">storage aggregate show-status</span> <span class="param">-aggregate</span> <span class="value">aggr_data01</span></div>
       </div>
 
-      <div id="rg-size-modify"></div>
-      <h3>Strategy 2 — Add Disks to an Existing RAID Group</h3>
-      <p>When spare inventory is critically low — not enough to form a complete new RAID group — you can expand the <em>max-raidgroup-size</em> setting and insert individual disks into existing groups. This avoids consuming two extra disks on parity overhead for a new group, buying time until fresh hardware arrives.</p>
+      <h3>Strategy 2 — Add to an Existing RAID Group</h3>
+      <p>When spare inventory is critically low, expand the <span class="hl">max-raidgroup-size</span> and insert disks into existing groups as data disks (no parity overhead). This is an emergency measure — the size increase is <strong>irreversible</strong>.</p>
 
       <div class="callout danger">
         <div class="callout-icon">🚨</div>
         <div class="callout-content">
           <div class="callout-title">Critical — Irreversible Action</div>
-          <div class="callout-text">Increasing the max-raidgroup-size is a one-way operation. Once increased, you cannot reduce it. Additionally, disks cannot be removed from an aggregate once added — the only path back is destroying the entire aggregate. Plan carefully before executing.</div>
+          <div class="callout-text">Increasing the max-raidgroup-size cannot be undone. Disks also cannot be removed from an aggregate once added — the only path back is destroying the entire aggregate.</div>
         </div>
       </div>
 
       <div class="code-block">
-        <div class="code-header"><span class="code-lang">ONTAP CLI · Strategy 2</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
-        <div class="code-body"><span class="comment"># Step 1: Increase RAID group size from 6 to 7 (irreversible)</span>
-<span class="cmd">storage aggregate modify</span> \
-  <span class="param">-aggregate</span> <span class="value">aggr_data01</span> \
-  <span class="param">-maxraidsize</span> <span class="value">7</span>
+        <div class="code-header"><span class="code-lang">Strategy 2 — Expand Existing RG</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="comment"># Step 1: Increase RAID group size (irreversible)</span>
+<span class="cmd">storage aggregate modify</span> <span class="param">-aggregate</span> <span class="value">aggr_data01</span> <span class="param">-maxraidsize</span> <span class="value">7</span>
 
-<span class="comment"># Step 2: Add one disk to RAID group rg0 specifically</span>
+<span class="comment"># Step 2: Add one disk to rg0 as a data disk</span>
 <span class="cmd">storage aggregate add-disks</span> \
   <span class="param">-aggregate</span> <span class="value">aggr_data01</span> \
-  <span class="param">-diskcount</span> <span class="value">1</span> \
-  <span class="param">-raidgroup</span> <span class="value">rg0</span>
-
-<span class="comment"># The new disk is added as a DATA disk (no additional parity cost)</span>
-<span class="cmd">storage aggregate show-status</span> <span class="param">-aggregate</span> <span class="value">aggr_data01</span></div>
+  <span class="param">-diskcount</span>  <span class="value">1</span> \
+  <span class="param">-raidgroup</span>  <span class="value">rg0</span></div>
       </div>
 
-      <h3>Strategy 3 — Intelligent Auto-Distribution (all)</h3>
-      <p>The <span class="hl">raidgroup: all</span> option instructs ONTAP to analyze the aggregate layout, identify available slots across all RAID groups based on the max-raidgroup-size setting, and automatically fill them. Any disks you provide that exceed available slots are returned to the spare pool — no waste, no manual slot calculation.</p>
+      <h3>Strategy 3 — Auto-Distribute (all)</h3>
+      <p>The <span class="hl">raidgroup: all</span> option lets ONTAP identify available slots across all RAID groups and fill them automatically. Any disks exceeding available slots are returned to the spare pool.</p>
 
       <div class="code-block">
-        <div class="code-header"><span class="code-lang">ONTAP CLI · Strategy 3</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
-        <div class="code-body"><span class="comment"># Provide more disks than slots — ONTAP places only what fits</span>
-<span class="cmd">storage aggregate add-disks</span> \
+        <div class="code-header"><span class="code-lang">Strategy 3 — Auto-Distribute</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="cmd">storage aggregate add-disks</span> \
   <span class="param">-aggregate</span> <span class="value">aggr_data01</span> \
-  <span class="param">-diskcount</span> <span class="value">4</span> \
-  <span class="param">-raidgroup</span> <span class="value">all</span>
+  <span class="param">-diskcount</span>  <span class="value">4</span> \
+  <span class="param">-raidgroup</span>  <span class="value">all</span>
 
-<span class="output"># ONTAP output (example):
-# Warning: 4 disks specified, but only 2 slots available.
-# 2 disks will be added; 2 disks returned to spare pool.</span>
-
-<span class="comment"># Result: balanced RAID groups, no leftover slots, spare pool intact</span>
-<span class="cmd">storage aggregate show-status</span> <span class="param">-aggregate</span> <span class="value">aggr_data01</span></div>
+<span class="output"># Warning: 4 disks specified, but only 2 slots available.
+# 2 disks will be added; 2 disks returned to spare pool.</span></div>
       </div>
 
-      <h3>Comparison: Three Expansion Strategies</h3>
-      <table class="spec-table">
-        <thead>
-          <tr><th>Strategy</th><th>When to Use</th><th>Parity Overhead?</th><th>Risk Level</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><span class="badge badge-blue">new</span> New RAID Group</td><td>Ample spare disks available</td><td>Yes — 2 disks (P + DP)</td><td><span class="badge badge-green">Low</span></td></tr>
-          <tr><td><span class="badge badge-orange">rg#</span> Specific Group</td><td>Emergency/low spare scenario</td><td>No — data disk only</td><td><span class="badge badge-orange">Medium</span></td></tr>
-          <tr><td><span class="badge badge-purple">all</span> Auto-Distribute</td><td>Re-balancing after ad-hoc changes</td><td>Only if new RG needed</td><td><span class="badge badge-green">Low</span></td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- AUTO PROVISION -->
-    <section class="section" id="auto-provision">
-      <div class="section-header">
-        <div class="section-icon icon-teal">🤖</div>
-        <div class="section-title-wrap">
-          <div class="section-num">SECTION 03</div>
-          <h2>Auto-Provisioning Feature</h2>
-        </div>
-      </div>
-      <p>ONTAP provides an <span class="hl">aggr auto-provision</span> command that attempts to create an aggregate automatically by following NetApp's recommended sizing guidelines. It evaluates your spare pool, picks an optimal RAID group size, reserves the minimum required spares, and creates the aggregate — including naming.</p>
-
-      <div class="callout danger">
-        <div class="callout-icon">🚨</div>
-        <div class="callout-content">
-          <div class="callout-title">Warning — Use With Caution</div>
-          <div class="callout-text">Auto-provisioning may not honor your organization's specific capacity planning requirements or RAID group size conventions. In production environments, always perform manual analysis: calculate usable space, verify RAID group sizing, and validate against your storage policy before creating any aggregate. Do not rely on automation for business-critical storage builds.</div>
-        </div>
-      </div>
-
-      <div class="code-block">
-        <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
-        <div class="code-body"><span class="comment"># Auto-provision creates aggregate with NetApp defaults</span>
-<span class="cmd">storage aggregate auto-provision</span> <span class="param">-node</span> <span class="value">stor-node-01</span>
-
-<span class="comment"># Review what was created</span>
-<span class="cmd">storage aggregate show-status</span></div>
+      <div class="card">
+        <div class="card-title">📊 Strategy Comparison</div>
+        <table class="spec-table">
+          <thead><tr><th>Strategy</th><th>When to Use</th><th>Parity Overhead?</th><th>Risk</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge badge-blue">new</span></td><td>Ample spares available</td><td>Yes — 2 disks (P + DP)</td><td><span class="badge badge-green">Low</span></td></tr>
+            <tr><td><span class="badge badge-orange">rg#</span></td><td>Emergency / low spare scenario</td><td>No — data disk only</td><td><span class="badge badge-orange">Medium</span></td></tr>
+            <tr><td><span class="badge badge-purple">all</span></td><td>Re-balancing after ad-hoc changes</td><td>Only if new RG needed</td><td><span class="badge badge-green">Low</span></td></tr>
+          </tbody>
+        </table>
       </div>
 
       <div class="callout tip">
         <div class="callout-icon">💡</div>
         <div class="callout-content">
           <div class="callout-title">RAID Group Sizing Guidelines</div>
-          <div class="callout-text">For production aggregates, a RAID group size between <strong style="color:var(--accent-purple)">17 and 23 disks</strong> provides the best balance of performance and protection. Under 17 disks wastes too much space on parity; above 23 increases rebuild time risk. Within this range, tailor to your specific drive count and capacity needs.</div>
+          <div class="callout-text">For production aggregates, a RAID group size between <strong>17 and 23 disks</strong> gives the best balance of performance and protection. Under 17 wastes parity overhead; above 23 increases rebuild time risk.</div>
         </div>
       </div>
     </section>
 
-    <!-- AGGREGATE LIFECYCLE OPS -->
+    <div class="divider"></div>
+
+    <!-- ═══ SECTION 3: AGGREGATE LIFECYCLE ═══ -->
     <section class="section" id="aggr-ops">
       <div class="section-header">
         <div class="section-icon icon-yellow">⚙️</div>
         <div class="section-title-wrap">
-          <div class="section-num">SECTION 04</div>
+          <div class="section-num">SECTION 03</div>
           <h2>Aggregate Lifecycle Operations</h2>
         </div>
       </div>
-      <p>ONTAP provides a rich set of aggregate management commands beyond creation and expansion. Understanding these operations helps you manage aggregate health, reconfigure settings, and safely perform maintenance.</p>
 
-      <table class="spec-table">
-        <thead>
-          <tr><th>Operation</th><th>Command</th><th>Downtime?</th><th>Key Notes</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Rename</td><td><span class="hl">aggr rename</span></td><td>None</td><td>Purely metadata change, fully non-disruptive</td></tr>
-          <tr><td>Bring Online</td><td><span class="hl">aggr online</span></td><td>None</td><td>Re-mounts an offline aggregate; data becomes accessible</td></tr>
-          <tr><td>Take Offline</td><td><span class="hl">aggr offline</span></td><td>Client access lost</td><td>Required before deletion; client I/O stops immediately</td></tr>
-          <tr><td>Delete</td><td><span class="hl">aggr delete</span></td><td>Yes — permanent</td><td>Irreversible; aggregate must be offline first</td></tr>
-          <tr><td>Restrict</td><td><span class="hl">aggr restrict</span></td><td>Client access blocked</td><td>Blocks client access without going fully offline; rarely used in practice</td></tr>
-          <tr><td>Modify Settings</td><td><span class="hl">aggr modify</span></td><td>None</td><td>Change RAID type, RAID group size (increase only), and other params</td></tr>
-          <tr><td>RAID Type Change</td><td><span class="hl">aggr modify -raidtype</span></td><td>None (but I/O intensive)</td><td>RAID-DP ↔ RAID-TEC; takes an extra disk for triple parity reconstruction</td></tr>
-        </tbody>
-      </table>
+      <div class="card">
+        <div class="card-title">📋 Key Aggregate Operations</div>
+        <table class="spec-table">
+          <thead><tr><th>Operation</th><th>Command</th><th>Downtime?</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Rename</td><td><span class="hl">aggr rename</span></td><td>None</td><td>Purely metadata — non-disruptive</td></tr>
+            <tr><td>Bring Online</td><td><span class="hl">aggr online</span></td><td>None</td><td>Re-mounts offline aggregate</td></tr>
+            <tr><td>Take Offline</td><td><span class="hl">aggr offline</span></td><td>Yes</td><td>Required before deletion; I/O stops</td></tr>
+            <tr><td>Delete</td><td><span class="hl">aggr delete</span></td><td>Permanent</td><td>Irreversible; must be offline first</td></tr>
+            <tr><td>Modify Settings</td><td><span class="hl">aggr modify</span></td><td>None</td><td>Change RAID type, RAID group size (increase only)</td></tr>
+          </tbody>
+        </table>
+      </div>
 
-      <div id="reallocation"></div>
-      <h3>Reallocation — Defragmentation for Storage</h3>
-      <p>Over time, as volumes are created and deleted, the block allocation within an aggregate becomes fragmented. Free blocks and used blocks become interleaved, which can degrade I/O performance. <strong style="color:var(--text-primary)">Reallocation</strong> is ONTAP's answer — it reorganizes blocks so that all used blocks are contiguous and all free blocks form a single large pool.</p>
+      <h3>Reallocation — Block-Level Defragmentation</h3>
+      <p>Over time, block allocation within an aggregate becomes fragmented. <strong>Reallocation</strong> reorganizes blocks so used blocks are contiguous, improving sequential I/O performance.</p>
 
       <div class="mermaid-wrap">
         <div class="mermaid">
 flowchart LR
     subgraph Before["Before Reallocation"]
       direction LR
-      B1["Used"]
-      B2["Free"]
-      B3["Used"]
-      B4["Free"]
-      B5["Used"]
-      B6["Free"]
-      B7["Used"]
+      B1["Used"] B2["Free"] B3["Used"] B4["Free"] B5["Used"] B6["Free"] B7["Used"]
     end
     subgraph After["After Reallocation"]
       direction LR
-      A1["Used"]
-      A2["Used"]
-      A3["Used"]
-      A4["Used"]
-      A5["Free"]
-      A6["Free"]
-      A7["Free"]
+      A1["Used"] A2["Used"] A3["Used"] A4["Used"] A5["Free"] A6["Free"] A7["Free"]
     end
     Before -->|"aggr reallocation\n(background scan)"| After
     style Before fill:#1c2333,stroke:#f78166,color:#e6edf3
@@ -711,57 +606,40 @@ flowchart LR
       </div>
 
       <h3>Relocation — Moving an Aggregate Between Nodes</h3>
-      <p>Within an HA pair, you can non-disruptively move an aggregate from one node to its partner using <span class="hl">aggr relocation</span>. Disk ownership transfers automatically. This is particularly useful during planned maintenance — when a node is being rebooted, ONTAP automatically relocates its aggregates to the HA partner.</p>
+      <p>Within an HA pair, you can non-disruptively move an aggregate from one node to its partner using <span class="hl">aggr relocation</span>. Disk ownership transfers automatically. Clients experience zero disruption.</p>
 
       <div class="svg-diagram">
         <svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" width="100%">
-          <!-- Node 1 box -->
           <rect x="20" y="30" width="200" height="140" rx="10" fill="#161b22" stroke="#58a6ff" stroke-width="2"/>
           <rect x="20" y="30" width="200" height="34" rx="10" fill="rgba(88,166,255,0.15)"/>
           <rect x="20" y="54" width="200" height="10" rx="0" fill="rgba(88,166,255,0.15)"/>
           <text x="120" y="53" fill="#58a6ff" font-size="13" font-weight="700" text-anchor="middle" font-family="'Inter',sans-serif">stor-node-01</text>
-          <!-- aggr chips inside node1 -->
           <rect x="36" y="76" width="168" height="24" rx="6" fill="rgba(88,166,255,0.12)" stroke="rgba(88,166,255,0.3)" stroke-width="1"/>
           <text x="120" y="93" fill="#58a6ff" font-size="12" text-anchor="middle" font-family="monospace">aggr_data01  ✓ active</text>
           <rect x="36" y="108" width="168" height="24" rx="6" fill="rgba(88,166,255,0.12)" stroke="rgba(88,166,255,0.3)" stroke-width="1"/>
           <text x="120" y="125" fill="#58a6ff" font-size="12" text-anchor="middle" font-family="monospace">aggr_data02  ✓ active</text>
           <text x="120" y="158" fill="#6e7681" font-size="10" text-anchor="middle" font-family="sans-serif">⚙️ Scheduled Maintenance</text>
-
-          <!-- Arrow forward: relocation start -->
           <line x1="225" y1="100" x2="330" y2="100" stroke="#e3b341" stroke-width="2" marker-end="url(#arrowY)"/>
           <text x="277" y="90" fill="#e3b341" font-size="10" text-anchor="middle" font-family="sans-serif" font-weight="600">aggr relocation</text>
           <text x="277" y="102" fill="#e3b341" font-size="10" text-anchor="middle" font-family="sans-serif">start →</text>
-
-          <!-- Node 2 box -->
           <rect x="335" y="30" width="200" height="140" rx="10" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
           <rect x="335" y="30" width="200" height="34" rx="10" fill="rgba(63,185,80,0.15)"/>
           <rect x="335" y="54" width="200" height="10" rx="0" fill="rgba(63,185,80,0.15)"/>
           <text x="435" y="53" fill="#3fb950" font-size="13" font-weight="700" text-anchor="middle" font-family="'Inter',sans-serif">stor-node-02</text>
-          <!-- aggr chips inside node2 (relocated) -->
           <rect x="351" y="76" width="168" height="24" rx="6" fill="rgba(63,185,80,0.12)" stroke="rgba(63,185,80,0.3)" stroke-width="1"/>
           <text x="435" y="93" fill="#3fb950" font-size="12" text-anchor="middle" font-family="monospace">aggr_data01  ↗ relocated</text>
           <rect x="351" y="108" width="168" height="24" rx="6" fill="rgba(63,185,80,0.12)" stroke="rgba(63,185,80,0.3)" stroke-width="1"/>
           <text x="435" y="125" fill="#3fb950" font-size="12" text-anchor="middle" font-family="monospace">aggr_data02  ↗ relocated</text>
           <text x="435" y="158" fill="#3fb950" font-size="10" text-anchor="middle" font-family="sans-serif">✓ Clients continue I/O</text>
-
-          <!-- Arrow back: maintenance complete -->
           <line x1="540" y1="100" x2="610" y2="100" stroke="#bc8cff" stroke-width="2" marker-end="url(#arrowP)"/>
           <text x="650" y="82" fill="#bc8cff" font-size="10" text-anchor="middle" font-family="sans-serif" font-weight="600">Maintenance</text>
           <text x="650" y="94" fill="#bc8cff" font-size="10" text-anchor="middle" font-family="sans-serif">complete</text>
           <text x="650" y="106" fill="#bc8cff" font-size="10" text-anchor="middle" font-family="sans-serif">↩ relocate back</text>
-
-          <!-- Client always connected label -->
           <rect x="240" y="148" width="230" height="28" rx="6" fill="rgba(57,211,195,0.08)" stroke="rgba(57,211,195,0.3)" stroke-width="1"/>
           <text x="355" y="167" fill="#39d3c3" font-size="11" text-anchor="middle" font-family="sans-serif">🔒 Zero client disruption throughout</text>
-
-          <!-- Arrow markers -->
           <defs>
-            <marker id="arrowY" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L8,3 z" fill="#e3b341"/>
-            </marker>
-            <marker id="arrowP" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L8,3 z" fill="#bc8cff"/>
-            </marker>
+            <marker id="arrowY" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#e3b341"/></marker>
+            <marker id="arrowP" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#bc8cff"/></marker>
           </defs>
         </svg>
         <div class="diagram-caption">Figure 4 — Aggregate relocation is non-disruptive. Clients experience no interruption while aggregates move between HA pair nodes. Disk ownership transfers automatically.</div>
@@ -771,265 +649,163 @@ flowchart LR
         <div class="callout-icon">ℹ️</div>
         <div class="callout-content">
           <div class="callout-title">Relocation Boundaries</div>
-          <div class="callout-text">Aggregate relocation only works between nodes in the <strong>same HA pair</strong>. You cannot relocate an aggregate to a node in a different HA pair within the cluster. The SFO (Storage Failover) mechanism handles this during planned and unplanned failover scenarios.</div>
+          <div class="callout-text">Aggregate relocation only works between nodes in the <strong>same HA pair</strong>. You cannot relocate an aggregate to a node in a different HA pair. The SFO (Storage Failover) mechanism handles this during planned and unplanned failover scenarios.</div>
         </div>
       </div>
 
       <div class="code-block">
         <div class="code-header"><span class="code-lang">ONTAP CLI · Relocation</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
-        <div class="code-body"><span class="comment"># Relocate aggregate from stor-node-01 to stor-node-02</span>
-<span class="cmd">storage aggregate relocation start</span> \
-  <span class="param">-node</span> <span class="value">stor-node-01</span> \
-  <span class="param">-destination</span> <span class="value">stor-node-02</span> \
-  <span class="param">-aggregate-list</span> <span class="value">aggr_data01</span>
+        <div class="code-body"><span class="cmd">storage aggregate relocation start</span> \
+  <span class="param">-node</span>            <span class="value">stor-node-01</span> \
+  <span class="param">-destination</span>     <span class="value">stor-node-02</span> \
+  <span class="param">-aggregate-list</span>  <span class="value">aggr_data01</span>
 
-<span class="comment"># Monitor relocation progress</span>
 <span class="cmd">storage aggregate relocation show</span></div>
       </div>
     </section>
 
-    <!-- SCRUB -->
+    <div class="divider"></div>
+
+    <!-- ═══ SECTION 4: SCRUB ═══ -->
     <section class="section" id="scrub">
       <div class="section-header">
         <div class="section-icon icon-purple">🔬</div>
         <div class="section-title-wrap">
-          <div class="section-num">SECTION 05</div>
-          <h2>RAID Scrub & Media Scrub</h2>
+          <div class="section-num">SECTION 04</div>
+          <h2>RAID Scrub &amp; Media Scrub</h2>
         </div>
       </div>
-      <p>Disk drives accumulate <strong style="color:var(--text-primary)">bad sectors</strong> over time due to media degradation or hardware wear. A bad sector is a region on the disk platter that becomes unreadable, meaning data stored there can no longer be retrieved directly. ONTAP addresses this through two complementary background scanning processes: RAID Scrub and Media Scrub.</p>
+      <p>Disk drives accumulate <strong style="color:var(--text-primary)">bad sectors</strong> over time. ONTAP addresses this through two complementary background scanning processes.</p>
 
       <div class="svg-diagram">
         <svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" width="100%">
           <defs>
-            <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill="#58a6ff"/>
-            </marker>
-            <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill="#3fb950"/>
-            </marker>
+            <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#58a6ff"/></marker>
+            <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#3fb950"/></marker>
           </defs>
-
-          <!-- ─── LEFT: Disk with Bad Sectors ─── -->
+          <!-- Disk Before -->
           <rect x="30" y="10" width="180" height="200" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
-          <!-- title -->
           <text x="120" y="32" fill="#e6edf3" font-size="13" font-weight="700" text-anchor="middle" font-family="'Inter',sans-serif">Disk (Before Scrub)</text>
-          <!-- track dividers -->
           <line x1="40" y1="55" x2="200" y2="55" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
           <line x1="40" y1="100" x2="200" y2="100" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
           <line x1="40" y1="145" x2="200" y2="145" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
-
-          <!-- Row 1: track label + sectors -->
+          <!-- Row 1 -->
           <text x="42" y="78" fill="#6e7681" font-size="9" font-family="monospace">Track 0</text>
-          <!-- good sector -->
-          <rect x="80" y="62" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
-          <text x="91" y="74" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-          <!-- bad sector -->
-          <rect x="108" y="62" width="22" height="16" rx="3" fill="rgba(247,129,102,0.35)" stroke="#f78166" stroke-width="1.5"/>
-          <text x="119" y="74" fill="#f78166" font-size="11" text-anchor="middle" font-family="monospace">✗</text>
-          <!-- good sector -->
-          <rect x="136" y="62" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
-          <text x="147" y="74" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-          <rect x="164" y="62" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
-          <text x="175" y="74" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-
+          <rect x="80" y="62" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/><text x="91" y="74" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
+          <rect x="108" y="62" width="22" height="16" rx="3" fill="rgba(247,129,102,0.35)" stroke="#f78166" stroke-width="1.5"/><text x="119" y="74" fill="#f78166" font-size="11" text-anchor="middle" font-family="monospace">✗</text>
+          <rect x="136" y="62" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/><text x="147" y="74" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
+          <rect x="164" y="62" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/><text x="175" y="74" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
           <!-- Row 2 -->
           <text x="42" y="124" fill="#6e7681" font-size="9" font-family="monospace">Track 1</text>
-          <rect x="80" y="108" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
-          <text x="91" y="120" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-          <rect x="108" y="108" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
-          <text x="119" y="120" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-          <!-- bad sector -->
-          <rect x="136" y="108" width="22" height="16" rx="3" fill="rgba(247,129,102,0.35)" stroke="#f78166" stroke-width="1.5"/>
-          <text x="147" y="120" fill="#f78166" font-size="11" text-anchor="middle" font-family="monospace">✗</text>
-          <rect x="164" y="108" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
-          <text x="175" y="120" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-
+          <rect x="80" y="108" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/><text x="91" y="120" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
+          <rect x="108" y="108" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/><text x="119" y="120" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
+          <rect x="136" y="108" width="22" height="16" rx="3" fill="rgba(247,129,102,0.35)" stroke="#f78166" stroke-width="1.5"/><text x="147" y="120" fill="#f78166" font-size="11" text-anchor="middle" font-family="monospace">✗</text>
+          <rect x="164" y="108" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/><text x="175" y="120" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
           <!-- Row 3 -->
           <text x="42" y="168" fill="#6e7681" font-size="9" font-family="monospace">Track 2</text>
-          <rect x="80" y="152" width="22" height="16" rx="3" fill="rgba(247,129,102,0.35)" stroke="#f78166" stroke-width="1.5"/>
-          <text x="91" y="164" fill="#f78166" font-size="11" text-anchor="middle" font-family="monospace">✗</text>
-          <rect x="108" y="152" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
-          <text x="119" y="164" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-          <rect x="136" y="152" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
-          <text x="147" y="164" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-          <rect x="164" y="152" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
-          <text x="175" y="164" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-
-          <!-- Bad sector count badge -->
+          <rect x="80" y="152" width="22" height="16" rx="3" fill="rgba(247,129,102,0.35)" stroke="#f78166" stroke-width="1.5"/><text x="91" y="164" fill="#f78166" font-size="11" text-anchor="middle" font-family="monospace">✗</text>
+          <rect x="108" y="152" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/><text x="119" y="164" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
+          <rect x="136" y="152" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/><text x="147" y="164" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
+          <rect x="164" y="152" width="22" height="16" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/><text x="175" y="164" fill="#58a6ff" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
           <rect x="52" y="188" width="136" height="18" rx="4" fill="rgba(247,129,102,0.15)" stroke="rgba(247,129,102,0.4)" stroke-width="1"/>
           <text x="120" y="201" fill="#f78166" font-size="10" font-weight="600" text-anchor="middle" font-family="sans-serif">3 Bad Sectors Detected</text>
-
-          <!-- ─── MIDDLE: Scrub Process ─── -->
-          <!-- horizontal arrow -->
+          <!-- Scrub Process -->
           <line x1="215" y1="110" x2="290" y2="110" stroke="#58a6ff" stroke-width="2" marker-end="url(#arrowBlue)"/>
-          
-          <!-- Scrub process box -->
           <rect x="295" y="65" width="130" height="90" rx="10" fill="#161b22" stroke="rgba(88,166,255,0.4)" stroke-width="1.5"/>
           <text x="360" y="90" fill="#e3b341" font-size="13" text-anchor="middle" font-family="monospace">⚙️</text>
           <text x="360" y="108" fill="#e6edf3" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">RAID Scrub</text>
           <text x="360" y="122" fill="#8b949e" font-size="9.5" text-anchor="middle" font-family="sans-serif">Reads parity stripe</text>
           <text x="360" y="134" fill="#8b949e" font-size="9.5" text-anchor="middle" font-family="sans-serif">Reconstructs data</text>
           <text x="360" y="146" fill="#8b949e" font-size="9.5" text-anchor="middle" font-family="sans-serif">Writes to healthy block</text>
-
-          <!-- Arrow out -->
           <line x1="430" y1="110" x2="500" y2="110" stroke="#3fb950" stroke-width="2" marker-end="url(#arrowGreen)"/>
-
-          <!-- ─── RIGHT: Disk After Scrub ─── -->
+          <!-- Disk After -->
           <rect x="505" y="10" width="180" height="200" rx="10" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
           <text x="595" y="32" fill="#3fb950" font-size="13" font-weight="700" text-anchor="middle" font-family="'Inter',sans-serif">Disk (After Scrub)</text>
           <line x1="515" y1="55" x2="675" y2="55" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
           <line x1="515" y1="100" x2="675" y2="100" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
           <line x1="515" y1="145" x2="675" y2="145" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
-
-          <!-- Row 1 all green -->
           <text x="517" y="78" fill="#6e7681" font-size="9" font-family="monospace">Track 0</text>
-          <rect x="555" y="62" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/>
-          <text x="566" y="74" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-          <rect x="583" y="62" width="22" height="16" rx="3" fill="rgba(63,185,80,0.35)" stroke="#3fb950" stroke-width="1.5"/>
-          <text x="594" y="74" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">✓</text>
-          <rect x="611" y="62" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/>
-          <text x="622" y="74" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-          <rect x="639" y="62" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/>
-          <text x="650" y="74" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-
-          <!-- Row 2 all green -->
+          <rect x="555" y="62" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/><text x="566" y="74" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
+          <rect x="583" y="62" width="22" height="16" rx="3" fill="rgba(63,185,80,0.35)" stroke="#3fb950" stroke-width="1.5"/><text x="594" y="74" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">✓</text>
+          <rect x="611" y="62" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/><text x="622" y="74" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
+          <rect x="639" y="62" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/><text x="650" y="74" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
           <text x="517" y="124" fill="#6e7681" font-size="9" font-family="monospace">Track 1</text>
-          <rect x="555" y="108" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/>
-          <text x="566" y="120" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-          <rect x="583" y="108" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/>
-          <text x="594" y="120" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-          <rect x="611" y="108" width="22" height="16" rx="3" fill="rgba(63,185,80,0.35)" stroke="#3fb950" stroke-width="1.5"/>
-          <text x="622" y="120" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">✓</text>
-          <rect x="639" y="108" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/>
-          <text x="650" y="120" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-
-          <!-- Row 3 all green -->
+          <rect x="555" y="108" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/><text x="566" y="120" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
+          <rect x="583" y="108" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/><text x="594" y="120" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
+          <rect x="611" y="108" width="22" height="16" rx="3" fill="rgba(63,185,80,0.35)" stroke="#3fb950" stroke-width="1.5"/><text x="622" y="120" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">✓</text>
+          <rect x="639" y="108" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/><text x="650" y="120" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
           <text x="517" y="168" fill="#6e7681" font-size="9" font-family="monospace">Track 2</text>
-          <rect x="555" y="152" width="22" height="16" rx="3" fill="rgba(63,185,80,0.35)" stroke="#3fb950" stroke-width="1.5"/>
-          <text x="566" y="164" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">✓</text>
-          <rect x="583" y="152" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/>
-          <text x="594" y="164" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-          <rect x="611" y="152" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/>
-          <text x="622" y="164" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-          <rect x="639" y="152" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/>
-          <text x="650" y="164" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
-
-          <!-- Recovered badge -->
+          <rect x="555" y="152" width="22" height="16" rx="3" fill="rgba(63,185,80,0.35)" stroke="#3fb950" stroke-width="1.5"/><text x="566" y="164" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">✓</text>
+          <rect x="583" y="152" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/><text x="594" y="164" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
+          <rect x="611" y="152" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/><text x="622" y="164" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
+          <rect x="639" y="152" width="22" height="16" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/><text x="650" y="164" fill="#3fb950" font-size="9" text-anchor="middle" font-family="monospace">OK</text>
           <rect x="527" y="188" width="136" height="18" rx="4" fill="rgba(63,185,80,0.15)" stroke="rgba(63,185,80,0.4)" stroke-width="1"/>
           <text x="595" y="201" fill="#3fb950" font-size="10" font-weight="600" text-anchor="middle" font-family="sans-serif">Data Recovered ✓</text>
-
-          <!-- Legend bottom -->
+          <!-- Legend -->
           <g transform="translate(230, 225)">
-            <rect x="0" y="0" width="12" height="12" rx="2" fill="rgba(247,129,102,0.4)" stroke="#f78166"/>
-            <text x="17" y="10" fill="#8b949e" font-size="10" font-family="sans-serif">Bad / Unreadable Sector</text>
-            <rect x="160" y="0" width="12" height="12" rx="2" fill="rgba(88,166,255,0.3)" stroke="#58a6ff"/>
-            <text x="177" y="10" fill="#8b949e" font-size="10" font-family="sans-serif">Healthy Sector</text>
-            <rect x="300" y="0" width="12" height="12" rx="2" fill="rgba(63,185,80,0.35)" stroke="#3fb950" stroke-width="1.5"/>
-            <text x="317" y="10" fill="#8b949e" font-size="10" font-family="sans-serif">Recovered (✓)</text>
+            <rect x="0" y="0" width="12" height="12" rx="2" fill="rgba(247,129,102,0.4)" stroke="#f78166"/><text x="17" y="10" fill="#8b949e" font-size="10" font-family="sans-serif">Bad / Unreadable Sector</text>
+            <rect x="160" y="0" width="12" height="12" rx="2" fill="rgba(88,166,255,0.3)" stroke="#58a6ff"/><text x="177" y="10" fill="#8b949e" font-size="10" font-family="sans-serif">Healthy Sector</text>
+            <rect x="300" y="0" width="12" height="12" rx="2" fill="rgba(63,185,80,0.35)" stroke="#3fb950" stroke-width="1.5"/><text x="317" y="10" fill="#8b949e" font-size="10" font-family="sans-serif">Recovered (✓)</text>
           </g>
         </svg>
         <div class="diagram-caption">Figure 5 — RAID Scrub scans each disk track, identifies unreadable sectors (✗), reconstructs data from parity stripes, and writes recovered data back to healthy sectors (✓).</div>
       </div>
 
-      <h3>RAID Scrub vs Media Scrub</h3>
-      <table class="spec-table">
-        <thead>
-          <tr><th>Attribute</th><th>RAID Scrub</th><th>Media Scrub</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Scope</td><td>Aggregates, plexes, RAID groups</td><td>Aggregates + spare drives</td></tr>
-          <tr><td>Error Type Detected</td><td>Hardware errors + media errors</td><td>Media errors only</td></tr>
-          <tr><td>Scheduling</td><td>Manual or scheduled (admin-configured)</td><td>Always-on background process</td></tr>
-          <tr><td>Performance Impact</td><td>Yes — Low / Medium / High configurable</td><td>Minimal (continuous, low-intensity)</td></tr>
-          <tr><td>Includes Spares?</td><td>No</td><td>Yes</td></tr>
-          <tr><td>Enabled By Default?</td><td>Scheduled by admin</td><td>Yes — factory default</td></tr>
-        </tbody>
-      </table>
-
-      <h3>Scheduling and Configuring RAID Scrub</h3>
-      <div class="code-block">
-        <div class="code-header"><span class="code-lang">ONTAP CLI · Scrub Management</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
-        <div class="code-body"><span class="comment"># Start scrub immediately on a specific aggregate</span>
-<span class="cmd">storage aggregate scrub</span> <span class="param">-aggregate</span> <span class="value">aggr_data01</span> <span class="param">-action</span> <span class="value">start</span>
-
-<span class="comment"># Check scrub progress (% complete)</span>
-<span class="cmd">storage aggregate scrub</span> <span class="param">-aggregate</span> <span class="value">aggr_data01</span> <span class="param">-action</span> <span class="value">status</span>
-
-<span class="comment"># Suspend if impacting business-hours performance</span>
-<span class="cmd">storage aggregate scrub</span> <span class="param">-aggregate</span> <span class="value">aggr_data01</span> <span class="param">-action</span> <span class="value">suspend</span>
-
-<span class="comment"># Schedule scrub every Friday at 23:00 on all nodes</span>
-<span class="cmd">storage raid-options modify</span> \
-  <span class="param">-node</span> <span class="value">*</span> \
-  <span class="param">-name</span> <span class="value">raid.scrub.schedule</span> \
-  <span class="param">-value</span> <span class="value">"Fri@23"</span>
-
-<span class="comment"># Set performance impact to LOW (recommended for scheduled runs)</span>
-<span class="cmd">storage raid-options modify</span> \
-  <span class="param">-node</span> <span class="value">*</span> \
-  <span class="param">-name</span> <span class="value">raid.scrub.perf_impact</span> \
-  <span class="param">-value</span> <span class="value">low</span>
-
-<span class="comment"># Set timeout to 24 hours to auto-suspend before business hours start</span>
-<span class="cmd">storage raid-options modify</span> \
-  <span class="param">-node</span> <span class="value">*</span> \
-  <span class="param">-name</span> <span class="value">raid.scrub.duration</span> \
-  <span class="param">-value</span> <span class="value">24</span></div>
+      <div class="card">
+        <div class="card-title">📋 RAID Scrub vs Media Scrub</div>
+        <table class="spec-table">
+          <thead><tr><th>Attribute</th><th>RAID Scrub</th><th>Media Scrub</th></tr></thead>
+          <tbody>
+            <tr><td>Scope</td><td>Aggregates, plexes, RAID groups</td><td>Aggregates + spare drives</td></tr>
+            <tr><td>Error Type</td><td>Hardware + media errors</td><td>Media errors only</td></tr>
+            <tr><td>Scheduling</td><td>Manual or admin-scheduled</td><td>Always-on background</td></tr>
+            <tr><td>Includes Spares?</td><td>No</td><td>Yes</td></tr>
+            <tr><td>Enabled by Default?</td><td>Admin-scheduled</td><td>Yes — factory default</td></tr>
+          </tbody>
+        </table>
       </div>
 
-      <div class="callout success">
-        <div class="callout-icon">✅</div>
-        <div class="callout-content">
-          <div class="callout-title">Best Practice — Scrub Configuration</div>
-          <div class="callout-text">Always schedule RAID scrubs during off-peak windows (weekends or overnight). Set performance impact to <strong>low</strong> and configure a timeout so that scrub operations automatically suspend before business hours begin. This prevents latency complaints from clients during peak activity.</div>
-        </div>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI · Scrub Management</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="cmd">storage aggregate scrub</span> <span class="param">-aggregate</span> <span class="value">aggr_data01</span> <span class="param">-action</span> <span class="value">start</span>
+<span class="cmd">storage aggregate scrub</span> <span class="param">-aggregate</span> <span class="value">aggr_data01</span> <span class="param">-action</span> <span class="value">status</span>
+<span class="cmd">storage aggregate scrub</span> <span class="param">-aggregate</span> <span class="value">aggr_data01</span> <span class="param">-action</span> <span class="value">suspend</span>
+
+<span class="comment"># Schedule scrub every Friday at 23:00; set low performance impact</span>
+<span class="cmd">storage raid-options modify</span> <span class="param">-node</span> <span class="value">*</span> <span class="param">-name</span> <span class="value">raid.scrub.schedule</span> <span class="param">-value</span> <span class="value">"Fri@23"</span>
+<span class="cmd">storage raid-options modify</span> <span class="param">-node</span> <span class="value">*</span> <span class="param">-name</span> <span class="value">raid.scrub.perf_impact</span> <span class="param">-value</span> <span class="value">low</span></div>
       </div>
 
       <h3>Pre-Fail: Proactive Disk Replacement</h3>
-      <p>When ONTAP detects a rising bad-sector count on a drive, it can trigger <strong style="color:var(--text-primary)">pre-fail</strong> — a graceful, data-safe replacement sequence. Rather than waiting for an outright disk failure, ONTAP copies data from the degrading disk to a spare drive before marking it as failed. This significantly reduces RAID reconstruction time and risk.</p>
+      <p>When ONTAP detects a rising bad-sector count, it triggers <strong>pre-fail</strong> — copying data from the degrading disk to a spare before marking it failed. This avoids a full RAID reconstruction.</p>
 
       <div class="scrub-timeline">
-        <div class="scrub-step">
-          <div class="scrub-step-icon">📊</div>
-          <div class="scrub-step-label">Rising Bad Sectors</div>
-          <div class="scrub-step-sub">ONTAP detects threshold exceeded</div>
-        </div>
+        <div class="scrub-step"><div class="scrub-step-icon">📊</div><div class="scrub-step-label">Rising Bad Sectors</div><div class="scrub-step-sub">Threshold exceeded</div></div>
         <div class="scrub-arrow">→</div>
-        <div class="scrub-step">
-          <div class="scrub-step-icon">🔄</div>
-          <div class="scrub-step-label">Pre-Fail Triggered</div>
-          <div class="scrub-step-sub">Data copies to spare proactively</div>
-        </div>
+        <div class="scrub-step"><div class="scrub-step-icon">🔄</div><div class="scrub-step-label">Pre-Fail Triggered</div><div class="scrub-step-sub">Data copies to spare</div></div>
         <div class="scrub-arrow">→</div>
-        <div class="scrub-step">
-          <div class="scrub-step-icon">✅</div>
-          <div class="scrub-step-label">Copy Complete</div>
-          <div class="scrub-step-sub">Spare now active in RAID group</div>
-        </div>
+        <div class="scrub-step"><div class="scrub-step-icon">✅</div><div class="scrub-step-label">Copy Complete</div><div class="scrub-step-sub">Spare now active in RG</div></div>
         <div class="scrub-arrow">→</div>
-        <div class="scrub-step">
-          <div class="scrub-step-icon">🗑️</div>
-          <div class="scrub-step-label">Drive Marked Failed</div>
-          <div class="scrub-step-sub">No parity reconstruction needed</div>
-        </div>
+        <div class="scrub-step"><div class="scrub-step-icon">🗑️</div><div class="scrub-step-label">Drive Marked Failed</div><div class="scrub-step-sub">No parity reconstruction</div></div>
       </div>
-      <div class="diagram-caption">Figure 6 — Pre-fail sequence provides graceful, zero-disruption disk retirement compared to sudden failure.</div>
+      <div class="diagram-caption">Figure 6 — Pre-fail sequence: graceful, zero-disruption disk retirement compared to sudden failure.</div>
     </section>
 
-    <!-- SPACE MODEL -->
+    <div class="divider"></div>
+
+    <!-- ═══ SECTION 5: SPACE MODEL ═══ -->
     <section class="section" id="space-model">
       <div class="section-header">
         <div class="section-icon icon-teal">📐</div>
         <div class="section-title-wrap">
-          <div class="section-num">SECTION 06</div>
-          <h2>Understanding Aggregate Space Consumption</h2>
+          <div class="section-num">SECTION 05</div>
+          <h2>Aggregate Space Consumption Model</h2>
         </div>
       </div>
-      <p>When you create an aggregate, the raw disk capacity passes through several layers of overhead before becoming usable storage for your volumes. Understanding this chain prevents capacity planning surprises.</p>
+      <p>Raw disk capacity passes through several overhead layers before becoming usable storage for volumes. Understanding this prevents capacity planning surprises.</p>
 
       <div class="space-bar-container">
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px; font-family:monospace;">Capacity breakdown for a sample aggregate with 20 × 2 TB SAS drives</p>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px; font-family:monospace;">Capacity breakdown — 20 × 2 TB SAS drives</p>
         <div class="space-bar">
           <div class="space-seg seg-meta"><span>Disk</span><span>Meta</span></div>
           <div class="space-seg seg-parity"><span>Parity</span><span>+ DP</span></div>
@@ -1037,72 +813,53 @@ flowchart LR
           <div class="space-seg seg-usable"><span>Usable Aggregate Capacity</span></div>
         </div>
         <div class="space-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:rgba(247,129,102,0.6)"></div>Disk-level firmware &amp; metadata (~10%/disk)</div>
-          <div class="legend-item"><div class="legend-dot" style="background:rgba(227,179,65,0.6)"></div>RAID parity + double-parity disks (2 disks per RG)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(247,129,102,0.6)"></div>Disk firmware &amp; metadata (~10%/disk)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(227,179,65,0.6)"></div>RAID parity + double-parity (2 disks/RG)</div>
           <div class="legend-item"><div class="legend-dot" style="background:rgba(188,140,255,0.6)"></div>Aggregate internal reserve (default 10%)</div>
           <div class="legend-item"><div class="legend-dot" style="background:rgba(88,166,255,0.6)"></div>Available for volume provisioning</div>
         </div>
       </div>
 
-      <div class="callout info">
-        <div class="callout-icon">📌</div>
-        <div class="callout-content">
-          <div class="callout-title">Key Space Facts</div>
-          <div class="callout-text">
-            <ul style="margin-left:16px; margin-top:6px; line-height:1.8; color:var(--text-secondary);">
-              <li>Each physical disk delivers roughly <strong style="color:var(--text-primary)">90–92%</strong> of its rated capacity (the rest is reserved for firmware and bad block mapping).</li>
-              <li>RAID-DP consumes 2 disks per RAID group for parity and double-parity, regardless of group size.</li>
-              <li>ONTAP reserves <strong style="color:var(--text-primary)">10% of aggregate capacity</strong> by default for internal metadata, Snapshot reserves, and operational headroom.</li>
-              <li>The <span class="hl">storage aggregate show-space</span> command provides a detailed per-category breakdown of actual space usage.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
       <div class="code-block">
         <div class="code-header"><span class="code-lang">ONTAP CLI · Space Analysis</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
-        <div class="code-body"><span class="comment"># Show detailed space footprint of an aggregate</span>
-<span class="cmd">storage aggregate show-space</span> <span class="param">-aggregate</span> <span class="value">aggr_data01</span>
+        <div class="code-body"><span class="cmd">storage aggregate show-space</span> <span class="param">-aggregate</span> <span class="value">aggr_data01</span>
 
-<span class="output"># Sample output:
-# Aggregate       : aggr_data01
+<span class="output"># Aggregate       : aggr_data01
 # Volumes         : 1.80 TB
 # Snapshot Reserve: 200 GB
 # Aggregate Meta  : 45 GB
 # Total Used      : 2.05 TB
-# Physical Used   : 1.90 TB  (after dedup/compression savings)
 # Total Available : 3.12 TB</span></div>
       </div>
     </section>
 
-    <!-- MIRROR AGGREGATE INTRO -->
+    <div class="divider"></div>
+
+    <!-- ═══ SECTION 6: MIRROR AGGREGATE ═══ -->
     <section class="section" id="mirror-intro">
       <div class="section-header">
         <div class="section-icon icon-green">🔀</div>
         <div class="section-title-wrap">
-          <div class="section-num">SECTION 07</div>
-          <h2>Mirror Aggregates — Concept & Architecture</h2>
+          <div class="section-num">SECTION 06</div>
+          <h2>Mirror Aggregates — Concept &amp; Architecture</h2>
         </div>
       </div>
-      <p>A <strong style="color:var(--text-primary)">mirror aggregate</strong> is a special aggregate type where all data is synchronously duplicated across two independent sets of disks called <em>plexes</em>. If one disk shelf or pool of disks becomes unavailable, the aggregate continues operating from its surviving plex — with zero data loss and zero downtime.</p>
-
-      <h3>When Are Mirror Aggregates Used?</h3>
-      <p>Mirror aggregates are primarily associated with <strong style="color:var(--text-primary)">MetroCluster</strong> configurations — where HA pair nodes reside in physically separate data centers (up to 5 km apart). If one site suffers a power failure or hardware catastrophe, the partner site's node takes over using the surviving plex of the mirror aggregate.</p>
+      <p>A <strong style="color:var(--text-primary)">mirror aggregate</strong> synchronously duplicates all data across two independent sets of disks called <em>plexes</em>. If one disk shelf becomes unavailable, the aggregate continues from its surviving plex — zero data loss, zero downtime. Mirror aggregates are primarily used in <strong>MetroCluster</strong> configurations where HA pair nodes sit in separate data centers.</p>
 
       <div class="mermaid-wrap">
         <div class="mermaid">
 flowchart TB
     subgraph DC1["🏢 Data Center A (Primary Site)"]
-      N1["stor-node-01\n192.168.10.21"]
+      N1["stor-node-01"]
       Shelf1["Disk Shelf A\n(Pool 0 · 24 drives)"]
       N1 --- Shelf1
     end
     subgraph DC2["🏢 Data Center B (Secondary Site)"]
-      N2["stor-node-02\n192.168.10.22"]
+      N2["stor-node-02"]
       Shelf2["Disk Shelf B\n(Pool 1 · 24 drives)"]
       N2 --- Shelf2
     end
-    N1 <-->|"HA Interconnect\n(IP / FC / FCIP)"| N2
+    N1 <-->|"HA Interconnect"| N2
     Shelf1 -->|"Original Plex\n(Plex 0)"| MA["🔀 Mirror Aggregate\naggr_mirror01"]
     Shelf2 -->|"Mirror Plex\n(Plex 1)"| MA
     MA -->|"Active I/O"| Clients["👥 Clients / Servers"]
@@ -1113,9 +870,8 @@ flowchart TB
         <div class="diagram-caption">Figure 7 — MetroCluster architecture: mirror aggregate spans two independent disk shelves across geographically separated data centers.</div>
       </div>
 
-      <div id="plex-pool"></div>
-      <h3>Understanding Plexes and Spare Pools</h3>
-      <p>Every aggregate has at least one plex. A plex is a logical wrapper over a set of RAID groups — think of it as a complete, self-contained copy of the aggregate's RAID structure. Normal aggregates have only <strong>Plex 0</strong>. Mirror aggregates add a second plex (e.g., Plex 1) that contains an exact, live duplicate.</p>
+      <h3>Plexes and Spare Pools</h3>
+      <p>Normal aggregates have only <strong>Plex 0</strong>. Mirror aggregates add <strong>Plex 1</strong> — an exact live duplicate. Disks for Pool 0 come from Shelf A; Pool 1 from Shelf B, ensuring a single shelf failure only takes down one plex.</p>
 
       <div class="plex-container">
         <div class="plex-box plex-original">
@@ -1123,78 +879,44 @@ flowchart TB
           <div class="aggr-expand-vis" style="margin-top:10px;">
             <div class="rg-block" style="border-color:rgba(88,166,255,0.3)">
               <div class="rg-title">RG0</div>
-              <div class="disk-row">
-                <div class="disk-chip disk-parity">P</div>
-                <div class="disk-chip disk-parity">DP</div>
-                <div class="disk-chip disk-data-c">D</div>
-                <div class="disk-chip disk-data-c">D</div>
-                <div class="disk-chip disk-data-c">D</div>
-              </div>
+              <div class="disk-row"><div class="disk-chip disk-parity">P</div><div class="disk-chip disk-parity">DP</div><div class="disk-chip disk-data-c">D</div><div class="disk-chip disk-data-c">D</div><div class="disk-chip disk-data-c">D</div></div>
             </div>
             <div class="rg-block" style="border-color:rgba(88,166,255,0.3)">
               <div class="rg-title">RG1</div>
-              <div class="disk-row">
-                <div class="disk-chip disk-parity">P</div>
-                <div class="disk-chip disk-parity">DP</div>
-                <div class="disk-chip disk-data-c">D</div>
-                <div class="disk-chip disk-data-c">D</div>
-                <div class="disk-chip disk-data-c">D</div>
-              </div>
+              <div class="disk-row"><div class="disk-chip disk-parity">P</div><div class="disk-chip disk-parity">DP</div><div class="disk-chip disk-data-c">D</div><div class="disk-chip disk-data-c">D</div><div class="disk-chip disk-data-c">D</div></div>
             </div>
           </div>
-          <p style="font-size:12px; margin-top:8px; margin-bottom:0; color:var(--accent-blue);">Disks from Spare Pool 0 (Shelf A)</p>
+          <p style="font-size:12px; margin-top:8px; margin-bottom:0; color:var(--accent-blue);">Disks from Pool 0 (Shelf A)</p>
         </div>
         <div class="plex-box plex-mirror">
           <div class="plex-title">🟢 Plex 1 — Mirror (Standby)</div>
           <div class="aggr-expand-vis" style="margin-top:10px;">
             <div class="rg-block" style="border-color:rgba(63,185,80,0.3)">
               <div class="rg-title">RG0</div>
-              <div class="disk-row">
-                <div class="disk-chip disk-parity">P</div>
-                <div class="disk-chip disk-parity">DP</div>
-                <div class="disk-chip disk-new">D</div>
-                <div class="disk-chip disk-new">D</div>
-                <div class="disk-chip disk-new">D</div>
-              </div>
+              <div class="disk-row"><div class="disk-chip disk-parity">P</div><div class="disk-chip disk-parity">DP</div><div class="disk-chip disk-new">D</div><div class="disk-chip disk-new">D</div><div class="disk-chip disk-new">D</div></div>
             </div>
             <div class="rg-block" style="border-color:rgba(63,185,80,0.3)">
               <div class="rg-title">RG1</div>
-              <div class="disk-row">
-                <div class="disk-chip disk-parity">P</div>
-                <div class="disk-chip disk-parity">DP</div>
-                <div class="disk-chip disk-new">D</div>
-                <div class="disk-chip disk-new">D</div>
-                <div class="disk-chip disk-new">D</div>
-              </div>
+              <div class="disk-row"><div class="disk-chip disk-parity">P</div><div class="disk-chip disk-parity">DP</div><div class="disk-chip disk-new">D</div><div class="disk-chip disk-new">D</div><div class="disk-chip disk-new">D</div></div>
             </div>
           </div>
-          <p style="font-size:12px; margin-top:8px; margin-bottom:0; color:var(--accent-green);">Disks from Spare Pool 1 (Shelf B)</p>
+          <p style="font-size:12px; margin-top:8px; margin-bottom:0; color:var(--accent-green);">Disks from Pool 1 (Shelf B)</p>
         </div>
       </div>
 
-      <h3>Spare Pool Architecture for Mirror Aggregates</h3>
-      <p>ONTAP's spare pool is sub-divided into <span class="hl">Pool 0</span> and <span class="hl">Pool 1</span>. By default, all disks are assigned to Pool 0. For mirror aggregates, you intentionally split disk shelves — all disks from Shelf A go to Pool 0, all disks from Shelf B go to Pool 1. This physical separation ensures that a single shelf failure only takes down one plex, not both.</p>
-
       <div class="code-block">
         <div class="code-header"><span class="code-lang">ONTAP CLI · Mirror Aggregate Creation</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
-        <div class="code-body"><span class="comment"># Assign Shelf A disks to Pool 0 (default)</span>
-<span class="cmd">disk assign</span> <span class="param">-disk-list</span> <span class="value">1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,1.10,1.11</span> \
-  <span class="param">-owner</span> <span class="value">stor-node-01</span> <span class="param">-pool</span> <span class="value">0</span>
+        <div class="code-body"><span class="comment"># Assign Shelf A → Pool 0, Shelf B → Pool 1</span>
+<span class="cmd">disk assign</span> <span class="param">-disk-list</span> <span class="value">1.0,1.1,...,1.11</span> <span class="param">-owner</span> <span class="value">stor-node-01</span> <span class="param">-pool</span> <span class="value">0</span>
+<span class="cmd">disk assign</span> <span class="param">-disk-list</span> <span class="value">2.0,2.1,...,2.11</span> <span class="param">-owner</span> <span class="value">stor-node-01</span> <span class="param">-pool</span> <span class="value">1</span>
 
-<span class="comment"># Assign Shelf B disks to Pool 1</span>
-<span class="cmd">disk assign</span> <span class="param">-disk-list</span> <span class="value">2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,2.10,2.11</span> \
-  <span class="param">-owner</span> <span class="value">stor-node-01</span> <span class="param">-pool</span> <span class="value">1</span>
-
-<span class="comment"># Verify both pools are populated</span>
-<span class="cmd">storage aggregate show-spare-disks</span> <span class="param">-original-owner</span> <span class="value">stor-node-01</span>
-
-<span class="comment"># Create mirror aggregate using disks from both pools</span>
+<span class="comment"># Create mirror aggregate</span>
 <span class="cmd">storage aggregate create</span> \
-  <span class="param">-aggregate</span> <span class="value">aggr_mirror01</span> \
-  <span class="param">-node</span> <span class="value">stor-node-01</span> \
-  <span class="param">-raidtype</span> <span class="value">raid_dp</span> \
-  <span class="param">-maxraidsize</span> <span class="value">8</span> \
-  <span class="param">-disklist</span> <span class="value">1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9</span> \
+  <span class="param">-aggregate</span>      <span class="value">aggr_mirror01</span> \
+  <span class="param">-node</span>           <span class="value">stor-node-01</span> \
+  <span class="param">-raidtype</span>       <span class="value">raid_dp</span> \
+  <span class="param">-maxraidsize</span>    <span class="value">8</span> \
+  <span class="param">-disklist</span>       <span class="value">1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9</span> \
   <span class="param">-mirror-disklist</span> <span class="value">2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9</span></div>
       </div>
 
@@ -1202,78 +924,60 @@ flowchart TB
         <div class="callout-icon">⚠️</div>
         <div class="callout-content">
           <div class="callout-title">Mirror Aggregate — Space Cost</div>
-          <div class="callout-text">Mirroring doubles the disk requirement. Every byte written is stored in both plexes simultaneously. The usable capacity is determined by Plex 0 alone (parity-adjusted), while Plex 1 holds the duplicate. Plan your capacity accordingly — expect ~40–45% usable storage from your raw disk count due to combined mirroring and RAID overhead.</div>
+          <div class="callout-text">Mirroring doubles the disk requirement. Expect ~40–45% usable storage from raw disk count due to combined mirroring and RAID overhead. Only Plex 0's data-disk capacity counts as usable.</div>
         </div>
       </div>
     </section>
 
-    <!-- MIRROR OPERATIONS -->
+    <div class="divider"></div>
+
+    <!-- ═══ SECTION 7: MIRROR OPERATIONS ═══ -->
     <section class="section" id="mirror-ops">
       <div class="section-header">
         <div class="section-icon icon-green">🔧</div>
         <div class="section-title-wrap">
-          <div class="section-num">SECTION 08</div>
+          <div class="section-num">SECTION 07</div>
           <h2>Mirror Aggregate Operations</h2>
         </div>
       </div>
-      <p>Once a mirror aggregate is in place, you have several lifecycle operations available — converting between mirrored and non-mirrored states, expanding capacity, and verifying plex consistency.</p>
 
-      <h3>Converting Mirror → Normal Aggregate</h3>
-      <p>If the data hosted on a mirror aggregate no longer requires the highest availability tier, you can remove the mirror plex. This releases all disks in the secondary plex back to the spare pool.</p>
       <div class="code-block">
-        <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
-        <div class="code-body"><span class="comment"># Remove the mirror plex (demirror)</span>
-<span class="cmd">storage aggregate plex delete</span> \
+        <div class="code-header"><span class="code-lang">Mirror → Normal (Demirror)</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="cmd">storage aggregate plex delete</span> \
   <span class="param">-aggregate</span> <span class="value">aggr_mirror01</span> \
-  <span class="param">-plex</span> <span class="value">plex1</span>
-
-<span class="comment"># Aggregate now shows as non-mirrored; plex1 disks return to spare pool</span>
-<span class="cmd">storage aggregate show</span> <span class="param">-aggregate</span> <span class="value">aggr_mirror01</span></div>
+  <span class="param">-plex</span>      <span class="value">plex1</span>
+<span class="comment"># plex1 disks return to spare pool</span></div>
       </div>
 
-      <h3>Converting Normal → Mirror Aggregate</h3>
-      <p>You can add a mirror plex to an existing normal aggregate at any time — no downtime required. ONTAP creates the new plex, then synchronizes all existing data in the background.</p>
       <div class="code-block">
-        <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
-        <div class="code-body"><span class="comment"># Add mirror plex to existing aggregate (same disk count as original)</span>
-<span class="cmd">storage aggregate mirror</span> \
-  <span class="param">-aggregate</span> <span class="value">aggr_data01</span> \
+        <div class="code-header"><span class="code-lang">Normal → Mirror (Add Mirror Plex)</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="cmd">storage aggregate mirror</span> \
+  <span class="param">-aggregate</span>       <span class="value">aggr_data01</span> \
   <span class="param">-mirror-disklist</span> <span class="value">2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9</span>
 
-<span class="comment"># Monitor resync progress (aggregate shows "mirror degraded" until sync completes)</span>
+<span class="comment"># Monitor resync (aggregate shows "mirror degraded" until sync completes)</span>
 <span class="cmd">storage aggregate show-status</span> <span class="param">-aggregate</span> <span class="value">aggr_data01</span></div>
       </div>
 
-      <h3>Verifying Plex Data Consistency</h3>
-      <p>The <span class="hl">aggr verify</span> operation confirms that both plexes contain identical data — essential after a resync or hardware replacement. It compares block-by-block and reports any discrepancies.</p>
       <div class="code-block">
-        <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
-        <div class="code-body"><span class="comment"># Start plex verification</span>
-<span class="cmd">storage aggregate verify</span> <span class="param">-aggregate</span> <span class="value">aggr_mirror01</span> <span class="param">-action</span> <span class="value">start</span>
-
-<span class="comment"># Check verification status</span>
+        <div class="code-header"><span class="code-lang">Verify Plex Consistency</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="cmd">storage aggregate verify</span> <span class="param">-aggregate</span> <span class="value">aggr_mirror01</span> <span class="param">-action</span> <span class="value">start</span>
 <span class="cmd">storage aggregate verify</span> <span class="param">-aggregate</span> <span class="value">aggr_mirror01</span> <span class="param">-action</span> <span class="value">status</span></div>
-      </div>
-
-      <div class="callout tip">
-        <div class="callout-icon">🎯</div>
-        <div class="callout-content">
-          <div class="callout-title">Resynchronization Priority</div>
-          <div class="callout-text">If a plex goes offline and comes back online, ONTAP triggers a resync automatically. You can adjust the priority (<code>low</code>, <code>medium</code>, <code>high</code>) to control how aggressively it consumes controller resources. In production, always keep this at <strong>low</strong> to avoid performance impact during business hours.</div>
-        </div>
       </div>
     </section>
 
-    <!-- SVM OVERVIEW -->
+    <div class="divider"></div>
+
+    <!-- ═══ SECTION 8: SVM ═══ -->
     <section class="section" id="svm-intro">
       <div class="section-header">
         <div class="section-icon icon-purple">🏛️</div>
         <div class="section-title-wrap">
-          <div class="section-num">SECTION 09</div>
+          <div class="section-num">SECTION 08</div>
           <h2>SVM / vServer — The Heart of ONTAP Cluster-Mode</h2>
         </div>
       </div>
-      <p>A <strong style="color:var(--text-primary)">Storage Virtual Machine (SVM)</strong> — also called a vServer — is ONTAP's foundational abstraction layer for data access. It acts as a logical storage appliance within the cluster, presenting storage to clients while completely hiding the physical cluster topology.</p>
+      <p>A <strong style="color:var(--text-primary)">Storage Virtual Machine (SVM)</strong> — also called a vServer — is ONTAP's logical data-access layer. It acts as a virtual storage appliance within the cluster, presenting storage to clients while completely hiding the physical topology. Clients connect to SVMs — never directly to nodes.</p>
 
       <div class="mermaid-wrap">
         <div class="mermaid">
@@ -1294,7 +998,6 @@ flowchart TB
     subgraph Cluster["🖥️ ONTAP Cluster (hidden from clients)"]
       Node1["stor-node-01\naggr_node01"]
       Node2["stor-node-02\naggr_node02"]
-      Node3["stor-node-03\naggr_node03"]
     end
     C2 -->|NFS| LIF1
     C1 -->|CIFS/SMB| LIF2
@@ -1312,67 +1015,63 @@ flowchart TB
         <div class="diagram-caption">Figure 8 — SVM acts as the data-access gateway. Clients see only the SVM's LIFs and volumes — never the physical cluster nodes or aggregates.</div>
       </div>
 
-      <p>The SVM architecture eliminates a fundamental limitation of legacy storage operating modes: in earlier designs, storage was presented directly from a controller — meaning clients were tied to specific hardware. With SVMs, volumes can reside on any node's aggregate in the cluster, and the SVM transparently handles routing. Client access is not disrupted even when volumes are moved between nodes.</p>
-
-      <div id="svm-types"></div>
       <h3>The Four SVM Types</h3>
       <div class="svm-grid">
         <div class="svm-card svm-admin">
           <div class="svm-icon">🏢</div>
           <div class="svm-name">Admin SVM</div>
-          <div class="svm-desc">Represents the cluster itself. Used exclusively for cluster-wide management and configuration. Created automatically during cluster setup.</div>
-          <span class="svm-count">1 per cluster (auto-created)</span>
+          <div class="svm-desc">Represents the cluster for management. Hosts cluster management LIFs. Created automatically during cluster setup.</div>
+          <span class="svm-count">1 per cluster · Auto-created</span>
         </div>
         <div class="svm-card svm-node">
           <div class="svm-icon">🖥️</div>
           <div class="svm-name">Node SVM</div>
-          <div class="svm-desc">Represents each physical controller (node) in the cluster. Used for node-level management. One created per node during cluster setup. Handles AutoSupport (node-to-NetApp communication).</div>
-          <span class="svm-count">1 per node (auto-created)</span>
+          <div class="svm-desc">Represents each physical node. Hosts node management LIFs and handles AutoSupport. One per node, auto-created.</div>
+          <span class="svm-count">1 per node · Auto-created</span>
         </div>
         <div class="svm-card svm-data">
           <div class="svm-icon">📦</div>
-          <div class="svm-name">Data SVM</div>
-          <div class="svm-desc">The most important type — created by the storage administrator. This is where volumes, LUNs, LIFs, and protocols are configured. All client data access flows through Data SVMs.</div>
-          <span class="svm-count">0–many (admin-created)</span>
+          <div class="svm-name">Data SVM ⭐</div>
+          <div class="svm-desc">The only type an admin creates. Hosts volumes, LUNs, LIFs, and protocols. All client data access flows through here.</div>
+          <span class="svm-count">0–many · Admin-created</span>
         </div>
         <div class="svm-card svm-system">
           <div class="svm-icon">⚙️</div>
           <div class="svm-name">System SVM</div>
-          <div class="svm-desc">Hidden from standard view — accessible only in diagnostic mode. Manages cluster-internal communication, inter-node traffic, and background ONTAP services. Entirely managed by ONTAP itself.</div>
-          <span class="svm-count">1 per cluster (auto-created)</span>
+          <div class="svm-desc">Manages internal cluster communication. Visible only in diagnostic mode. Fully managed by ONTAP — not accessible to admins.</div>
+          <span class="svm-count">1 per cluster · Auto-created</span>
         </div>
       </div>
 
       <div class="code-block">
-        <div class="code-header"><span class="code-lang">ONTAP CLI · SVM Discovery</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
-        <div class="code-body"><span class="comment"># List all visible SVMs (admin mode)</span>
+        <div class="code-header"><span class="code-lang">ONTAP CLI · SVM Discovery &amp; Creation</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="comment"># List all visible SVMs</span>
 <span class="cmd">vserver show</span>
-<span class="output"># Shows: Admin SVM + Node SVMs (no Data SVMs until created)</span>
 
-<span class="comment"># Switch to diagnostic mode to reveal System SVM</span>
+<span class="comment"># Reveal System SVM (diagnostic mode only)</span>
 <span class="cmd">set</span> <span class="param">-privilege</span> <span class="value">diagnostic</span>
 <span class="cmd">vserver show</span>
-<span class="output"># Now includes: cluster1 (system type) + all others</span>
 
-<span class="comment"># Create a Data SVM (most common admin task)</span>
+<span class="comment"># Create a Data SVM</span>
 <span class="cmd">vserver create</span> \
-  <span class="param">-vserver</span> <span class="value">svm_prod01</span> \
-  <span class="param">-rootvolume</span> <span class="value">svm_prod01_root</span> \
-  <span class="param">-rootvolume-security-style</span> <span class="value">unix</span> \
-  <span class="param">-aggregate</span> <span class="value">aggr_data01</span></div>
+  <span class="param">-vserver</span>                    <span class="value">svm_prod01</span> \
+  <span class="param">-rootvolume</span>                 <span class="value">svm_prod01_root</span> \
+  <span class="param">-rootvolume-security-style</span>  <span class="value">unix</span> \
+  <span class="param">-aggregate</span>                  <span class="value">aggr_data01</span></div>
       </div>
     </section>
 
-    <!-- 7-MODE vs CMODE -->
+    <div class="divider"></div>
+
+    <!-- ═══ SECTION 9: 7-MODE vs CMODE ═══ -->
     <section class="section" id="7mode-vs-cmode">
       <div class="section-header">
         <div class="section-icon icon-orange">⚖️</div>
         <div class="section-title-wrap">
-          <div class="section-num">SECTION 10</div>
+          <div class="section-num">SECTION 09</div>
           <h2>7-Mode vs Cluster-Mode: Why SVMs Were Introduced</h2>
         </div>
       </div>
-      <p>To appreciate why SVMs exist, it helps to understand the fundamental architectural difference between NetApp's legacy 7-Mode operating system and modern ONTAP cluster-mode.</p>
 
       <div class="mermaid-wrap">
         <div class="mermaid">
@@ -1403,190 +1102,130 @@ flowchart LR
         <div class="diagram-caption">Figure 9 — 7-Mode controllers are isolated silos. Cluster-Mode with SVMs unifies all nodes, allowing any SVM to provision storage from any node's aggregate.</div>
       </div>
 
-      <table class="spec-table">
-        <thead>
-          <tr><th>Characteristic</th><th>7-Mode</th><th>Cluster-Mode (ONTAP)</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Storage Boundaries</td><td>Per-controller — volumes can only consume local aggregate space</td><td>Cluster-wide — SVMs can use aggregates on any node</td></tr>
-          <tr><td>Management Interface</td><td>Login required per controller (separate management IP each)</td><td>Single cluster management IP; unified CLI/GUI for all nodes</td></tr>
-          <tr><td>Resource Sharing</td><td>No — controllers work independently</td><td>Yes — all nodes participate in a unified storage pool</td></tr>
-          <tr><td>HA Behavior</td><td>Controllers assist each other only on failure</td><td>Workloads actively distributed; aggregate relocation on-demand</td></tr>
-          <tr><td>Scale</td><td>Maximum 2 controllers per HA pair (silo)</td><td>Up to 24 nodes per cluster (shared resource pool)</td></tr>
-          <tr><td>Client Visibility</td><td>Clients see controller hostnames/IPs directly</td><td>Clients see only SVM LIF IPs — hardware completely abstracted</td></tr>
-        </tbody>
-      </table>
-
-      <h3>Multi-Tenancy and SVM Segregation</h3>
-      <p>One of the most powerful SVM use cases is <strong style="color:var(--text-primary)">multi-tenancy</strong> — hosting multiple independent organizations or application tiers on the same physical cluster while maintaining strict isolation between them. Each tenant gets its own SVM with dedicated protocols, IP addresses, and access controls.</p>
+      <div class="card">
+        <div class="card-title">📊 7-Mode vs Cluster-Mode Comparison</div>
+        <table class="spec-table">
+          <thead><tr><th>Characteristic</th><th>7-Mode</th><th>Cluster-Mode (ONTAP)</th></tr></thead>
+          <tbody>
+            <tr><td>Storage Boundaries</td><td>Per-controller — local aggregates only</td><td>Cluster-wide — SVMs use any node's aggregates</td></tr>
+            <tr><td>Management</td><td>Separate IP per controller</td><td>Single cluster management IP; unified CLI/GUI</td></tr>
+            <tr><td>Resource Sharing</td><td>No — controllers work independently</td><td>Yes — unified storage pool across all nodes</td></tr>
+            <tr><td>Scale</td><td>Max 2 controllers (silo)</td><td>Up to 24 nodes per cluster</td></tr>
+            <tr><td>Client Visibility</td><td>Clients see controller IPs directly</td><td>Clients see only SVM LIF IPs — hardware abstracted</td></tr>
+          </tbody>
+        </table>
+      </div>
 
       <div class="callout tip">
         <div class="callout-icon">💡</div>
         <div class="callout-content">
           <div class="callout-title">Multi-Tenant SVM Design</div>
-          <div class="callout-text">When hosting multiple tenants or segregating SAN from NAS workloads, create separate SVMs rather than mixing everything into one. This provides security isolation, independent protocol configuration, and cleaner operational boundaries. Add IP Spaces for complete network-level isolation between tenant SVMs.</div>
+          <div class="callout-text">When hosting multiple tenants or segregating SAN from NAS workloads, create separate SVMs rather than mixing protocols into one. This provides security isolation, independent protocol configuration, and cleaner operational boundaries. Add IP Spaces for complete network-level isolation between tenant SVMs.</div>
         </div>
-      </div>
-
-      <h3>SVM Protocol Flexibility</h3>
-      <p>A single Data SVM can serve multiple protocols simultaneously — NFS, SMB/CIFS, iSCSI, and FCP can all be configured on the same SVM. Or you can create dedicated SVMs per protocol for environments requiring strict separation.</p>
-      <div class="grid-3" style="margin-top:16px;">
-        <div class="stat-card"><div class="stat-num" style="color:var(--accent-blue); font-size:18px;">NFS</div><div class="stat-label">UNIX/Linux Clients</div></div>
-        <div class="stat-card"><div class="stat-num" style="color:var(--accent-green); font-size:18px;">SMB</div><div class="stat-label">Windows Clients</div></div>
-        <div class="stat-card"><div class="stat-num" style="color:var(--accent-purple); font-size:18px;">iSCSI</div><div class="stat-label">Block Storage (IP)</div></div>
-        <div class="stat-card"><div class="stat-num" style="color:var(--accent-orange); font-size:18px;">FCP</div><div class="stat-label">Block Storage (FC)</div></div>
-        <div class="stat-card"><div class="stat-num" style="color:var(--accent-yellow); font-size:18px;">NVMe</div><div class="stat-label">High-perf Block</div></div>
-        <div class="stat-card"><div class="stat-num" style="color:var(--accent-teal); font-size:18px;">S3</div><div class="stat-label">Object Storage</div></div>
       </div>
     </section>
 
     <div class="divider"></div>
 
-    <!-- INTERVIEW Q&A -->
+    <!-- ═══ SECTION 10: INTERVIEW Q&A ═══ -->
     <section class="section" id="interview-qa">
       <div class="section-header">
         <div class="section-icon icon-purple">🎯</div>
         <div class="section-title-wrap">
-          <div class="section-num">SECTION 11</div>
-          <h2>Interview Q&A — Scenario-Based Questions</h2>
+          <div class="section-num">SECTION 10</div>
+          <h2>Interview Q&amp;A — Scenario-Based Questions</h2>
         </div>
       </div>
-      <p>These questions are modeled after real storage engineer interview scenarios covering the concepts from this tutorial.</p>
 
       <div class="qa-block">
-        <div class="qa-q"><span class="qa-label">Q1 ›</span> You need to expand an aggregate urgently but only have 3 spare disks — not enough to form a new RAID group. How do you proceed without violating data integrity?</div>
-        <div class="qa-a">Increase the aggregate's <code>maxraidsize</code> setting using <code>storage aggregate modify -maxraidsize</code> to allow one additional disk per existing RAID group. Then add the available spares individually to specific RAID groups using <code>-raidgroup rg0</code>, <code>rg1</code>, etc. The added disks become data disks (no parity overhead). Critical note: this max-raidgroup-size change is <strong>irreversible</strong>, so document the change and immediately order replacement disks to restore a healthy spare pool.</div>
+        <div class="qa-q"><span class="qa-label">Q1 ›</span> You need to expand an aggregate urgently but only have 3 spare disks — not enough for a new RAID group. How do you proceed?</div>
+        <div class="qa-a">Increase <span class="hl">maxraidsize</span> using <span class="hl">storage aggregate modify -maxraidsize</span> to allow one extra disk per existing RAID group. Then add spares individually to specific RAID groups using <span class="hl">-raidgroup rg0</span> etc. The added disks become data disks — no parity overhead. Critical: this change is <strong>irreversible</strong>, so document it and order replacement disks immediately.</div>
       </div>
 
       <div class="qa-block">
-        <div class="qa-q"><span class="qa-label">Q2 ›</span> A storage administrator added 4 disks to an aggregate using the <code>-raidgroup all</code> option, but the system only added 2 disks. Why?</div>
-        <div class="qa-a">The <code>raidgroup: all</code> option is intelligent — it scans all RAID groups within the aggregate, identifies how many available slots exist based on the current <code>maxraidsize</code> setting, and fills only those slots. In this case, only 2 slots were available across all existing RAID groups, so ONTAP added 2 disks and returned the remaining 2 to the spare pool. No data or configuration was harmed.</div>
+        <div class="qa-q"><span class="qa-label">Q2 ›</span> An admin added 4 disks using <code>-raidgroup all</code> but ONTAP only added 2. Why?</div>
+        <div class="qa-a">The <span class="hl">raidgroup: all</span> option scans all RAID groups, identifies available slots based on <span class="hl">maxraidsize</span>, and fills only those slots. Only 2 slots were available, so ONTAP added 2 disks and returned the remaining 2 to the spare pool. No harm done.</div>
       </div>
 
       <div class="qa-block">
-        <div class="qa-q"><span class="qa-label">Q3 ›</span> What is the difference between aggregate reallocation and aggregate relocation? They sound similar.</div>
-        <div class="qa-a"><strong>Reallocation</strong> is a block-level defragmentation process that runs on a single aggregate. It reorganizes the used and free block distribution within the aggregate to improve I/O performance — conceptually similar to disk defragmentation in a traditional OS. It does not move the aggregate. <strong>Relocation</strong>, by contrast, physically moves the aggregate from one node to its HA partner within the same HA pair. Disk ownership transfers automatically, and the operation is non-disruptive to clients.</div>
+        <div class="qa-q"><span class="qa-label">Q3 ›</span> What is the difference between aggregate reallocation and aggregate relocation?</div>
+        <div class="qa-a"><strong>Reallocation</strong> is block-level defragmentation within a single aggregate — it reorganizes used and free blocks for better I/O performance. It does not move the aggregate. <strong>Relocation</strong> physically moves the aggregate from one node to its HA partner — disk ownership transfers automatically and the operation is non-disruptive to clients.</div>
       </div>
 
       <div class="qa-block">
-        <div class="qa-q"><span class="qa-label">Q4 ›</span> Why does a mirror aggregate provide only ~40% usable capacity from raw disk? Explain the overhead layers.</div>
-        <div class="qa-a">Three layers consume capacity: (1) <strong>Disk-level</strong>: each physical disk provides only ~90% of its rated capacity, with the remainder reserved for firmware and bad-block remapping. (2) <strong>RAID overhead</strong>: in RAID-DP, 2 disks per RAID group are used for parity and double-parity — not for data. (3) <strong>Mirroring overhead</strong>: the entire RAID structure is duplicated in Plex 1, meaning you effectively consume twice the disk count to store the same data. Only Plex 0's data-disk capacity is usable. The 10% aggregate reserve adds a final layer of overhead.</div>
+        <div class="qa-q"><span class="qa-label">Q4 ›</span> Why does a mirror aggregate provide only ~40% usable capacity from raw disks?</div>
+        <div class="qa-a">Three overhead layers apply: (1) <strong>Disk-level</strong>: each drive provides ~90% of rated capacity — the rest is reserved for firmware and bad-block remapping. (2) <strong>RAID overhead</strong>: RAID-DP uses 2 disks per RAID group for parity and double-parity. (3) <strong>Mirroring overhead</strong>: the entire RAID structure is duplicated in Plex 1, so you consume twice the disk count for the same data. Only Plex 0's data-disk capacity is usable.</div>
       </div>
 
       <div class="qa-block">
-        <div class="qa-q"><span class="qa-label">Q5 ›</span> What are the four types of SVMs in ONTAP, and which one do clients interact with?</div>
-        <div class="qa-a"><strong>Admin SVM</strong>: represents the cluster for administrative management — created automatically. <strong>Node SVM</strong>: represents each physical node — one per node, created automatically. <strong>Data SVM</strong>: the client-facing SVM where volumes, LUNs, LIFs, and protocols live — created manually by the administrator. <strong>System SVM</strong>: manages internal cluster operations (visible only in diagnostic mode) — fully managed by ONTAP. Clients always interact exclusively with <strong>Data SVMs</strong> through their configured LIF IP addresses.</div>
+        <div class="qa-q"><span class="qa-label">Q5 ›</span> What are the four SVM types in ONTAP, and which one do clients interact with?</div>
+        <div class="qa-a"><strong>Admin SVM</strong>: cluster management — auto-created. <strong>Node SVM</strong>: per-node management — auto-created. <strong>Data SVM</strong>: client-facing — admin-created; hosts volumes, LUNs, LIFs, and protocols. <strong>System SVM</strong>: internal ONTAP operations — auto-created, diagnostic mode only. Clients exclusively interact with <strong>Data SVMs</strong> through their configured LIF IP addresses.</div>
       </div>
 
       <div class="qa-block">
-        <div class="qa-q"><span class="qa-label">Q6 ›</span> In a 4-node ONTAP cluster, can a Data SVM provision a volume from a node-3 aggregate and serve it to a client connecting through a node-1 network interface?</div>
-        <div class="qa-a">Yes — this is one of the key architectural advantages of Cluster-Mode over 7-Mode. A Data SVM has visibility into all aggregates across all cluster nodes. A volume can be created on <code>aggr_node03</code> and associated with the SVM. The client connects through any LIF on any node — ONTAP routes the I/O internally. The client never needs to know which physical node owns the storage. This abstraction enables flexible capacity planning and non-disruptive volume mobility.</div>
+        <div class="qa-q"><span class="qa-label">Q6 ›</span> In a 4-node cluster, can a Data SVM provision a volume from node-3's aggregate and serve it via a node-1 LIF?</div>
+        <div class="qa-a">Yes — this is a key advantage of Cluster-Mode. A Data SVM has visibility into all aggregates across all nodes. A volume on <span class="hl">aggr_node03</span> can be served through any LIF on any node. ONTAP routes the I/O internally. The client never knows which physical node owns the storage, enabling flexible capacity planning and non-disruptive volume mobility.</div>
       </div>
 
       <div class="qa-block">
-        <div class="qa-q"><span class="qa-label">Q7 ›</span> What is RAID Scrub and how does it differ from Media Scrub? When would you run each?</div>
-        <div class="qa-a"><strong>RAID Scrub</strong> is a manually-triggered or scheduled background process that scans all disks within aggregates (plexes and RAID groups) for both hardware and media errors. It reconstructs data from bad sectors using RAID parity and writes recovered data to healthy sectors. It has configurable performance impact (low/medium/high) and should be scheduled during off-peak hours. <strong>Media Scrub</strong> runs continuously by default at low intensity and covers both active aggregate disks and spare drives — but only checks for media errors (not hardware errors). It requires no scheduling and has minimal performance impact. Both are complementary: media scrub for constant background health monitoring, RAID scrub for periodic deep validation.</div>
+        <div class="qa-q"><span class="qa-label">Q7 ›</span> What is RAID Scrub and how does it differ from Media Scrub?</div>
+        <div class="qa-a"><strong>RAID Scrub</strong>: manually triggered or scheduled; scans all disks in aggregates for hardware and media errors; reconstructs data from bad sectors using parity; has configurable performance impact; should run during off-peak hours. <strong>Media Scrub</strong>: always-on background process at low intensity; covers both active aggregate disks and spare drives; detects media errors only. They are complementary — media scrub for continuous monitoring, RAID scrub for periodic deep validation.</div>
       </div>
     </section>
 
+    <div class="divider"></div>
+
     <!-- AUTHOR -->
-    <div class="author-section" style="margin-top:60px;">
-
-      <!-- Section header -->
-      <div style="display:flex; align-items:center; gap:12px; margin-bottom:28px; padding-bottom:16px; border-bottom:1px solid var(--border);">
-        <div style="width:44px;height:44px;border-radius:10px;background:rgba(88,166,255,0.15);border:1px solid rgba(88,166,255,0.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">✍️</div>
-        <div>
-          <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text-muted);margin-bottom:4px;">ABOUT THE AUTHOR</div>
-          <div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:700;color:var(--text-primary);">Mohammed Abdul</div>
+    <section class="section" id="author">
+      <div class="author-section">
+        <div class="author-avatar">👨‍💻</div>
+        <div class="author-name">Mohammed Abdul</div>
+        <div class="author-title">Data Protection Architect — Hybrid Cloud &amp; Enterprise Storage</div>
+        <div class="author-bio">Mohammed Abdul is a Data Protection Architect with more than 10 years of experience in Hybrid Cloud, working with global clients across financial services, healthcare, manufacturing, and technology industries. He specializes in enterprise backup, recovery, and storage solutions across on-premises and cloud environments.</div>
+        <div class="tech-badges">
+          <span class="badge badge-blue">AWS</span>
+          <span class="badge badge-teal" style="background:rgba(57,211,195,0.15);color:var(--accent-teal);border:1px solid rgba(57,211,195,0.3);">Azure</span>
+          <span class="badge badge-green">GCP</span>
+          <span class="badge badge-orange">Commvault</span>
+          <span class="badge badge-purple">Veeam</span>
+          <span class="badge badge-yellow">NetBackup</span>
+          <span class="badge badge-blue">NetApp ONTAP</span>
         </div>
-      </div>
-
-      <!-- Bio card -->
-      <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;">
-        <!-- Avatar -->
-        <div style="flex-shrink:0;">
-          <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#58a6ff,#bc8cff);display:flex;align-items:center;justify-content:center;font-size:36px;border:3px solid rgba(88,166,255,0.35);box-shadow:0 0 24px rgba(88,166,255,0.15);">👨‍💻</div>
-          <div style="margin-top:10px;text-align:center;">
-            <span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-family:'JetBrains Mono',monospace;background:rgba(63,185,80,0.15);color:var(--accent-green);border:1px solid rgba(63,185,80,0.3);">10+ Years Exp.</span>
-          </div>
+        <div class="contact-card">
+          <span style="font-size:20px;">✉️</span>
+          <div class="contact-text">For questions or knowledge sharing: <a href="mailto:abdul.md.20000102@gmail.com">abdul.md.20000102@gmail.com</a></div>
         </div>
-
-        <!-- Content -->
-        <div style="flex:1;min-width:260px;">
-          <div style="font-family:'Sora',sans-serif;font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Data Protection Architect</div>
-          <div style="font-size:13px;color:var(--accent-blue);font-weight:500;margin-bottom:14px;">Hybrid Cloud · Enterprise Backup &amp; Recovery · Storage Architecture</div>
-          <p style="margin-bottom:14px;">Mohammed Abdul is a Data Protection Architect with more than 10 years of experience in Hybrid Cloud environments, having worked with global clients across various industries including financial services, healthcare, manufacturing, and technology.</p>
-          <p style="margin-bottom:18px;">With extensive expertise in enterprise backup and recovery solutions, Mohammed specializes in helping organizations design and implement robust, scalable data protection strategies aligned with business continuity requirements.</p>
-
-          <!-- Tech specializations -->
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:10px;">Technology Specializations</div>
-          <div class="tech-badges" style="margin-bottom:20px;">
-            <span class="badge badge-blue">AWS</span>
-            <span class="badge badge-teal">Azure</span>
-            <span class="badge badge-green">GCP</span>
-            <span class="badge badge-orange">Commvault</span>
-            <span class="badge badge-purple">Veeam</span>
-            <span class="badge badge-yellow">NetBackup</span>
-            <span class="badge badge-blue">NetApp ONTAP</span>
-            <span class="badge badge-green">SAN · NAS</span>
-            <span class="badge badge-teal">Data Architecture</span>
-          </div>
-
-          <!-- Email contact -->
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:10px;">Contact &amp; Queries</div>
-          <a href="mailto:abdul.md.20000102@gmail.com" style="display:inline-flex;align-items:center;gap:10px;background:rgba(88,166,255,0.08);border:1px solid rgba(88,166,255,0.35);border-radius:10px;padding:12px 20px;text-decoration:none;transition:all 0.2s;margin-bottom:0;">
-            <span style="font-size:18px;">✉️</span>
-            <div>
-              <div style="font-size:12px;color:var(--text-muted);font-weight:500;margin-bottom:2px;">Email</div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent-blue);font-weight:600;">abdul.md.20000102@gmail.com</div>
-            </div>
-          </a>
-        </div>
-      </div>
-
-      <!-- Disclaimer -->
-      <div style="margin-top:32px;border-radius:10px;padding:18px 22px;background:rgba(227,179,65,0.07);border:1px solid rgba(227,179,65,0.3);display:flex;gap:14px;align-items:flex-start;">
-        <span style="font-size:20px;flex-shrink:0;margin-top:2px;">⚠️</span>
-        <div>
-          <div style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--accent-yellow);margin-bottom:8px;">Disclaimer</div>
-          <div style="font-size:13px;color:var(--text-secondary);line-height:1.75;">
-            This content is for <strong style="color:var(--text-primary);">educational purposes and knowledge sharing</strong> only. Always refer to official NetApp documentation and follow your organization's procedures for production implementations.<br><br>
-            I am not affiliated with or endorsed by NetApp, Inc. <strong style="color:var(--text-primary);">NetApp®</strong> and <strong style="color:var(--text-primary);">ONTAP®</strong> are registered trademarks of NetApp, Inc. All references are made purely for learning purposes. All IP addresses, hostnames, and configuration parameters used in this tutorial are illustrative examples only.
+        <div class="callout warning" style="margin-top:20px">
+          <div class="callout-icon">📋</div>
+          <div class="callout-content">
+            <div class="callout-title">Disclaimer</div>
+            <div class="callout-text">This content is for educational purposes only. Always refer to official NetApp documentation and follow your organization's procedures for production implementations. The author is not affiliated with or endorsed by NetApp, Inc. NetApp® and ONTAP® are registered trademarks of NetApp, Inc.</div>
           </div>
         </div>
       </div>
-
-    </div>
+    </section>
 
   </div>
 </main>
 
 <script>
   mermaid.initialize({
-    startOnLoad: true,
-    theme: 'dark',
+    startOnLoad: true, theme: 'dark',
     themeVariables: {
-      darkMode: true,
-      background: '#1c2333',
-      primaryColor: '#1c2333',
-      primaryTextColor: '#e6edf3',
-      primaryBorderColor: '#30363d',
-      lineColor: '#8b949e',
-      secondaryColor: '#161b22',
-      tertiaryColor: '#0d1117',
-      edgeLabelBackground: '#1c2333',
-      clusterBkg: '#1c2333',
-      clusterBorder: '#30363d',
-      titleColor: '#e6edf3',
-      fontFamily: "'Inter', sans-serif",
-      fontSize: '13px'
+      background: '#1c2333', primaryColor: '#1c2333', primaryTextColor: '#e6edf3',
+      primaryBorderColor: '#58a6ff', lineColor: '#8b949e', secondaryColor: '#161b22',
+      tertiaryColor: '#0d1117', fontFamily: "'Inter', sans-serif", fontSize: '13px'
     }
   });
 
-  // Active TOC link on scroll
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const pct = (doc.scrollTop / (doc.scrollHeight - doc.clientHeight)) * 100;
+    document.getElementById('reading-progress').style.width = pct + '%';
+  });
+
   const sections = document.querySelectorAll('section[id]');
   const tocLinks = document.querySelectorAll('.toc-link');
-
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -1596,7 +1235,6 @@ flowchart LR
       }
     });
   }, { threshold: 0.2, rootMargin: '-30px 0px -60% 0px' });
-
   sections.forEach(s => observer.observe(s));
 </script>
 </body>

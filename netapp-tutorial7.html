@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetApp ONTAP: SVM Creation, LIF Architecture & Volume Management</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-card: #1c2333;
+    --bg-card-hover: #21283a;
+    --accent-blue: #58a6ff;
+    --accent-green: #3fb950;
+    --accent-orange: #f78166;
+    --accent-purple: #bc8cff;
+    --accent-yellow: #e3b341;
+    --accent-teal: #39d3c3;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --border: #30363d;
+    --border-bright: #484f58;
+    --sidebar-width: 290px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-header {
+    padding: 20px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .sidebar-logo .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .sidebar-logo span { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px; color: var(--text-primary); letter-spacing: 0.5px; }
+  .sidebar-subtitle { font-size: 11px; color: var(--text-muted); padding-left: 42px; }
+  .toc-nav { padding: 12px 0; flex: 1; }
+  .toc-section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); padding: 12px 16px 6px; }
+  .toc-link {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 16px; font-size: 12.5px;
+    color: var(--text-secondary); text-decoration: none;
+    transition: all 0.2s ease;
+    border-left: 2px solid transparent; line-height: 1.4;
+  }
+  .toc-link:hover { background: var(--bg-card); color: var(--text-primary); border-left-color: var(--accent-blue); }
+  .toc-link.active { background: rgba(88,166,255,0.1); color: var(--accent-blue); border-left-color: var(--accent-blue); font-weight: 500; }
+  .toc-link .toc-num { font-size: 10px; font-weight: 700; color: var(--text-muted); min-width: 18px; font-family: 'JetBrains Mono', monospace; }
+  .toc-link.sub { padding-left: 32px; font-size: 12px; }
+
+  /* ── MAIN ── */
+  .main-content { margin-left: var(--sidebar-width); flex: 1; max-width: calc(100vw - var(--sidebar-width)); }
+
+  .top-header {
+    background: linear-gradient(135deg, #0d1117 0%, #1a2744 50%, #0d2035 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 60px 60px 50px;
+    position: relative; overflow: hidden;
+  }
+  .top-header::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(88,166,255,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(63,185,80,0.06) 0%, transparent 50%);
+  }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(88,166,255,0.12); border: 1px solid rgba(88,166,255,0.3);
+    border-radius: 20px; padding: 4px 14px;
+    font-size: 12px; color: var(--accent-blue); font-weight: 500;
+    margin-bottom: 18px; font-family: 'JetBrains Mono', monospace;
+  }
+  .main-title {
+    font-family: 'Sora', sans-serif; font-size: 38px; font-weight: 800;
+    line-height: 1.15; margin-bottom: 16px;
+    background: linear-gradient(135deg, #e6edf3 30%, #58a6ff 70%, #bc8cff 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; position: relative;
+  }
+  .header-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.7; max-width: 680px; position: relative; }
+  .header-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 20px; position: relative; }
+  .meta-chip { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-secondary); }
+  .meta-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .content-area { padding: 40px 60px 80px; max-width: 1000px; }
+  .section { margin-bottom: 60px; scroll-margin-top: 30px; }
+  .section-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .section-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .icon-blue { background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.3); }
+  .icon-green { background: rgba(63,185,80,0.15); border: 1px solid rgba(63,185,80,0.3); }
+  .icon-orange { background: rgba(247,129,102,0.15); border: 1px solid rgba(247,129,102,0.3); }
+  .icon-purple { background: rgba(188,140,255,0.15); border: 1px solid rgba(188,140,255,0.3); }
+  .icon-teal { background: rgba(57,211,195,0.15); border: 1px solid rgba(57,211,195,0.3); }
+  .icon-yellow { background: rgba(227,179,65,0.15); border: 1px solid rgba(227,179,65,0.3); }
+
+  .section-title-wrap h2 { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+  .section-title-wrap .section-num { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); font-weight: 400; margin-bottom: 4px; }
+
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; transition: border-color 0.2s; }
+  .card:hover { border-color: var(--border-bright); }
+  .card-title { font-family: 'Sora', sans-serif; font-weight: 600; font-size: 15px; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+  p { font-size: 14.5px; line-height: 1.8; color: var(--text-secondary); margin-bottom: 14px; }
+
+  .callout { border-radius: 10px; padding: 16px 20px; margin: 20px 0; display: flex; gap: 14px; align-items: flex-start; }
+  .callout-icon { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+  .callout-content { flex: 1; }
+  .callout-title { font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .callout-text { font-size: 13.5px; line-height: 1.7; color: var(--text-secondary); }
+  .callout.info { background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.25); }
+  .callout.info .callout-title { color: var(--accent-blue); }
+  .callout.success { background: rgba(63,185,80,0.08); border: 1px solid rgba(63,185,80,0.25); }
+  .callout.success .callout-title { color: var(--accent-green); }
+  .callout.warning { background: rgba(227,179,65,0.08); border: 1px solid rgba(227,179,65,0.3); }
+  .callout.warning .callout-title { color: var(--accent-yellow); }
+  .callout.danger { background: rgba(247,129,102,0.08); border: 1px solid rgba(247,129,102,0.3); }
+  .callout.danger .callout-title { color: var(--accent-orange); }
+  .callout.tip { background: rgba(188,140,255,0.08); border: 1px solid rgba(188,140,255,0.25); }
+  .callout.tip .callout-title { color: var(--accent-purple); }
+
+  .code-block { background: #0a0e13; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 16px 0; font-family: 'JetBrains Mono', monospace; }
+  .code-header { background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .code-lang { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .code-dots { display: flex; gap: 5px; }
+  .code-dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-red { background: #ff5f56; } .dot-yellow-c { background: #ffbd2e; } .dot-green-c { background: #27c93f; }
+  .code-body { padding: 20px; font-size: 13px; line-height: 1.8; color: #79c0ff; overflow-x: auto; white-space: pre; }
+  .code-body .cmd { color: #3fb950; }
+  .code-body .comment { color: #6e7681; font-style: italic; }
+  .code-body .param { color: #ffa657; }
+  .code-body .value { color: #a5d6ff; }
+  .code-body .output { color: #8b949e; }
+  .code-body .prompt { color: #e3b341; }
+
+  .spec-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; }
+  .spec-table th { background: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 16px; text-align: left; border-bottom: 2px solid var(--border); }
+  .spec-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
+  .spec-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+  .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent-blue); border: 1px solid rgba(88,166,255,0.3); }
+  .badge-green { background: rgba(63,185,80,0.15); color: var(--accent-green); border: 1px solid rgba(63,185,80,0.3); }
+  .badge-orange { background: rgba(247,129,102,0.15); color: var(--accent-orange); border: 1px solid rgba(247,129,102,0.3); }
+  .badge-purple { background: rgba(188,140,255,0.15); color: var(--accent-purple); border: 1px solid rgba(188,140,255,0.3); }
+  .badge-yellow { background: rgba(227,179,65,0.15); color: var(--accent-yellow); border: 1px solid rgba(227,179,65,0.3); }
+  .badge-teal { background: rgba(57,211,195,0.15); color: var(--accent-teal); border: 1px solid rgba(57,211,195,0.3); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0; }
+
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; }
+  .stat-num { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+  .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .step-list { list-style: none; margin: 12px 0; }
+  .step-list li { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(48,54,61,0.5); font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; align-items: flex-start; }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num { width: 22px; height: 22px; border-radius: 6px; background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.3); color: var(--accent-blue); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
+
+  .bullet-list { list-style: none; margin: 10px 0; }
+  .bullet-list li { padding: 6px 0 6px 20px; position: relative; font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; }
+  .bullet-list li::before { content: '▸'; position: absolute; left: 0; color: var(--accent-blue); font-size: 11px; top: 8px; }
+
+  h3 { font-family: 'Sora', sans-serif; font-size: 17px; font-weight: 600; color: var(--text-primary); margin: 24px 0 12px; }
+  h4 { font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 600; color: var(--accent-blue); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .mermaid-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 28px 20px 16px; margin: 20px 0; overflow-x: auto; }
+  .diagram-caption { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 10px; font-style: italic; }
+
+  .svg-diagram { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; overflow-x: auto; }
+
+  .qa-block { background: var(--bg-card); border: 1px solid rgba(188,140,255,0.3); border-radius: 12px; padding: 20px 24px; margin: 16px 0; }
+  .qa-q { font-size: 14px; font-weight: 600; color: var(--accent-purple); margin-bottom: 10px; display: flex; gap: 10px; }
+  .qa-a { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; padding-left: 26px; }
+  .qa-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; }
+
+  .divider { height: 1px; background: var(--border); margin: 40px 0; }
+  .hl { background: rgba(88,166,255,0.12); color: var(--accent-blue); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-green { background: rgba(63,185,80,0.12); color: var(--accent-green); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-orange { background: rgba(247,129,102,0.12); color: var(--accent-orange); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-purple { background: rgba(188,140,255,0.12); color: var(--accent-purple); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+
+  /* SVM type cards */
+  .svm-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 20px 0; }
+  .svm-card { border-radius: 12px; padding: 20px; border: 1px solid; }
+  .svm-admin { border-color: rgba(88,166,255,0.4); background: rgba(88,166,255,0.05); }
+  .svm-node { border-color: rgba(63,185,80,0.4); background: rgba(63,185,80,0.05); }
+  .svm-data { border-color: rgba(188,140,255,0.4); background: rgba(188,140,255,0.05); }
+  .svm-system { border-color: rgba(227,179,65,0.4); background: rgba(227,179,65,0.05); }
+  .svm-icon { font-size: 24px; margin-bottom: 10px; }
+  .svm-name { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+  .svm-admin .svm-name { color: var(--accent-blue); }
+  .svm-node .svm-name { color: var(--accent-green); }
+  .svm-data .svm-name { color: var(--accent-purple); }
+  .svm-system .svm-name { color: var(--accent-yellow); }
+  .svm-desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 8px; }
+  .svm-count { font-size: 11px; font-family: 'JetBrains Mono', monospace; padding: 2px 8px; border-radius: 4px; display: inline-block; }
+  .svm-admin .svm-count { background: rgba(88,166,255,0.15); color: var(--accent-blue); }
+  .svm-node .svm-count { background: rgba(63,185,80,0.15); color: var(--accent-green); }
+  .svm-data .svm-count { background: rgba(188,140,255,0.15); color: var(--accent-purple); }
+  .svm-system .svm-count { background: rgba(227,179,65,0.15); color: var(--accent-yellow); }
+
+  /* LIF type cards */
+  .lif-grid { display: grid; grid-template-columns: repeat(1,1fr); gap: 12px; margin: 20px 0; }
+  .lif-card { border-radius: 10px; padding: 16px 20px; border: 1px solid var(--border); background: var(--bg-card); display: flex; gap: 16px; align-items: flex-start; }
+  .lif-badge-wrap { min-width: 130px; }
+  .lif-detail { flex: 1; }
+  .lif-title { font-family: 'Sora', sans-serif; font-weight: 600; font-size: 14px; color: var(--text-primary); margin-bottom: 4px; }
+  .lif-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+  /* Volume type visual */
+  .vol-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+  .vol-thick { border: 2px solid rgba(247,129,102,0.5); background: rgba(247,129,102,0.04); border-radius: 12px; padding: 20px; }
+  .vol-thin { border: 2px solid rgba(63,185,80,0.5); background: rgba(63,185,80,0.04); border-radius: 12px; padding: 20px; }
+  .vol-type-title { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+  .vol-thick .vol-type-title { color: var(--accent-orange); }
+  .vol-thin .vol-type-title { color: var(--accent-green); }
+
+  /* namespace viz */
+  .ns-tree { margin: 20px 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .ns-root { background: rgba(88,166,255,0.12); border: 1px solid rgba(88,166,255,0.4); border-radius: 8px; padding: 10px 16px; margin-bottom: 6px; color: var(--accent-blue); font-weight: 700; display: inline-block; }
+  .ns-vol { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 7px 14px; margin: 4px 0 4px 28px; color: var(--accent-green); display: inline-block; }
+  .ns-subvol { background: rgba(188,140,255,0.08); border: 1px solid rgba(188,140,255,0.3); border-radius: 6px; padding: 6px 14px; margin: 4px 0 4px 56px; color: var(--accent-purple); display: inline-block; }
+  .ns-line { color: var(--text-muted); padding-left: 14px; display: block; }
+
+  .author-section { background: linear-gradient(135deg, #161b22, #1c2333); border: 1px solid var(--border); border-radius: 16px; padding: 36px; margin-top: 60px; }
+  .author-avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); display: flex; align-items: center; justify-content: center; font-size: 26px; border: 3px solid rgba(88,166,255,0.3); margin-bottom: 14px; }
+  .author-name { font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .author-title { font-size: 13px; color: var(--accent-blue); margin-bottom: 12px; font-weight: 500; }
+  .author-bio { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; }
+  .tech-badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+
+  .contact-card { background: rgba(88,166,255,0.06); border: 1px solid rgba(88,166,255,0.25); border-radius: 10px; padding: 14px 20px; margin-top: 16px; display: flex; align-items: center; gap: 12px; }
+  .contact-icon { font-size: 20px; }
+  .contact-text { font-size: 13.5px; color: var(--text-secondary); }
+  .contact-text a { color: var(--accent-blue); text-decoration: none; font-weight: 500; }
+  .contact-text a:hover { text-decoration: underline; }
+
+  /* interactive quiz */
+  .quiz-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; }
+  .quiz-q { font-size: 14.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 14px; }
+  .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-option { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; cursor: pointer; font-size: 13.5px; color: var(--text-secondary); transition: all 0.2s; text-align: left; }
+  .quiz-option:hover { border-color: var(--accent-blue); color: var(--text-primary); background: rgba(88,166,255,0.05); }
+  .quiz-option.correct { border-color: var(--accent-green); background: rgba(63,185,80,0.08); color: var(--accent-green); }
+  .quiz-option.wrong { border-color: var(--accent-orange); background: rgba(247,129,102,0.08); color: var(--accent-orange); }
+  .quiz-feedback { margin-top: 12px; font-size: 13px; line-height: 1.6; display: none; padding: 10px 16px; border-radius: 8px; }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.correct-fb { background: rgba(63,185,80,0.08); border: 1px solid rgba(63,185,80,0.3); color: var(--accent-green); }
+  .quiz-feedback.wrong-fb { background: rgba(247,129,102,0.08); border: 1px solid rgba(247,129,102,0.3); color: var(--accent-orange); }
+  .quiz-reset { margin-top: 10px; background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.3); border-radius: 6px; padding: 6px 14px; font-size: 12px; color: var(--accent-blue); cursor: pointer; }
+
+  /* progress bar */
+  #reading-progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); z-index: 9999; width: 0%; transition: width 0.1s; }
+
+  /* port diagram */
+  .port-viz { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin: 20px 0; overflow-x: auto; }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main-content { margin-left: 0; max-width: 100vw; }
+    .top-header { padding: 30px 20px; }
+    .content-area { padding: 20px; }
+    .grid-2, .grid-3, .svm-grid, .vol-compare { grid-template-columns: 1fr; }
+    .main-title { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Reading progress bar -->
+<div id="reading-progress"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🗄️</div>
+      <span>ONTAP Tutorial</span>
+    </div>
+    <div class="sidebar-subtitle">SVM · LIF · Volumes</div>
+  </div>
+  <nav class="toc-nav">
+    <div class="toc-section-label">Module Overview</div>
+    <a href="#overview" class="toc-link active">
+      <span class="toc-num">00</span> Overview & Objectives
+    </a>
+
+    <div class="toc-section-label">SVM / VServer</div>
+    <a href="#svm-intro" class="toc-link">
+      <span class="toc-num">01</span> What Is a VServer (SVM)?
+    </a>
+    <a href="#svm-types" class="toc-link sub">
+      <span class="toc-num">↳</span> SVM Types
+    </a>
+    <a href="#svm-create" class="toc-link sub">
+      <span class="toc-num">↳</span> Creating a Data SVM
+    </a>
+    <a href="#svm-protocols" class="toc-link sub">
+      <span class="toc-num">↳</span> Protocol Management
+    </a>
+    <a href="#svm-aggregates" class="toc-link sub">
+      <span class="toc-num">↳</span> Aggregate Restrictions
+    </a>
+
+    <div class="toc-section-label">LIF Architecture</div>
+    <a href="#lif-intro" class="toc-link">
+      <span class="toc-num">02</span> LIF Fundamentals
+    </a>
+    <a href="#lif-types" class="toc-link sub">
+      <span class="toc-num">↳</span> Five Types of LIFs
+    </a>
+    <a href="#lif-create" class="toc-link sub">
+      <span class="toc-num">↳</span> Creating Data LIFs
+    </a>
+    <a href="#lif-ports" class="toc-link sub">
+      <span class="toc-num">↳</span> Port Planning
+    </a>
+
+    <div class="toc-section-label">Volume Management</div>
+    <a href="#vol-types" class="toc-link">
+      <span class="toc-num">03</span> Volume Types
+    </a>
+    <a href="#vol-thick-thin" class="toc-link sub">
+      <span class="toc-num">↳</span> Thick vs Thin Provisioning
+    </a>
+    <a href="#vol-create" class="toc-link sub">
+      <span class="toc-num">↳</span> Volume Operations
+    </a>
+
+    <div class="toc-section-label">Namespace</div>
+    <a href="#junction" class="toc-link">
+      <span class="toc-num">04</span> Junction Points & Paths
+    </a>
+    <a href="#namespace" class="toc-link sub">
+      <span class="toc-num">↳</span> Namespace Concept
+    </a>
+
+    <div class="toc-section-label">Reference</div>
+    <a href="#cli-reference" class="toc-link">
+      <span class="toc-num">05</span> CLI Quick Reference
+    </a>
+    <a href="#interview" class="toc-link">
+      <span class="toc-num">06</span> Interview Q&amp;A
+    </a>
+    <a href="#quiz" class="toc-link">
+      <span class="toc-num">07</span> Self-Assessment Quiz
+    </a>
+    <a href="#author" class="toc-link">
+      <span class="toc-num">08</span> About the Author
+    </a>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<main class="main-content">
+  <header class="top-header">
+    <div class="header-badge">📘 ONTAP Module 13 &amp; 14</div>
+    <h1 class="main-title">SVM Architecture, LIF Design<br>&amp; Volume Management in ONTAP</h1>
+    <p class="header-desc">
+      A comprehensive, self-paced technical guide covering Storage Virtual Machines (SVMs), Logical Interface (LIF) architecture, and flexible volume provisioning in NetApp ONTAP cluster mode — the backbone of modern enterprise NAS/SAN storage delivery.
+    </p>
+    <div class="header-meta">
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-blue)"></span> Intermediate Level</div>
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-green)"></span> ~60 min read</div>
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-purple)"></span> ONTAP 9.5+</div>
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-yellow)"></span> NAS &amp; SAN Concepts</div>
+    </div>
+  </header>
+
+  <div class="content-area">
+
+    <!-- ═══ SECTION 0: OVERVIEW ═══ -->
+    <section class="section" id="overview">
+      <div class="section-header">
+        <div class="section-icon icon-blue">🎯</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 00</div>
+          <h2>Overview &amp; Learning Objectives</h2>
+        </div>
+      </div>
+      <p>This module covers three core building blocks that every ONTAP storage administrator must master: <strong>Storage Virtual Machines (SVMs)</strong>, <strong>Logical Interfaces (LIFs)</strong>, and <strong>Volumes</strong>. These components work in concert to present storage to clients in a multi-tenant, non-disruptive, and protocol-agnostic manner.</p>
+      <div class="grid-3">
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--accent-blue)">SVM</div>
+          <div class="stat-label">Virtual Storage Server</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--accent-green)">LIF</div>
+          <div class="stat-label">Logical Interface</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--accent-purple)">VOL</div>
+          <div class="stat-label">Flexible Volume</div>
+        </div>
+      </div>
+      <div class="callout info">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <div class="callout-title">Key Learning Path</div>
+          <div class="callout-text">You must understand SVMs before LIFs, and both before volumes. Each concept builds directly on the previous one — they are not independent components.</div>
+        </div>
+      </div>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart TD
+    A["🗄️ ONTAP Cluster"] --> B["Physical Nodes"]
+    A --> C["Aggregates (Storage Pools)"]
+    C --> D["SVM / VServer"]
+    D --> E["LIFs (Logical Interfaces)"]
+    D --> F["Volumes (Logical Partitions)"]
+    E --> G["Physical NIC Ports"]
+    F --> H["Junction Points / Namespace"]
+    H --> I["NFS / CIFS Clients"]
+    E --> I
+
+    style A fill:#1c2333,stroke:#58a6ff,color:#e6edf3
+    style D fill:#1c2333,stroke:#bc8cff,color:#bc8cff
+    style E fill:#1c2333,stroke:#3fb950,color:#3fb950
+    style F fill:#1c2333,stroke:#e3b341,color:#e3b341
+    style I fill:#1c2333,stroke:#39d3c3,color:#39d3c3
+        </div>
+        <div class="diagram-caption">Figure 1 — High-level architecture: How SVMs, LIFs, and Volumes relate within an ONTAP cluster</div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ═══ SECTION 1: SVM ═══ -->
+    <section class="section" id="svm-intro">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🖥️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 01</div>
+          <h2>Storage Virtual Machines (SVMs)</h2>
+        </div>
+      </div>
+      <p>A <strong>Storage Virtual Machine (SVM)</strong> — also referred to as a VServer in older ONTAP documentation — is a logical, isolated storage entity that runs on top of an ONTAP cluster. It acts as a virtualization layer between the physical cluster infrastructure and the end clients consuming storage.</p>
+      <p>Think of an SVM as a dedicated virtual storage server that owns its own IP addresses, protocols, volumes, and security policies — yet shares the underlying physical hardware with other SVMs on the same cluster.</p>
+
+      <div class="callout tip">
+        <div class="callout-icon">🔑</div>
+        <div class="callout-content">
+          <div class="callout-title">Core Concept</div>
+          <div class="callout-text">Clients never interact with physical nodes directly. All storage access flows through an SVM. This abstraction enables non-disruptive operations, multi-tenancy, and protocol flexibility.</div>
+        </div>
+      </div>
+
+      <h3 id="svm-types">🔷 Four Types of SVMs</h3>
+      <div class="svm-grid">
+        <div class="svm-card svm-admin">
+          <div class="svm-icon">⚙️</div>
+          <div class="svm-name">Admin SVM</div>
+          <div class="svm-desc">Represents the entire cluster for management purposes. Cluster management LIFs are hosted here. Only one per cluster.</div>
+          <span class="svm-count">1 per cluster · Auto-created</span>
+        </div>
+        <div class="svm-card svm-node">
+          <div class="svm-icon">🖥️</div>
+          <div class="svm-name">Node SVM</div>
+          <div class="svm-desc">Represents individual nodes. Node management LIFs are associated here. Created automatically per node during cluster setup.</div>
+          <span class="svm-count">1 per node · Auto-created</span>
+        </div>
+        <div class="svm-card svm-data">
+          <div class="svm-icon">📦</div>
+          <div class="svm-name">Data SVM</div>
+          <div class="svm-desc">The only type a storage admin creates and manages. Used to serve data to clients via NFS, CIFS, iSCSI, FC, and other protocols.</div>
+          <span class="svm-count">Multiple allowed · Admin-created</span>
+        </div>
+        <div class="svm-card svm-system">
+          <div class="svm-icon">🔧</div>
+          <div class="svm-name">System SVM</div>
+          <div class="svm-desc">Internal ONTAP use only. Cluster LIFs for inter-node communication (169.254.x.x range) reside here. Not accessible by admins.</div>
+          <span class="svm-count">Auto-created · Internal only</span>
+        </div>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-content">
+          <div class="callout-title">Important Distinction</div>
+          <div class="callout-text">Only the <strong>Data SVM</strong> is administrator-managed. Admin, Node, and System SVMs are created automatically by ONTAP during cluster setup and cannot be manually provisioned.</div>
+        </div>
+      </div>
+
+      <h3 id="svm-create">⚙️ Creating a Data SVM</h3>
+      <p>When creating a Data SVM, you define its identity, root volume location, and security style. The root volume stores SVM-level configuration metadata — not actual user data.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">ONTAP CLI — Create Data SVM</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body"><span class="comment"># Create a standard data SVM</span>
+<span class="cmd">vserver create</span> <span class="param">-vserver</span> <span class="value">prod-svm01</span> \
+  <span class="param">-subtype</span> <span class="value">default</span> \
+  <span class="param">-rootvolume</span> <span class="value">prod_svm01_root</span> \
+  <span class="param">-rootvolume-security-style</span> <span class="value">unix</span> \
+  <span class="param">-aggregate</span> <span class="value">aggr_node01_data01</span>
+
+<span class="comment"># Verify the SVM was created successfully</span>
+<span class="cmd">vserver show</span>
+
+<span class="output">                               Admin    Operational Root
+Vserver     Type    Subtype    State    State       Volume     Aggregate
+----------- ------- ---------- -------- ----------- ---------- ----------
+prod-svm01  data    default    running  running     prod_svm01_root aggr_node01_data01</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📌 SVM Subtype Options</div>
+        <table class="spec-table">
+          <thead><tr><th>Subtype</th><th>Purpose</th><th>When to Use</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge badge-green">default</span></td><td>Standard data serving SVM</td><td>Normal NAS/SAN workloads</td></tr>
+            <tr><td><span class="badge badge-blue">dp-destination</span></td><td>Disaster recovery target</td><td>SnapVault / SnapMirror destinations</td></tr>
+            <tr><td><span class="badge badge-purple">sync-source</span></td><td>MetroCluster active site</td><td>MetroCluster licensed clusters only</td></tr>
+            <tr><td><span class="badge badge-yellow">sync-destination</span></td><td>MetroCluster passive site</td><td>MetroCluster licensed clusters only</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout success">
+        <div class="callout-icon">✅</div>
+        <div class="callout-content">
+          <div class="callout-title">Best Practice</div>
+          <div class="callout-text">Always host the SVM root volume on a <strong>data aggregate</strong>, never on a root aggregate. Root aggregates are reserved for controller configuration data only.</div>
+        </div>
+      </div>
+
+      <h3 id="svm-protocols">🔌 Protocol Management on SVMs</h3>
+      <p>By default, all protocols (NFS, CIFS, iSCSI, FCP, NVMe, NDMP) are enabled on a newly created SVM. In enterprise environments, it is a best practice to restrict protocols to only those actually used — this prevents accidental misconfiguration and documents intent clearly.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Protocol Allow/Remove</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body"><span class="comment"># Check currently allowed protocols</span>
+<span class="cmd">vserver show</span> <span class="param">-fields</span> <span class="value">allowed-protocols</span>
+
+<span class="comment"># Remove unwanted protocols (e.g., keep only NAS protocols)</span>
+<span class="cmd">vserver remove-protocols</span> <span class="param">-vserver</span> <span class="value">prod-svm01</span> \
+  <span class="param">-protocols</span> <span class="value">fcp,iscsi,nvme,ndmp</span>
+
+<span class="comment"># Add a protocol back if needed</span>
+<span class="cmd">vserver add-protocols</span> <span class="param">-vserver</span> <span class="value">prod-svm01</span> \
+  <span class="param">-protocols</span> <span class="value">iscsi</span>
+
+<span class="comment"># Verify</span>
+<span class="cmd">vserver show</span> <span class="param">-fields</span> <span class="value">allowed-protocols</span>
+<span class="output">vserver      allowed-protocols
+------------ -----------------
+prod-svm01   nfs,cifs</span></div>
+      </div>
+
+      <h3 id="svm-aggregates">🗂️ Controlling Aggregate Access</h3>
+      <p>By default, an SVM has access to all aggregates in the cluster for volume creation. You can restrict this to specific aggregates — useful for workload isolation or compliance requirements.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Aggregate Restriction</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body"><span class="comment"># Add specific aggregates to an SVM (restricts to these only)</span>
+<span class="cmd">vserver add-aggregates</span> <span class="param">-vserver</span> <span class="value">prod-svm01</span> \
+  <span class="param">-aggregates</span> <span class="value">aggr_node01_data01,aggr_node02_data01</span>
+
+<span class="comment"># Remove an aggregate from SVM access</span>
+<span class="cmd">vserver remove-aggregates</span> <span class="param">-vserver</span> <span class="value">prod-svm01</span> \
+  <span class="param">-aggregates</span> <span class="value">aggr_node03_data01</span></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ═══ SECTION 2: LIF ═══ -->
+    <section class="section" id="lif-intro">
+      <div class="section-header">
+        <div class="section-icon icon-green">🔗</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 02</div>
+          <h2>Logical Interfaces (LIFs)</h2>
+        </div>
+      </div>
+      <p>A <strong>Logical Interface (LIF)</strong> is a software-defined network endpoint created on top of a physical NIC port. It provides an IP address (for NAS/management) or a WWPN (for Fibre Channel SAN) that clients use to communicate with an SVM.</p>
+      <p>The core challenge LIFs solve: an SVM is a <em>logical</em> construct — it has no physical presence. Physical ports exist on nodes. LIFs bridge this gap by binding a logical, SVM-owned network identity to a specific physical port on a specific node.</p>
+
+      <!-- Why LIFs Architecture Diagram -->
+      <div class="svg-diagram">
+        <svg viewBox="0 0 780 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
+          <defs>
+            <marker id="arr" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#58a6ff" opacity="0.8"/>
+            </marker>
+            <marker id="arr2" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#3fb950" opacity="0.8"/>
+            </marker>
+          </defs>
+
+          <!-- Client -->
+          <rect x="20" y="120" width="110" height="60" rx="8" fill="#1c2333" stroke="#39d3c3" stroke-width="1.5"/>
+          <text x="75" y="145" text-anchor="middle" font-family="monospace" font-size="12" fill="#39d3c3">🖥️ Client</text>
+          <text x="75" y="162" text-anchor="middle" font-family="monospace" font-size="10" fill="#8b949e">Server / App</text>
+
+          <!-- LAN -->
+          <rect x="170" y="110" width="100" height="80" rx="8" fill="#1c2333" stroke="#58a6ff" stroke-width="1.5" stroke-dasharray="4,2"/>
+          <text x="220" y="145" text-anchor="middle" font-family="monospace" font-size="11" fill="#58a6ff">LAN / Switch</text>
+
+          <!-- Node 1 -->
+          <rect x="320" y="40" width="160" height="110" rx="10" fill="#1c2333" stroke="#30363d" stroke-width="1.5"/>
+          <text x="400" y="60" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#e6edf3">Node 01</text>
+          <!-- Physical Port -->
+          <rect x="340" y="70" width="120" height="28" rx="5" fill="#161b22" stroke="#484f58"/>
+          <text x="400" y="89" text-anchor="middle" font-family="monospace" font-size="10" fill="#8b949e">e0d (Physical Port)</text>
+          <!-- LIF -->
+          <rect x="340" y="106" width="120" height="28" rx="5" fill="rgba(88,166,255,0.1)" stroke="rgba(88,166,255,0.5)"/>
+          <text x="400" y="120" text-anchor="middle" font-family="monospace" font-size="10" fill="#58a6ff">data-lif-01</text>
+          <text x="400" y="130" text-anchor="middle" font-family="monospace" font-size="9" fill="#8b949e">10.20.30.101</text>
+
+          <!-- Node 2 -->
+          <rect x="320" y="180" width="160" height="110" rx="10" fill="#1c2333" stroke="#30363d" stroke-width="1.5"/>
+          <text x="400" y="200" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#e6edf3">Node 02</text>
+          <rect x="340" y="210" width="120" height="28" rx="5" fill="#161b22" stroke="#484f58"/>
+          <text x="400" y="229" text-anchor="middle" font-family="monospace" font-size="10" fill="#8b949e">e0d (Physical Port)</text>
+          <rect x="340" y="246" width="120" height="28" rx="5" fill="rgba(63,185,80,0.1)" stroke="rgba(63,185,80,0.5)"/>
+          <text x="400" y="260" text-anchor="middle" font-family="monospace" font-size="10" fill="#3fb950">data-lif-02</text>
+          <text x="400" y="270" text-anchor="middle" font-family="monospace" font-size="9" fill="#8b949e">10.20.30.102</text>
+
+          <!-- SVM -->
+          <rect x="540" y="120" width="180" height="80" rx="12" fill="rgba(188,140,255,0.05)" stroke="rgba(188,140,255,0.5)" stroke-width="2"/>
+          <text x="630" y="148" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#bc8cff">SVM: prod-svm01</text>
+          <text x="630" y="168" text-anchor="middle" font-family="monospace" font-size="10" fill="#8b949e">Logical · Owns both LIFs</text>
+          <text x="630" y="183" text-anchor="middle" font-family="monospace" font-size="9" fill="#6e7681">NFS · CIFS · Volumes</text>
+
+          <!-- Arrows -->
+          <line x1="130" y1="150" x2="170" y2="150" stroke="#39d3c3" stroke-width="1.5" marker-end="url(#arr)"/>
+          <line x1="270" y1="130" x2="320" y2="100" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr)"/>
+          <line x1="270" y1="165" x2="320" y2="225" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr2)"/>
+          <line x1="480" y1="115" x2="540" y2="148" stroke="#bc8cff" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr)"/>
+          <line x1="480" y1="260" x2="540" y2="185" stroke="#bc8cff" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr)"/>
+
+          <!-- Labels -->
+          <text x="390" y="320" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#6e7681">LIFs bridge the logical SVM to physical node ports — enabling client connectivity</text>
+        </svg>
+        <div class="diagram-caption">Figure 2 — LIF Architecture: Logical interfaces bind SVM identity to physical node ports</div>
+      </div>
+
+      <h3 id="lif-types">📋 Five Types of LIFs</h3>
+
+      <div class="lif-grid">
+        <div class="lif-card">
+          <div class="lif-badge-wrap">
+            <span class="badge badge-yellow">Cluster LIF</span><br><br>
+            <span style="font-size:11px;color:var(--text-muted);font-family:monospace">System SVM</span><br>
+            <span style="font-size:11px;color:var(--text-muted);font-family:monospace">169.254.x.x</span>
+          </div>
+          <div class="lif-detail">
+            <div class="lif-title">Cluster LIF (Cluster Interconnect)</div>
+            <div class="lif-desc">Created automatically during cluster setup on dedicated 10/25GbE interconnect ports. Used exclusively for inter-node communication within the cluster (heartbeat, data replication, cache coherency). Cannot be created manually. Hosted on the System SVM.</div>
+          </div>
+        </div>
+        <div class="lif-card">
+          <div class="lif-badge-wrap">
+            <span class="badge badge-blue">Cluster Mgmt LIF</span><br><br>
+            <span style="font-size:11px;color:var(--text-muted);font-family:monospace">Admin SVM</span><br>
+            <span style="font-size:11px;color:var(--text-muted);font-family:monospace">1 per cluster</span>
+          </div>
+          <div class="lif-detail">
+            <div class="lif-title">Cluster Management LIF</div>
+            <div class="lif-desc">Created once during cluster initialization. Provides the cluster-wide management IP address used by administrators to remotely manage the entire cluster via SSH, System Manager, or REST API. Hosted on the Admin SVM. Additional ones can be created manually if needed.</div>
+          </div>
+        </div>
+        <div class="lif-card">
+          <div class="lif-badge-wrap">
+            <span class="badge badge-green">Node Mgmt LIF</span><br><br>
+            <span style="font-size:11px;color:var(--text-muted);font-family:monospace">Admin SVM</span><br>
+            <span style="font-size:11px;color:var(--text-muted);font-family:monospace">1 per node</span>
+          </div>
+          <div class="lif-detail">
+            <div class="lif-title">Node Management LIF</div>
+            <div class="lif-desc">Automatically created per node. Used for node-specific management operations and AutoSupport (vendor telemetry / dial-home). Allows direct node access for troubleshooting independent of other nodes. Hosted on the Admin SVM. Cannot be created manually.</div>
+          </div>
+        </div>
+        <div class="lif-card">
+          <div class="lif-badge-wrap">
+            <span class="badge badge-purple">Data LIF</span><br><br>
+            <span style="font-size:11px;color:var(--text-muted);font-family:monospace">Data SVM</span><br>
+            <span style="font-size:11px;color:var(--text-muted);font-family:monospace">Admin-created</span>
+          </div>
+          <div class="lif-detail">
+            <div class="lif-title">Data LIF ⭐ (Most Important)</div>
+            <div class="lif-desc">Created manually by the storage administrator. This is the primary LIF type for production use — it carries all client data traffic (NFS mounts, SMB/CIFS shares, iSCSI sessions). Multiple data LIFs per SVM are recommended — at minimum one per node — for high availability and throughput. Bound to a Data SVM.</div>
+          </div>
+        </div>
+        <div class="lif-card">
+          <div class="lif-badge-wrap">
+            <span class="badge badge-teal">Intercluster LIF</span><br><br>
+            <span style="font-size:11px;color:var(--text-muted);font-family:monospace">Admin SVM</span><br>
+            <span style="font-size:11px;color:var(--text-muted);font-family:monospace">Admin-created</span>
+          </div>
+          <div class="lif-detail">
+            <div class="lif-title">Intercluster LIF</div>
+            <div class="lif-desc">Created manually to establish connectivity between two separate ONTAP clusters — for example, between a primary datacenter and a DR site. Required for SnapMirror replication, SnapVault backup, and cluster peering relationships. Hosted on the Admin SVM.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+graph LR
+    SYS["🔧 System SVM"]
+    ADM["⚙️ Admin SVM"]
+    DAT["📦 Data SVM"]
+
+    SYS --> CL["Cluster LIFs\n(169.254.x.x)\nAuto-created"]
+    ADM --> CM["Cluster Mgmt LIF\nAuto-created"]
+    ADM --> NM["Node Mgmt LIFs\n1 per node\nAuto-created"]
+    ADM --> IC["Intercluster LIFs\nManual"]
+    DAT --> DL["Data LIFs\nNAS / SAN\nManual ⭐"]
+
+    style DAT fill:#1c2333,stroke:#bc8cff,color:#bc8cff
+    style DL fill:#1c2333,stroke:#bc8cff,color:#bc8cff
+    style SYS fill:#1c2333,stroke:#e3b341,color:#e3b341
+    style ADM fill:#1c2333,stroke:#58a6ff,color:#58a6ff
+        </div>
+        <div class="diagram-caption">Figure 3 — LIF to SVM ownership mapping</div>
+      </div>
+
+      <h3 id="lif-create">🛠️ Creating Data LIFs</h3>
+      <p>Before creating LIFs, identify available network ports using <span class="hl">network port show</span>. Ports prefixed with <span class="hl">e</span> are Ethernet ports. Avoid cluster interconnect ports and reusing management ports in production.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Check Available Ports</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body"><span class="cmd">network port show</span>
+
+<span class="output">Node: node01
+                                      Speed(Mbps) Health
+Port      IPspace      Broadcast Domain Link  MTU  Admin/Oper  Status
+--------- ------------ ---------------- ----- ---- ----------- ------
+e0a       Cluster      Cluster          up    9000  auto/10000  healthy  ← Cluster port
+e0b       Cluster      Cluster          up    9000  auto/10000  healthy  ← Cluster port
+e0c       Default      Default          up    1500  auto/1000   healthy  ← Mgmt port
+e0d       Default      Default          up    1500  auto/1000   healthy  ← Available ✓
+e0e       Default      Default          up    1500  auto/1000   healthy  ← Available ✓</span></div>
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-icon">🚫</div>
+        <div class="callout-content">
+          <div class="callout-title">Do Not Use Cluster Ports for Data LIFs</div>
+          <div class="callout-text">Ports <strong>e0a</strong> and <strong>e0b</strong> (cluster interconnect) must never host data LIFs. ONTAP will prevent this. Always use dedicated data ports (<strong>e0d</strong>, <strong>e0e</strong>, etc.) or dedicated management ports for their respective roles.</div>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Create Data LIF — NAS (Node 01)</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body"><span class="comment"># Create NAS data LIF on Node 01</span>
+<span class="cmd">network interface create</span> \
+  <span class="param">-vserver</span>       <span class="value">prod-svm01</span>        \
+  <span class="param">-lif</span>          <span class="value">nas-data-lif01</span>    \
+  <span class="param">-service-policy</span> <span class="value">default-data-files</span>\
+  <span class="param">-role</span>         <span class="value">data</span>              \
+  <span class="param">-home-node</span>    <span class="value">node01</span>            \
+  <span class="param">-home-port</span>    <span class="value">e0d</span>               \
+  <span class="param">-address</span>      <span class="value">10.20.30.101</span>      \
+  <span class="param">-netmask</span>      <span class="value">255.255.255.0</span>     \
+  <span class="param">-status-admin</span> <span class="value">up</span>
+
+<span class="comment"># Create NAS data LIF on Node 02 (HA redundancy)</span>
+<span class="cmd">network interface create</span> \
+  <span class="param">-vserver</span>       <span class="value">prod-svm01</span>        \
+  <span class="param">-lif</span>          <span class="value">nas-data-lif02</span>    \
+  <span class="param">-service-policy</span> <span class="value">default-data-files</span>\
+  <span class="param">-role</span>         <span class="value">data</span>              \
+  <span class="param">-home-node</span>    <span class="value">node02</span>            \
+  <span class="param">-home-port</span>    <span class="value">e0d</span>               \
+  <span class="param">-address</span>      <span class="value">10.20.30.102</span>      \
+  <span class="param">-netmask</span>      <span class="value">255.255.255.0</span>     \
+  <span class="param">-status-admin</span> <span class="value">up</span>
+
+<span class="comment"># Verify all LIFs</span>
+<span class="cmd">network interface show</span>
+
+<span class="output">            Logical    Status     Network            Current       Current Is
+Vserver     Interface  Admin/Oper Address/Mask       Node          Port    Home
+----------- ---------- ---------- ------------------ ------------- ------- ----
+prod-svm01  nas-data-lif01 up/up  10.20.30.101/24   node01        e0d     true
+            nas-data-lif02 up/up  10.20.30.102/24   node02        e0d     true</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📋 Service Policy Quick Reference</div>
+        <table class="spec-table">
+          <thead><tr><th>Service Policy</th><th>Protocol Type</th><th>Use Case</th></tr></thead>
+          <tbody>
+            <tr><td><span class="hl">default-data-files</span></td><td>NAS (NFS, CIFS/SMB)</td><td>File-based storage — NFS exports, SMB shares</td></tr>
+            <tr><td><span class="hl">default-data-blocks</span></td><td>SAN (iSCSI, FCP)</td><td>Block-based storage — LUNs, iSCSI targets</td></tr>
+            <tr><td><span class="hl">default-management</span></td><td>Management</td><td>SVM-level remote management access</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top:10px;font-size:13px;color:var(--text-muted)">NAS = Files | SAN = Blocks — remember this distinction, it drives LIF service policy selection.</p>
+      </div>
+
+      <h3 id="lif-ports">📡 Port Planning Best Practices</h3>
+
+      <!-- Network Port Diagram SVG -->
+      <div class="port-viz">
+        <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
+          <text x="350" y="20" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#e6edf3">Node Port Allocation Diagram</text>
+
+          <!-- Node box -->
+          <rect x="40" y="35" width="620" height="150" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+          <text x="350" y="54" text-anchor="middle" font-family="monospace" font-size="11" fill="#8b949e">Node (e.g., node01)</text>
+
+          <!-- Port blocks -->
+          <!-- e0a -->
+          <rect x="60" y="65" width="90" height="55" rx="6" fill="rgba(247,129,102,0.1)" stroke="rgba(247,129,102,0.5)"/>
+          <text x="105" y="88" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" fill="#f78166">e0a</text>
+          <text x="105" y="103" text-anchor="middle" font-family="monospace" font-size="9" fill="#8b949e">Cluster</text>
+          <text x="105" y="114" text-anchor="middle" font-family="monospace" font-size="9" fill="#f78166">🚫 Reserved</text>
+
+          <!-- e0b -->
+          <rect x="160" y="65" width="90" height="55" rx="6" fill="rgba(247,129,102,0.1)" stroke="rgba(247,129,102,0.5)"/>
+          <text x="205" y="88" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" fill="#f78166">e0b</text>
+          <text x="205" y="103" text-anchor="middle" font-family="monospace" font-size="9" fill="#8b949e">Cluster</text>
+          <text x="205" y="114" text-anchor="middle" font-family="monospace" font-size="9" fill="#f78166">🚫 Reserved</text>
+
+          <!-- e0c -->
+          <rect x="265" y="65" width="90" height="55" rx="6" fill="rgba(227,179,65,0.1)" stroke="rgba(227,179,65,0.4)"/>
+          <text x="310" y="88" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" fill="#e3b341">e0c / e0m</text>
+          <text x="310" y="103" text-anchor="middle" font-family="monospace" font-size="9" fill="#8b949e">Management</text>
+          <text x="310" y="114" text-anchor="middle" font-family="monospace" font-size="9" fill="#e3b341">⚙️ Mgmt LIF</text>
+
+          <!-- e0d -->
+          <rect x="368" y="65" width="90" height="55" rx="6" fill="rgba(88,166,255,0.1)" stroke="rgba(88,166,255,0.5)"/>
+          <text x="413" y="88" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" fill="#58a6ff">e0d</text>
+          <text x="413" y="103" text-anchor="middle" font-family="monospace" font-size="9" fill="#8b949e">Data Network</text>
+          <text x="413" y="114" text-anchor="middle" font-family="monospace" font-size="9" fill="#58a6ff">✅ Data LIFs</text>
+
+          <!-- e0e -->
+          <rect x="468" y="65" width="90" height="55" rx="6" fill="rgba(88,166,255,0.1)" stroke="rgba(88,166,255,0.5)"/>
+          <text x="513" y="88" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" fill="#58a6ff">e0e</text>
+          <text x="513" y="103" text-anchor="middle" font-family="monospace" font-size="9" fill="#8b949e">Data Network</text>
+          <text x="513" y="114" text-anchor="middle" font-family="monospace" font-size="9" fill="#58a6ff">✅ Data LIFs</text>
+
+          <!-- legend -->
+          <rect x="60" y="135" width="12" height="10" fill="rgba(247,129,102,0.4)"/>
+          <text x="78" y="144" font-family="sans-serif" font-size="10" fill="#8b949e">Cluster (do not touch)</text>
+          <rect x="200" y="135" width="12" height="10" fill="rgba(227,179,65,0.4)"/>
+          <text x="218" y="144" font-family="sans-serif" font-size="10" fill="#8b949e">Management</text>
+          <rect x="320" y="135" width="12" height="10" fill="rgba(88,166,255,0.4)"/>
+          <text x="338" y="144" font-family="sans-serif" font-size="10" fill="#8b949e">Data LIFs (recommended)</text>
+        </svg>
+        <div class="diagram-caption">Figure 4 — Recommended port allocation for a typical ONTAP node</div>
+      </div>
+
+      <div class="callout success">
+        <div class="callout-icon">✅</div>
+        <div class="callout-content">
+          <div class="callout-title">Best Practice — LIF Redundancy</div>
+          <div class="callout-text">Always create at least <strong>one data LIF per node</strong> for each SVM. This ensures that if one node fails, the SVM can still serve data through LIFs on surviving nodes. In AFF/ASA environments with 4+ nodes, plan LIF counts based on port speed and bandwidth requirements.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ═══ SECTION 3: VOLUMES ═══ -->
+    <section class="section" id="vol-types">
+      <div class="section-header">
+        <div class="section-icon icon-yellow">📁</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 03</div>
+          <h2>Volume Types in ONTAP</h2>
+        </div>
+      </div>
+      <p>Volumes in ONTAP are <strong>logical partitions carved from aggregates</strong>. They are the primary unit of storage provisioning. Before creating volumes for clients, you must understand the three volume types available and their respective use cases.</p>
+
+      <div class="card">
+        <div class="card-title">📊 Volume Type Comparison</div>
+        <table class="spec-table">
+          <thead><tr><th>Type</th><th>Where Created</th><th>Max Size</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-orange">Traditional Volume</span></td>
+              <td>Directly on disks (bypasses aggregates)</td>
+              <td>Disk capacity</td>
+              <td><span class="badge badge-orange">Deprecated — ONTAP 9.0+</span></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-blue">FlexVol (Flexible)</span></td>
+              <td>On top of a single aggregate</td>
+              <td>~300 TB (model-dependent)</td>
+              <td><span class="badge badge-green">Current Standard</span></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-purple">FlexGroup</span></td>
+              <td>Spans multiple aggregates</td>
+              <td>Up to 21 PB</td>
+              <td><span class="badge badge-blue">Advanced / High-Scale</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart TD
+    AGG1["Aggregate 01\n(Node 01)"] -- "100 GB" --> FG
+    AGG2["Aggregate 02\n(Node 02)"] -- "100 GB" --> FG
+    AGG3["Aggregate 03\n(Node 03)"] -- "100 GB" --> FG
+    AGG4["Aggregate 04\n(Node 04)"] -- "100 GB" --> FG
+
+    FG["📦 FlexGroup Volume\n400 GB combined\nMax: 21 PB"] 
+
+    AGG5["Aggregate 01"] -- "10 GB\n(from single aggr)" --> FV["📄 FlexVol\n10 GB\nMax: ~300 TB"]
+
+    style FG fill:#1c2333,stroke:#bc8cff,color:#bc8cff
+    style FV fill:#1c2333,stroke:#58a6ff,color:#58a6ff
+        </div>
+        <div class="diagram-caption">Figure 5 — FlexVol vs FlexGroup: storage layout differences</div>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-icon">📘</div>
+        <div class="callout-content">
+          <div class="callout-title">Focus of This Module</div>
+          <div class="callout-text">This module covers <strong>FlexVol</strong> — the standard volume type for everyday provisioning. FlexGroup is covered in advanced topics.</div>
+        </div>
+      </div>
+
+      <h3 id="vol-thick-thin">⚖️ Thick vs Thin Provisioning</h3>
+      <p>FlexVols come in two provisioning modes that differ in how and when space is reserved from the parent aggregate:</p>
+
+      <div class="vol-compare">
+        <div class="vol-thick">
+          <div class="vol-type-title">🔒 Thick Provisioning (Space Guarantee: volume)</div>
+          <ul class="bullet-list">
+            <li>Space is immediately reserved from the aggregate at volume creation time</li>
+            <li>Aggregate available space decreases right away, regardless of actual data written</li>
+            <li>Guarantees storage will always be available for this volume</li>
+            <li>Simpler capacity management — what you see is what you get</li>
+            <li>Default for FAS (spinning disk) controllers</li>
+          </ul>
+        </div>
+        <div class="vol-thin">
+          <div class="vol-type-title">💧 Thin Provisioning (Space Guarantee: none)</div>
+          <ul class="bullet-list">
+            <li>No space reserved at creation — aggregate shows full available capacity</li>
+            <li>Space is consumed from aggregate only as data is written</li>
+            <li>Enables overprovisioning — allocate more than physically available</li>
+            <li>Requires active aggregate monitoring to prevent out-of-space conditions</li>
+            <li>Default for AFF (all-flash) controllers</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Thin provisioning visual -->
+      <div class="svg-diagram">
+        <svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
+          <text x="350" y="20" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#e6edf3">Thick vs Thin Provisioning — Aggregate Space Impact</text>
+
+          <!-- THICK scenario -->
+          <text x="175" y="45" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#f78166">THICK — 200 GB Aggregate</text>
+          <rect x="40" y="55" width="270" height="40" rx="6" fill="#161b22" stroke="#30363d"/>
+          <!-- thick reserved -->
+          <rect x="40" y="55" width="67" height="40" rx="6" fill="rgba(247,129,102,0.5)" stroke="rgba(247,129,102,0.3)"/>
+          <text x="74" y="79" text-anchor="middle" font-family="monospace" font-size="10" fill="#f78166">50 GB Reserved</text>
+          <text x="220" y="79" text-anchor="middle" font-family="monospace" font-size="10" fill="#8b949e">150 GB Available</text>
+          <text x="175" y="115" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#8b949e">Created 50 GB thick vol → immediately -50 GB from aggregate</text>
+
+          <text x="175" y="140" text-anchor="middle" font-family="monospace" font-size="10" fill="#8b949e">aggr avail: 200 GB → 150 GB</text>
+
+          <!-- THIN scenario -->
+          <text x="525" y="45" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="700" fill="#3fb950">THIN — 200 GB Aggregate</text>
+          <rect x="390" y="55" width="270" height="40" rx="6" fill="#161b22" stroke="#30363d"/>
+          <!-- thin: aggregate still shows full -->
+          <rect x="390" y="55" width="270" height="40" rx="0" fill="rgba(63,185,80,0.12)" stroke="none"/>
+          <text x="525" y="79" text-anchor="middle" font-family="monospace" font-size="10" fill="#3fb950">200 GB Available (no reservation)</text>
+          <text x="525" y="115" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#8b949e">Created 75 GB thin vol → aggregate shows 200 GB still</text>
+          <text x="525" y="140" text-anchor="middle" font-family="monospace" font-size="10" fill="#8b949e">aggr avail: 200 GB → 200 GB (until data is written)</text>
+
+          <!-- warning -->
+          <rect x="390" y="155" width="270" height="45" rx="6" fill="rgba(227,179,65,0.08)" stroke="rgba(227,179,65,0.3)"/>
+          <text x="525" y="173" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#e3b341">⚠️ Over-provisioning Risk</text>
+          <text x="525" y="190" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#8b949e">Monitor aggregate space aggressively when using thin provisioning</text>
+        </svg>
+        <div class="diagram-caption">Figure 6 — Aggregate space consumption: Thick reserves immediately; Thin reserves on write</div>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-content">
+          <div class="callout-title">Thin Provisioning — Monitor Carefully</div>
+          <div class="callout-text">With thin provisioning, it is possible to allocate more logical space than physically exists. If multiple thin volumes fill simultaneously, the aggregate can run out of space — causing write failures and potential data loss. Always configure aggregate-level space threshold alerts.</div>
+        </div>
+      </div>
+
+      <h3 id="vol-create">🛠️ Volume Operations</h3>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Create FlexVol — Thin Provisioned (NAS)</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body"><span class="comment"># Create a thin-provisioned NAS volume</span>
+<span class="cmd">volume create</span> \
+  <span class="param">-vserver</span>         <span class="value">prod-svm01</span>            \
+  <span class="param">-volume</span>          <span class="value">finance_data_vol01</span>    \
+  <span class="param">-aggregate</span>       <span class="value">aggr_node01_data01</span>    \
+  <span class="param">-size</span>            <span class="value">500G</span>                  \
+  <span class="param">-space-guarantee</span> <span class="value">none</span>                  \
+  <span class="param">-junction-path</span>   <span class="value">/finance_data</span>         \
+  <span class="param">-state</span>           <span class="value">online</span>
+
+<span class="comment"># Create a thick-provisioned volume (guaranteed space)</span>
+<span class="cmd">volume create</span> \
+  <span class="param">-vserver</span>         <span class="value">prod-svm01</span>            \
+  <span class="param">-volume</span>          <span class="value">db_vol_guaranteed</span>    \
+  <span class="param">-aggregate</span>       <span class="value">aggr_node02_data01</span>    \
+  <span class="param">-size</span>            <span class="value">200G</span>                  \
+  <span class="param">-space-guarantee</span> <span class="value">volume</span>
+
+<span class="comment"># Verify volumes and space guarantee type</span>
+<span class="cmd">volume show</span> <span class="param">-fields</span> <span class="value">space-guarantee</span>
+
+<span class="output">vserver      volume             space-guarantee
+------------ ------------------ ---------------
+prod-svm01   finance_data_vol01  none           ← Thin
+prod-svm01   db_vol_guaranteed   volume         ← Thick</span></div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Volume Sizing — Resize Operations</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body"><span class="comment"># Increase volume size by 100 GB (use + prefix)</span>
+<span class="cmd">volume size</span> <span class="param">-vserver</span> <span class="value">prod-svm01</span> <span class="param">-volume</span> <span class="value">finance_data_vol01</span> <span class="param">-new-size</span> <span class="value">+100G</span>
+
+<span class="comment"># Decrease volume size by 50 GB (use - prefix)</span>
+<span class="cmd">volume size</span> <span class="param">-vserver</span> <span class="value">prod-svm01</span> <span class="param">-volume</span> <span class="value">finance_data_vol01</span> <span class="param">-new-size</span> <span class="value">-50G</span>
+
+<span class="comment"># Set volume to an absolute size (⚠️ dangerous — omitting +/- replaces the entire size)</span>
+<span class="cmd">volume size</span> <span class="param">-vserver</span> <span class="value">prod-svm01</span> <span class="param">-volume</span> <span class="value">finance_data_vol01</span> <span class="param">-new-size</span> <span class="value">600G</span></div>
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-icon">🚨</div>
+        <div class="callout-content">
+          <div class="callout-title">Critical Warning — Volume Resize</div>
+          <div class="callout-text">Always use <strong>+</strong> (increase) or <strong>-</strong> (decrease) prefixes with <span class="hl">volume size</span>. Without a prefix, ONTAP sets the volume to that exact absolute size — if less than current used space, it can corrupt or lose data. Double-check every resize command before executing.</div>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Volume Lifecycle — Rename, Delete, Rehost</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body"><span class="comment"># Rename a volume (non-disruptive — clients use junction path, not volume name)</span>
+<span class="cmd">volume rename</span> <span class="param">-vserver</span> <span class="value">prod-svm01</span> <span class="param">-volume</span> <span class="value">finance_data_vol01</span> <span class="param">-newname</span> <span class="value">finance_primary_vol</span>
+
+<span class="comment"># Take volume offline, then delete</span>
+<span class="cmd">volume offline</span> <span class="param">-vserver</span> <span class="value">prod-svm01</span> <span class="param">-volume</span> <span class="value">db_vol_guaranteed</span>
+<span class="cmd">volume delete</span>  <span class="param">-vserver</span> <span class="value">prod-svm01</span> <span class="param">-volume</span> <span class="value">db_vol_guaranteed</span>
+
+<span class="comment"># Move volume from one SVM to another (disruptive — requires downtime)</span>
+<span class="cmd">volume unmount</span> <span class="param">-vserver</span> <span class="value">prod-svm01</span> <span class="param">-volume</span> <span class="value">finance_primary_vol</span>
+<span class="cmd">volume rehost</span>  <span class="param">-vserver</span> <span class="value">prod-svm01</span> <span class="param">-volume</span> <span class="value">finance_primary_vol</span> <span class="param">-destination-vserver</span> <span class="value">dr-svm01</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📊 Volume Limits Quick Reference</div>
+        <table class="spec-table">
+          <thead><tr><th>Parameter</th><th>Value</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Minimum FlexVol size</td><td>20 MB</td><td>Applies to all controller models</td></tr>
+            <tr><td>Maximum FlexVol size</td><td>Model-dependent</td><td>Check NetApp Hardware Universe</td></tr>
+            <tr><td>Volumes per controller (older)</td><td>1,000</td><td>ONTAP &lt; 9.7</td></tr>
+            <tr><td>Volumes per controller (newer)</td><td>2,500</td><td>AFF A700/A900, ONTAP 9.7+</td></tr>
+            <tr><td>FlexGroup max size</td><td>21 PB</td><td>Across multiple aggregates</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ═══ SECTION 4: JUNCTION POINT ═══ -->
+    <section class="section" id="junction">
+      <div class="section-header">
+        <div class="section-icon icon-teal">🌐</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 04</div>
+          <h2>Junction Points, Junction Paths &amp; Namespace</h2>
+        </div>
+      </div>
+      <p>In ONTAP cluster mode, volumes are not automatically accessible after creation. Unlike legacy single-controller systems where volumes were automatically mounted to the controller's root path, ONTAP requires an explicit <strong>mount step</strong> — called junction mounting — before volumes can be presented to NAS clients.</p>
+
+      <div class="callout info">
+        <div class="callout-icon">📌</div>
+        <div class="callout-content">
+          <div class="callout-title">SAN vs NAS — Important Scope Note</div>
+          <div class="callout-text">Junction points and namespace apply <strong>only to NAS protocols</strong> (NFS, CIFS/SMB). SAN protocols (iSCSI, Fibre Channel) use a completely different presentation mechanism (LUNs and igroups) that does not involve junction paths at all.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🔑 Three Critical Definitions</div>
+        <table class="spec-table">
+          <thead><tr><th>Term</th><th>Definition</th><th>Created By</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-blue">Junction Point</span></td>
+              <td>The root path of an SVM. Acts as the gateway through which all volumes are accessed. Think of it as "/" on a Linux filesystem.</td>
+              <td>ONTAP automatically (during SVM creation)</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-green">Junction Path</span></td>
+              <td>The full path of an individual volume after it is mounted under the junction point. e.g., <code>/finance_data</code></td>
+              <td>Administrator (during volume mount)</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-purple">Namespace</span></td>
+              <td>The logical grouping/aggregation of all volumes mounted under an SVM's junction point. The entire mountable tree visible to clients.</td>
+              <td>Result of mounting multiple volumes</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Junction architecture diagram -->
+      <div class="svg-diagram">
+        <svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
+          <text x="350" y="22" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#e6edf3">SVM Namespace — Junction Point &amp; Volume Mounting</text>
+
+          <!-- SVM root -->
+          <rect x="270" y="40" width="160" height="40" rx="8" fill="rgba(88,166,255,0.15)" stroke="rgba(88,166,255,0.6)" stroke-width="2"/>
+          <text x="350" y="56" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#58a6ff">SVM: prod-svm01</text>
+          <text x="350" y="70" text-anchor="middle" font-family="monospace" font-size="10" fill="#8b949e">Junction Point: /</text>
+
+          <!-- branch lines -->
+          <line x1="350" y1="80" x2="350" y2="105" stroke="#30363d" stroke-width="1.5"/>
+          <line x1="130" y1="105" x2="570" y2="105" stroke="#30363d" stroke-width="1.5"/>
+          <line x1="130" y1="105" x2="130" y2="130" stroke="#30363d" stroke-width="1.5"/>
+          <line x1="280" y1="105" x2="280" y2="130" stroke="#30363d" stroke-width="1.5"/>
+          <line x1="430" y1="105" x2="430" y2="130" stroke="#30363d" stroke-width="1.5"/>
+          <line x1="570" y1="105" x2="570" y2="130" stroke="#30363d" stroke-width="1.5"/>
+
+          <!-- vol boxes -->
+          <rect x="60" y="130" width="140" height="45" rx="8" fill="rgba(63,185,80,0.1)" stroke="rgba(63,185,80,0.4)"/>
+          <text x="130" y="148" text-anchor="middle" font-family="monospace" font-size="11" fill="#3fb950">finance_data</text>
+          <text x="130" y="163" text-anchor="middle" font-family="monospace" font-size="9" fill="#8b949e">Path: /finance_data</text>
+
+          <rect x="210" y="130" width="140" height="45" rx="8" fill="rgba(63,185,80,0.1)" stroke="rgba(63,185,80,0.4)"/>
+          <text x="280" y="148" text-anchor="middle" font-family="monospace" font-size="11" fill="#3fb950">hr_shared</text>
+          <text x="280" y="163" text-anchor="middle" font-family="monospace" font-size="9" fill="#8b949e">Path: /hr_shared</text>
+
+          <rect x="360" y="130" width="140" height="45" rx="8" fill="rgba(63,185,80,0.1)" stroke="rgba(63,185,80,0.4)"/>
+          <text x="430" y="148" text-anchor="middle" font-family="monospace" font-size="11" fill="#3fb950">app_logs</text>
+          <text x="430" y="163" text-anchor="middle" font-family="monospace" font-size="9" fill="#8b949e">Path: /app_logs</text>
+
+          <rect x="500" y="130" width="140" height="45" rx="8" fill="rgba(63,185,80,0.1)" stroke="rgba(63,185,80,0.4)"/>
+          <text x="570" y="148" text-anchor="middle" font-family="monospace" font-size="11" fill="#3fb950">backup_store</text>
+          <text x="570" y="163" text-anchor="middle" font-family="monospace" font-size="9" fill="#8b949e">Path: /backup_store</text>
+
+          <!-- nested vol -->
+          <line x1="130" y1="175" x2="130" y2="215" stroke="#30363d" stroke-width="1.5"/>
+          <rect x="60" y="215" width="140" height="40" rx="8" fill="rgba(188,140,255,0.1)" stroke="rgba(188,140,255,0.4)"/>
+          <text x="130" y="232" text-anchor="middle" font-family="monospace" font-size="10" fill="#bc8cff">fin_archive</text>
+          <text x="130" y="246" text-anchor="middle" font-family="monospace" font-size="9" fill="#8b949e">/finance_data/archive</text>
+
+          <!-- label -->
+          <text x="350" y="280" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#6e7681">Volumes can be nested — mounted under another volume's junction path (creates sub-namespaces)</text>
+        </svg>
+        <div class="diagram-caption">Figure 7 — SVM namespace: volumes mounted under a shared junction point form the client-visible filesystem tree</div>
+      </div>
+
+      <h3 id="namespace">⚙️ Mount Operations</h3>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Mount / Unmount Volumes</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body"><span class="comment"># Mount a volume to the SVM junction point (giving it a junction path)</span>
+<span class="cmd">volume mount</span> <span class="param">-vserver</span> <span class="value">prod-svm01</span> <span class="param">-volume</span> <span class="value">finance_data</span> <span class="param">-junction-path</span> <span class="value">/finance_data</span>
+
+<span class="comment"># Mount a volume nested under another volume (sub-namespace)</span>
+<span class="cmd">volume mount</span> <span class="param">-vserver</span> <span class="value">prod-svm01</span> <span class="param">-volume</span> <span class="value">fin_archive</span> <span class="param">-junction-path</span> <span class="value">/finance_data/archive</span>
+
+<span class="comment"># Verify junction paths of all volumes</span>
+<span class="cmd">volume show</span> <span class="param">-fields</span> <span class="value">junction-path</span>
+
+<span class="output">vserver      volume            junction-path
+------------ ----------------- ----------------------------
+prod-svm01   prod_svm01_root   /                  ← SVM root (junction point)
+prod-svm01   finance_data      /finance_data
+prod-svm01   hr_shared         /hr_shared
+prod-svm01   fin_archive       /finance_data/archive</span>
+
+<span class="comment"># Unmount a volume (removes junction path — disruptive)</span>
+<span class="cmd">volume unmount</span> <span class="param">-vserver</span> <span class="value">prod-svm01</span> <span class="param">-volume</span> <span class="value">finance_data</span></div>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-content">
+          <div class="callout-title">Changing Junction Path Requires Downtime</div>
+          <div class="callout-text">Unmounting and remounting a volume with a new junction path is a <strong>disruptive operation</strong>. Clients lose access during the change and must update their NFS mount points or UNC paths. Plan these operations during maintenance windows. Design junction paths carefully from the start.</div>
+        </div>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <div class="callout-title">Pro Tip — Create + Mount in One Step</div>
+          <div class="callout-text">You can specify the <span class="hl">-junction-path</span> parameter directly in the <span class="hl">volume create</span> command to mount at creation time — eliminating the separate mount step. This is the recommended approach in automated provisioning workflows.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ═══ SECTION 5: CLI REFERENCE ═══ -->
+    <section class="section" id="cli-reference">
+      <div class="section-header">
+        <div class="section-icon icon-orange">⌨️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 05</div>
+          <h2>CLI Quick Reference</h2>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">SVM Commands</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body"><span class="comment">── SVM Management ──────────────────────────────────────────</span>
+<span class="cmd">vserver show</span>                                         <span class="comment"># List all SVMs</span>
+<span class="cmd">vserver create</span> <span class="param">-vserver</span> <span class="value">&lt;name&gt;</span> <span class="param">-subtype</span> <span class="value">default</span> ...  <span class="comment"># Create SVM</span>
+<span class="cmd">vserver show</span>  <span class="param">-fields</span> <span class="value">allowed-protocols</span>               <span class="comment"># Check protocols</span>
+<span class="cmd">vserver remove-protocols</span> <span class="param">-vserver</span> <span class="value">&lt;v&gt;</span> <span class="param">-protocols</span> ...  <span class="comment"># Remove protocols</span>
+<span class="cmd">vserver add-protocols</span> <span class="param">-vserver</span> <span class="value">&lt;v&gt;</span> <span class="param">-protocols</span> ...     <span class="comment"># Add protocols</span>
+<span class="cmd">vserver add-aggregates</span> <span class="param">-vserver</span> <span class="value">&lt;v&gt;</span> <span class="param">-aggregates</span> ...  <span class="comment"># Restrict aggregates</span></div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">LIF Commands</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body"><span class="comment">── LIF Management ──────────────────────────────────────────</span>
+<span class="cmd">network interface show</span>                                 <span class="comment"># List all LIFs</span>
+<span class="cmd">network port show</span>                                      <span class="comment"># Show physical ports</span>
+<span class="cmd">network interface create</span> <span class="param">-vserver</span> <span class="value">&lt;v&gt;</span> <span class="param">-lif</span> <span class="value">&lt;name&gt;</span> ...  <span class="comment"># Create LIF</span>
+<span class="cmd">network interface modify</span> <span class="param">-vserver</span> <span class="value">&lt;v&gt;</span> <span class="param">-lif</span> <span class="value">&lt;name&gt;</span> ...  <span class="comment"># Modify LIF</span>
+<span class="cmd">network interface delete</span> <span class="param">-vserver</span> <span class="value">&lt;v&gt;</span> <span class="param">-lif</span> <span class="value">&lt;name&gt;</span>     <span class="comment"># Delete LIF</span>
+<span class="cmd">network interface migrate</span> <span class="param">-vserver</span> <span class="value">&lt;v&gt;</span> <span class="param">-lif</span> <span class="value">&lt;name&gt;</span> ... <span class="comment"># Migrate LIF to another node</span></div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Volume Commands</span>
+          <div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div>
+        </div>
+        <div class="code-body"><span class="comment">── Volume Management ────────────────────────────────────────</span>
+<span class="cmd">volume show</span>                                                        <span class="comment"># List volumes</span>
+<span class="cmd">volume create</span> <span class="param">-vserver</span> <span class="value">&lt;v&gt;</span> <span class="param">-volume</span> <span class="value">&lt;n&gt;</span> <span class="param">-aggregate</span> <span class="value">&lt;a&gt;</span> <span class="param">-size</span> <span class="value">&lt;s&gt;</span>   <span class="comment"># Create</span>
+<span class="cmd">volume modify</span> <span class="param">-vserver</span> <span class="value">&lt;v&gt;</span> <span class="param">-volume</span> <span class="value">&lt;n&gt;</span> <span class="param">-space-guarantee</span> <span class="value">none|volume</span>  <span class="comment"># Thick/thin</span>
+<span class="cmd">volume size</span>   <span class="param">-vserver</span> <span class="value">&lt;v&gt;</span> <span class="param">-volume</span> <span class="value">&lt;n&gt;</span> <span class="param">-new-size</span> <span class="value">+100G</span>              <span class="comment"># Resize</span>
+<span class="cmd">volume rename</span> <span class="param">-vserver</span> <span class="value">&lt;v&gt;</span> <span class="param">-volume</span> <span class="value">&lt;n&gt;</span> <span class="param">-newname</span> <span class="value">&lt;nn&gt;</span>              <span class="comment"># Rename</span>
+<span class="cmd">volume offline</span> / <span class="cmd">volume online</span> / <span class="cmd">volume delete</span>                    <span class="comment"># Lifecycle</span>
+<span class="cmd">volume mount</span>  <span class="param">-vserver</span> <span class="value">&lt;v&gt;</span> <span class="param">-volume</span> <span class="value">&lt;n&gt;</span> <span class="param">-junction-path</span> <span class="value">/path</span>        <span class="comment"># Mount</span>
+<span class="cmd">volume unmount</span> <span class="param">-vserver</span> <span class="value">&lt;v&gt;</span> <span class="param">-volume</span> <span class="value">&lt;n&gt;</span>                           <span class="comment"># Unmount</span>
+<span class="cmd">volume show</span>   <span class="param">-fields</span> <span class="value">junction-path</span>                               <span class="comment"># Show paths</span>
+<span class="cmd">volume rehost</span> <span class="param">-vserver</span> <span class="value">&lt;src&gt;</span> <span class="param">-volume</span> <span class="value">&lt;n&gt;</span> <span class="param">-destination-vserver</span> <span class="value">&lt;dst&gt;</span> <span class="comment"># Move SVM</span></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ═══ SECTION 6: INTERVIEW Q&A ═══ -->
+    <section class="section" id="interview">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🎓</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 06</div>
+          <h2>Interview &amp; Scenario-Based Q&amp;A</h2>
+        </div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q01</span> What is a Storage Virtual Machine (SVM) and why does ONTAP use this abstraction?</div>
+        <div class="qa-a">An SVM is a logical, isolated storage entity that virtualizes storage delivery in an ONTAP cluster. It owns its own network addresses, protocols, volumes, and security context. ONTAP uses SVMs to enable multi-tenancy (multiple clients on shared hardware), non-disruptive operations (failover without changing client IPs), and protocol flexibility (run NFS, SMB, iSCSI simultaneously). Clients connect to SVMs — never directly to nodes — providing a stable access layer independent of the underlying physical topology.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q02</span> A new SVM is created for NAS-only workloads. How do you prevent SAN protocols from being configured on it?</div>
+        <div class="qa-a">Use <span class="hl">vserver remove-protocols</span> to remove iSCSI, FCP, and NVMe after SVM creation. This documents intent (team members can see what protocols are allowed) and prevents accidental SAN configuration on that SVM. You can also add them back at any time with <span class="hl">vserver add-protocols</span> if the use case changes. This is a best practice in enterprise environments with segregated NAS and SAN SVMs.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q03</span> What is a LIF and why can't an SVM communicate directly through a physical port?</div>
+        <div class="qa-a">A LIF (Logical Interface) is a software-defined network endpoint bound to a physical port. SVMs are entirely logical constructs — they have no physical hardware of their own. Physical ports belong to nodes. Without a LIF, an SVM has no network presence. A LIF bridges this: it creates a logical IP/WWPN identity, associates it with a specific node's physical port, and links it to the SVM — enabling client-facing communication. Without at least one data LIF per SVM, clients cannot reach any storage.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q04</span> What is the difference between junction point, junction path, and namespace? Why does this matter for NAS?</div>
+        <div class="qa-a"><strong>Junction Point</strong>: The auto-created root path (/) of each SVM. Every SVM has exactly one. <strong>Junction Path</strong>: The path a specific volume gets when mounted under the junction point (e.g., /finance_data). This is the path given to NFS/SMB clients. <strong>Namespace</strong>: The complete logical tree formed by all volumes mounted under an SVM's junction point. Without mounting volumes (creating junction paths), NAS clients cannot access any data — the volume exists but has no client-visible address.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q05</span> A developer asks for 2 TB of NFS storage but historically only uses 20-30% of provisioned space. What provisioning approach do you recommend and what risks must you manage?</div>
+        <div class="qa-a">Use <strong>thin provisioning</strong> (space-guarantee: none) to maximize aggregate utilization. The developer's volume will show 2 TB available, but only consume aggregate space as data is actually written. The risk: if multiple thin-provisioned volumes fill simultaneously, the aggregate can run out of space mid-write, causing application errors. To manage this: configure aggregate threshold alerts (at 80% and 90%), use volume autosize policies, and maintain a documented overcommit ratio aligned with organizational risk tolerance — typically no more than 2:1 to 3:1 overcommitment.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q06</span> What happens if you run <code>volume size -new-size 50G</code> on a 200 GB volume that has 150 GB of data?</div>
+        <div class="qa-a">Without a <strong>+</strong> or <strong>-</strong> prefix, ONTAP interprets the value as an absolute target size. It will attempt to shrink the volume to 50 GB. Since the used space (150 GB) exceeds the new size, ONTAP will likely fail with an error. However, in some scenarios — particularly with thin volumes and certain efficiency features — it may succeed and corrupt or truncate data. Always use <strong>+nG</strong> to grow or <strong>-nG</strong> to shrink. Never specify absolute sizes without triple-checking current usage first.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q07</span> Why should you create at least one data LIF per node for each SVM?</div>
+        <div class="qa-a">High availability. If a node fails, only LIFs homed to that node become unavailable (unless LIF failover is configured). By having a data LIF on every node, the SVM can continue serving data through surviving nodes' LIFs. Additionally, volumes hosted on a specific node's aggregate are served most efficiently through that node's LIF — cross-node data access adds latency. Multi-node LIF coverage improves both resilience and performance locality.</div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ═══ SECTION 7: QUIZ ═══ -->
+    <section class="section" id="quiz">
+      <div class="section-header">
+        <div class="section-icon icon-teal">🧠</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 07</div>
+          <h2>Self-Assessment Quiz</h2>
+        </div>
+      </div>
+      <p>Test your understanding of the concepts covered in this module. Click an option to check your answer.</p>
+
+      <!-- Quiz 1 -->
+      <div class="quiz-container">
+        <div class="quiz-q">Q1: Which SVM type is the only one a storage administrator can create and manage directly?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="checkAnswer(this,'wrong','Incorrect. Admin SVM is automatically created during cluster setup.')">Admin SVM</button>
+          <button class="quiz-option" onclick="checkAnswer(this,'wrong','Incorrect. Node SVMs are auto-created per node during cluster initialization.')">Node SVM</button>
+          <button class="quiz-option" onclick="checkAnswer(this,'correct','Correct! Data SVM is the only type a storage admin creates and manages. Admin, Node, and System SVMs are all auto-created by ONTAP.')">Data SVM</button>
+          <button class="quiz-option" onclick="checkAnswer(this,'wrong','Incorrect. System SVMs are internal ONTAP constructs, not accessible to admins.')">System SVM</button>
+        </div>
+        <div class="quiz-feedback"></div>
+        <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset</button>
+      </div>
+
+      <!-- Quiz 2 -->
+      <div class="quiz-container">
+        <div class="quiz-q">Q2: What service policy should you use when creating a LIF for NFS and CIFS data traffic?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="checkAnswer(this,'wrong','Incorrect. default-data-blocks is for SAN (iSCSI/FCP) block-based protocols.')">default-data-blocks</button>
+          <button class="quiz-option" onclick="checkAnswer(this,'correct','Correct! default-data-files is used for NAS protocols (NFS, SMB/CIFS). NAS = files; SAN = blocks.')">default-data-files</button>
+          <button class="quiz-option" onclick="checkAnswer(this,'wrong','Incorrect. default-management is for SVM management LIFs, not data traffic.')">default-management</button>
+          <button class="quiz-option" onclick="checkAnswer(this,'wrong','Incorrect. This is not a valid ONTAP service policy.')">default-nas-access</button>
+        </div>
+        <div class="quiz-feedback"></div>
+        <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset</button>
+      </div>
+
+      <!-- Quiz 3 -->
+      <div class="quiz-container">
+        <div class="quiz-q">Q3: You create a 500 GB thin-provisioned volume on a 300 GB aggregate. What happens?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="checkAnswer(this,'wrong','Incorrect. ONTAP does not automatically resize aggregates.')">ONTAP automatically expands the aggregate</button>
+          <button class="quiz-option" onclick="checkAnswer(this,'wrong','Incorrect. Thin volumes can exceed physical aggregate capacity at creation time.')">The creation fails with an error</button>
+          <button class="quiz-option" onclick="checkAnswer(this,'correct','Correct! Thin provisioning (space-guarantee: none) allows volume creation beyond available aggregate space — no space is reserved at creation time. Space is only consumed when data is written.')">The volume is created successfully — space reserved only when data is written</button>
+          <button class="quiz-option" onclick="checkAnswer(this,'wrong','Incorrect. Thin volumes do not inherit aggregate size as a hard cap at creation.')">The volume is created but capped at 300 GB automatically</button>
+        </div>
+        <div class="quiz-feedback"></div>
+        <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset</button>
+      </div>
+
+      <!-- Quiz 4 -->
+      <div class="quiz-container">
+        <div class="quiz-q">Q4: A storage admin mounts volume "reports_vol" with junction path "/reports". A client currently accesses it. The admin then unmounts and remounts it as "/quarterly_reports". What is the impact?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="checkAnswer(this,'wrong','Incorrect. The junction path change is disruptive.')">No impact — the client continues to work seamlessly</button>
+          <button class="quiz-option" onclick="checkAnswer(this,'wrong','Incorrect. The data is not lost, but access is disrupted.')">The volume data is lost permanently</button>
+          <button class="quiz-option" onclick="checkAnswer(this,'correct','Correct! Changing the junction path is disruptive. The client loses access during the unmount/remount and must update their NFS mount or SMB share path to the new junction path /quarterly_reports.')">Client loses access; must remount using the new junction path</button>
+          <button class="quiz-option" onclick="checkAnswer(this,'wrong','Incorrect. ONTAP does not send automatic notifications to NFS/SMB clients.')">ONTAP automatically notifies the client of the new path</button>
+        </div>
+        <div class="quiz-feedback"></div>
+        <button class="quiz-reset" onclick="resetQuiz(this)">↺ Reset</button>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ═══ AUTHOR SECTION ═══ -->
+    <section class="section" id="author">
+      <div class="author-section">
+        <div class="author-avatar">👨‍💻</div>
+        <div class="author-name">Mohammed Abdul</div>
+        <div class="author-title">Data Protection Architect — Hybrid Cloud &amp; Enterprise Storage</div>
+        <div class="author-bio">
+          Mohammed Abdul is a Data Protection Architect with more than 10 years of experience in Hybrid Cloud, working with global clients across various industries. With extensive expertise in enterprise backup, recovery, and storage solutions, Mohammed helps organizations design and implement robust data protection strategies across on-premises and cloud environments.
+        </div>
+        <div class="tech-badges">
+          <span class="badge badge-blue">AWS</span>
+          <span class="badge badge-teal">Azure</span>
+          <span class="badge badge-green">GCP</span>
+          <span class="badge badge-orange">Commvault</span>
+          <span class="badge badge-purple">Veeam</span>
+          <span class="badge badge-yellow">NetBackup</span>
+          <span class="badge badge-blue">NetApp ONTAP</span>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-icon">✉️</div>
+          <div class="contact-text">
+            For questions or knowledge sharing: <a href="mailto:abdul.md.20000102@gmail.com">abdul.md.20000102@gmail.com</a>
+          </div>
+        </div>
+
+        <div class="callout warning" style="margin-top:20px">
+          <div class="callout-icon">📋</div>
+          <div class="callout-content">
+            <div class="callout-title">Disclaimer</div>
+            <div class="callout-text">
+              This content is intended for educational purposes only. Always refer to official NetApp documentation and follow your organization's procedures for production implementations. The author is not affiliated with or endorsed by NetApp, Inc. NetApp® and ONTAP® are registered trademarks of NetApp, Inc. All references are made purely for learning and knowledge sharing.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+  // Mermaid init
+  mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: { background: '#1c2333', primaryColor: '#1c2333', primaryTextColor: '#e6edf3', primaryBorderColor: '#58a6ff', lineColor: '#8b949e', secondaryColor: '#161b22', tertiaryColor: '#0d1117' } });
+
+  // Reading progress
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const pct = (doc.scrollTop / (doc.scrollHeight - doc.clientHeight)) * 100;
+    document.getElementById('reading-progress').style.width = pct + '%';
+  });
+
+  // Active sidebar link
+  const sections = document.querySelectorAll('.section');
+  const links = document.querySelectorAll('.toc-link');
+  window.addEventListener('scroll', () => {
+    let cur = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 80) cur = s.id; });
+    links.forEach(l => {
+      l.classList.remove('active');
+      if (l.getAttribute('href') === '#' + cur) l.classList.add('active');
+    });
+  });
+
+  // Quiz logic
+  function checkAnswer(btn, result, msg) {
+    const container = btn.closest('.quiz-container');
+    if (container.querySelector('.correct') || container.querySelector('.wrong-final')) return;
+    const fb = container.querySelector('.quiz-feedback');
+    const opts = container.querySelectorAll('.quiz-option');
+    opts.forEach(o => o.disabled = true);
+    if (result === 'correct') {
+      btn.classList.add('correct');
+      fb.textContent = '✅ ' + msg;
+      fb.className = 'quiz-feedback show correct-fb';
+    } else {
+      btn.classList.add('wrong');
+      fb.textContent = '❌ ' + msg;
+      fb.className = 'quiz-feedback show wrong-fb';
+    }
+  }
+  function resetQuiz(btn) {
+    const container = btn.closest('.quiz-container');
+    container.querySelectorAll('.quiz-option').forEach(o => { o.disabled = false; o.className = 'quiz-option'; });
+    const fb = container.querySelector('.quiz-feedback');
+    fb.className = 'quiz-feedback';
+    fb.textContent = '';
+  }
+</script>
+</body>
+</html>
