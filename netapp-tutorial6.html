@@ -587,21 +587,107 @@ flowchart TD
       <h3>Reallocation — Block-Level Defragmentation</h3>
       <p>Over time, block allocation within an aggregate becomes fragmented. <strong>Reallocation</strong> reorganizes blocks so used blocks are contiguous, improving sequential I/O performance.</p>
 
-      <div class="mermaid-wrap">
-        <div class="mermaid">
-flowchart LR
-    subgraph Before["Before Reallocation"]
-      direction LR
-      B1["Used"] B2["Free"] B3["Used"] B4["Free"] B5["Used"] B6["Free"] B7["Used"]
-    end
-    subgraph After["After Reallocation"]
-      direction LR
-      A1["Used"] A2["Used"] A3["Used"] A4["Used"] A5["Free"] A6["Free"] A7["Free"]
-    end
-    Before -->|"aggr reallocation\n(background scan)"| After
-    style Before fill:#1c2333,stroke:#f78166,color:#e6edf3
-    style After fill:#1c2333,stroke:#3fb950,color:#e6edf3
-        </div>
+      <div class="svg-diagram">
+        <svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" width="100%">
+          <defs>
+            <marker id="arrowR" markerWidth="8" markerHeight="7" refX="7" refY="3.5" orient="auto">
+              <polygon points="0 0, 8 3.5, 0 7" fill="#8b949e"/>
+            </marker>
+            <marker id="arrowRG" markerWidth="8" markerHeight="7" refX="7" refY="3.5" orient="auto">
+              <polygon points="0 0, 8 3.5, 0 7" fill="#3fb950"/>
+            </marker>
+          </defs>
+
+          <!-- BEFORE box -->
+          <rect x="10" y="10" width="330" height="130" rx="10" fill="#1c2333" stroke="#f78166" stroke-width="1.5"/>
+          <text x="175" y="32" fill="#f78166" font-size="12" font-weight="700" text-anchor="middle" font-family="'Inter',sans-serif" letter-spacing="0.5">BEFORE REALLOCATION</text>
+          <line x1="10" y1="40" x2="340" y2="40" stroke="#f78166" stroke-width="1" stroke-dasharray="4,3"/>
+
+          <!-- Before: row 1 blocks (Used=blue, Free=dark) -->
+          <!-- Block widths: Used=40, Free=36, alternating, 7 blocks, gap=4, start x=18 -->
+          <!-- B1 Used -->
+          <rect x="18"  y="55" width="40" height="34" rx="5" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1.2"/>
+          <text x="38"  y="77" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter',sans-serif">Used</text>
+          <line x1="58" y1="72" x2="64" y2="72" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arrowR)"/>
+          <!-- B2 Free -->
+          <rect x="64"  y="55" width="40" height="34" rx="5" fill="rgba(110,118,129,0.18)" stroke="#484f58" stroke-width="1.2"/>
+          <text x="84"  y="77" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter',sans-serif">Free</text>
+          <line x1="104" y1="72" x2="110" y2="72" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arrowR)"/>
+          <!-- B3 Used -->
+          <rect x="110" y="55" width="40" height="34" rx="5" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1.2"/>
+          <text x="130" y="77" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter',sans-serif">Used</text>
+          <line x1="150" y1="72" x2="156" y2="72" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arrowR)"/>
+          <!-- B4 Free -->
+          <rect x="156" y="55" width="40" height="34" rx="5" fill="rgba(110,118,129,0.18)" stroke="#484f58" stroke-width="1.2"/>
+          <text x="176" y="77" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter',sans-serif">Free</text>
+          <line x1="196" y1="72" x2="202" y2="72" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arrowR)"/>
+          <!-- B5 Used -->
+          <rect x="202" y="55" width="40" height="34" rx="5" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1.2"/>
+          <text x="222" y="77" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter',sans-serif">Used</text>
+          <line x1="242" y1="72" x2="248" y2="72" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arrowR)"/>
+          <!-- B6 Free -->
+          <rect x="248" y="55" width="40" height="34" rx="5" fill="rgba(110,118,129,0.18)" stroke="#484f58" stroke-width="1.2"/>
+          <text x="268" y="77" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter',sans-serif">Free</text>
+          <line x1="288" y1="72" x2="294" y2="72" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arrowR)"/>
+          <!-- B7 Used -->
+          <rect x="294" y="55" width="40" height="34" rx="5" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1.2"/>
+          <text x="314" y="77" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter',sans-serif">Used</text>
+
+          <!-- Before legend -->
+          <rect x="60" y="105" width="12" height="12" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+          <text x="76" y="116" fill="#8b949e" font-size="10" font-family="'Inter',sans-serif">Used blocks</text>
+          <rect x="155" y="105" width="12" height="12" rx="3" fill="rgba(110,118,129,0.18)" stroke="#484f58" stroke-width="1"/>
+          <text x="171" y="116" fill="#8b949e" font-size="10" font-family="'Inter',sans-serif">Free gaps (fragmented)</text>
+
+          <!-- Centre arrow with label -->
+          <line x1="345" y1="75" x2="400" y2="75" stroke="#e3b341" stroke-width="2" marker-end="url(#arrowRG)"/>
+          <text x="372" y="63" fill="#e3b341" font-size="10" font-weight="700" text-anchor="middle" font-family="'Inter',sans-serif">aggr reallocation</text>
+          <text x="372" y="74" fill="#8b949e" font-size="9" text-anchor="middle" font-family="'Inter',sans-serif">(background scan)</text>
+
+          <!-- AFTER box -->
+          <rect x="405" y="10" width="345" height="130" rx="10" fill="#1c2333" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="577" y="32" fill="#3fb950" font-size="12" font-weight="700" text-anchor="middle" font-family="'Inter',sans-serif" letter-spacing="0.5">AFTER REALLOCATION</text>
+          <line x1="405" y1="40" x2="750" y2="40" stroke="#3fb950" stroke-width="1" stroke-dasharray="4,3"/>
+
+          <!-- After: 4 Used, 3 Free, contiguous -->
+          <!-- A1 Used -->
+          <rect x="413" y="55" width="40" height="34" rx="5" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1.2"/>
+          <text x="433" y="77" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter',sans-serif">Used</text>
+          <line x1="453" y1="72" x2="459" y2="72" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arrowR)"/>
+          <!-- A2 Used -->
+          <rect x="459" y="55" width="40" height="34" rx="5" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1.2"/>
+          <text x="479" y="77" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter',sans-serif">Used</text>
+          <line x1="499" y1="72" x2="505" y2="72" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arrowR)"/>
+          <!-- A3 Used -->
+          <rect x="505" y="55" width="40" height="34" rx="5" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1.2"/>
+          <text x="525" y="77" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter',sans-serif">Used</text>
+          <line x1="545" y1="72" x2="551" y2="72" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arrowR)"/>
+          <!-- A4 Used -->
+          <rect x="551" y="55" width="40" height="34" rx="5" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1.2"/>
+          <text x="571" y="77" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter',sans-serif">Used</text>
+          <line x1="591" y1="72" x2="597" y2="72" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arrowR)"/>
+          <!-- A5 Free -->
+          <rect x="597" y="55" width="40" height="34" rx="5" fill="rgba(63,185,80,0.15)" stroke="#3fb950" stroke-width="1.2"/>
+          <text x="617" y="77" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter',sans-serif">Free</text>
+          <line x1="637" y1="72" x2="643" y2="72" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arrowR)"/>
+          <!-- A6 Free -->
+          <rect x="643" y="55" width="40" height="34" rx="5" fill="rgba(63,185,80,0.15)" stroke="#3fb950" stroke-width="1.2"/>
+          <text x="663" y="77" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter',sans-serif">Free</text>
+          <line x1="683" y1="72" x2="689" y2="72" stroke="#8b949e" stroke-width="1.5" marker-end="url(#arrowR)"/>
+          <!-- A7 Free -->
+          <rect x="689" y="55" width="40" height="34" rx="5" fill="rgba(63,185,80,0.15)" stroke="#3fb950" stroke-width="1.2"/>
+          <text x="709" y="77" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter',sans-serif">Free</text>
+
+          <!-- After legend -->
+          <rect x="450" y="105" width="12" height="12" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+          <text x="466" y="116" fill="#8b949e" font-size="10" font-family="'Inter',sans-serif">Contiguous used</text>
+          <rect x="580" y="105" width="12" height="12" rx="3" fill="rgba(63,185,80,0.15)" stroke="#3fb950" stroke-width="1"/>
+          <text x="596" y="116" fill="#8b949e" font-size="10" font-family="'Inter',sans-serif">Consolidated free space</text>
+
+          <!-- Bottom note -->
+          <rect x="200" y="153" width="360" height="26" rx="6" fill="rgba(57,211,195,0.08)" stroke="rgba(57,211,195,0.3)" stroke-width="1"/>
+          <text x="380" y="171" fill="#39d3c3" font-size="11" text-anchor="middle" font-family="'Inter',sans-serif">✓ Sequential I/O performance improves after consolidation</text>
+        </svg>
         <div class="diagram-caption">Figure 3 — Reallocation consolidates fragmented blocks, improving sequential I/O performance similar to disk defragmentation.</div>
       </div>
 
