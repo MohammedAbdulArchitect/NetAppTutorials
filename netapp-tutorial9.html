@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetApp Administration Series — Tutorial 9: CIFS Shares, SMB Protocol, WAFL & Inodes</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-card: #1c2333;
+    --bg-card-hover: #21283a;
+    --accent-blue: #58a6ff;
+    --accent-green: #3fb950;
+    --accent-orange: #f78166;
+    --accent-purple: #bc8cff;
+    --accent-yellow: #e3b341;
+    --accent-teal: #39d3c3;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --border: #30363d;
+    --border-bright: #484f58;
+    --sidebar-width: 290px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  #reading-progress {
+    position: fixed; top: 0; left: var(--sidebar-width); right: 0;
+    height: 3px; background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+    transform-origin: left; transform: scaleX(0);
+    z-index: 999; transition: transform 0.1s linear;
+  }
+
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-header {
+    padding: 20px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .sidebar-logo .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .sidebar-logo span { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px; color: var(--text-primary); letter-spacing: 0.5px; }
+  .sidebar-subtitle { font-size: 11px; color: var(--text-muted); padding-left: 42px; }
+  .toc-nav { padding: 12px 0; flex: 1; }
+  .toc-section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); padding: 12px 16px 6px; }
+  .toc-link {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 16px; font-size: 12.5px;
+    color: var(--text-secondary); text-decoration: none;
+    transition: all 0.2s ease;
+    border-left: 2px solid transparent; line-height: 1.4;
+  }
+  .toc-link:hover { background: var(--bg-card); color: var(--text-primary); border-left-color: var(--accent-blue); }
+  .toc-link.active { background: rgba(88,166,255,0.1); color: var(--accent-blue); border-left-color: var(--accent-blue); font-weight: 500; }
+  .toc-link .toc-num { font-size: 10px; font-weight: 700; color: var(--text-muted); min-width: 18px; font-family: 'JetBrains Mono', monospace; }
+  .toc-link.sub { padding-left: 32px; font-size: 12px; }
+
+  .main-content { margin-left: var(--sidebar-width); flex: 1; max-width: calc(100vw - var(--sidebar-width)); }
+
+  .top-header {
+    background: linear-gradient(135deg, #0d1117 0%, #1a1744 50%, #0d2035 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 60px 60px 50px;
+    position: relative; overflow: hidden;
+  }
+  .top-header::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(188,140,255,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(57,211,195,0.06) 0%, transparent 50%);
+  }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(188,140,255,0.12); border: 1px solid rgba(188,140,255,0.3);
+    border-radius: 20px; padding: 4px 14px;
+    font-size: 12px; color: var(--accent-purple); font-weight: 500;
+    margin-bottom: 18px; font-family: 'JetBrains Mono', monospace;
+  }
+  .main-title {
+    font-family: 'Sora', sans-serif; font-size: 38px; font-weight: 800;
+    line-height: 1.15; margin-bottom: 16px;
+    background: linear-gradient(135deg, #e6edf3 30%, #bc8cff 70%, #39d3c3 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; position: relative;
+  }
+  .header-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.7; max-width: 680px; position: relative; }
+  .header-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 20px; position: relative; }
+  .meta-chip { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-secondary); }
+  .meta-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .progress-bar-wrap { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; position: relative; }
+  .prog-chip {
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    border-radius: 6px; padding: 3px 10px; font-size: 11.5px;
+    color: var(--text-muted); font-family: 'JetBrains Mono', monospace;
+  }
+
+  .content-area { padding: 40px 60px 80px; max-width: 1000px; }
+  .section { margin-bottom: 60px; scroll-margin-top: 30px; }
+  .section-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .section-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .icon-blue { background: rgba(88,166,255,0.15); border: 1px solid rgba(88,166,255,0.3); }
+  .icon-green { background: rgba(63,185,80,0.15); border: 1px solid rgba(63,185,80,0.3); }
+  .icon-orange { background: rgba(247,129,102,0.15); border: 1px solid rgba(247,129,102,0.3); }
+  .icon-purple { background: rgba(188,140,255,0.15); border: 1px solid rgba(188,140,255,0.3); }
+  .icon-teal { background: rgba(57,211,195,0.15); border: 1px solid rgba(57,211,195,0.3); }
+  .icon-yellow { background: rgba(227,179,65,0.15); border: 1px solid rgba(227,179,65,0.3); }
+
+  .section-title-wrap h2 { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+  .section-title-wrap .section-num { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); font-weight: 400; margin-bottom: 4px; }
+
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; transition: border-color 0.2s; }
+  .card:hover { border-color: var(--border-bright); }
+  .card-title { font-family: 'Sora', sans-serif; font-weight: 600; font-size: 15px; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+  p { font-size: 14.5px; line-height: 1.8; color: var(--text-secondary); margin-bottom: 14px; }
+  h3 { font-family: 'Sora', sans-serif; font-size: 17px; font-weight: 600; color: var(--text-primary); margin: 28px 0 14px; }
+
+  .callout { border-radius: 10px; padding: 16px 20px; margin: 20px 0; display: flex; gap: 14px; align-items: flex-start; }
+  .callout-icon { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+  .callout-content { flex: 1; }
+  .callout-title { font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .callout-text { font-size: 13.5px; line-height: 1.7; color: var(--text-secondary); }
+  .callout.info { background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.25); }
+  .callout.info .callout-title { color: var(--accent-blue); }
+  .callout.success { background: rgba(63,185,80,0.08); border: 1px solid rgba(63,185,80,0.25); }
+  .callout.success .callout-title { color: var(--accent-green); }
+  .callout.warning { background: rgba(227,179,65,0.08); border: 1px solid rgba(227,179,65,0.3); }
+  .callout.warning .callout-title { color: var(--accent-yellow); }
+  .callout.danger { background: rgba(247,129,102,0.08); border: 1px solid rgba(247,129,102,0.3); }
+  .callout.danger .callout-title { color: var(--accent-orange); }
+  .callout.tip { background: rgba(188,140,255,0.08); border: 1px solid rgba(188,140,255,0.25); }
+  .callout.tip .callout-title { color: var(--accent-purple); }
+
+  .code-block { background: #0a0e13; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 16px 0; font-family: 'JetBrains Mono', monospace; }
+  .code-header { background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .code-lang { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .code-dots { display: flex; gap: 5px; }
+  .code-dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-red { background: #ff5f56; } .dot-yellow-c { background: #ffbd2e; } .dot-green-c { background: #27c93f; }
+  .code-body { padding: 20px; font-size: 13px; line-height: 1.9; color: #79c0ff; overflow-x: auto; white-space: pre; }
+  .code-body .cmd { color: #3fb950; }
+  .code-body .comment { color: #6e7681; font-style: italic; }
+  .code-body .param { color: #ffa657; }
+  .code-body .value { color: #a5d6ff; }
+  .code-body .output { color: #8b949e; }
+  .code-body .prompt { color: #e3b341; }
+
+  .spec-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; }
+  .spec-table th { background: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 16px; text-align: left; border-bottom: 2px solid var(--border); }
+  .spec-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
+  .spec-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+  .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent-blue); border: 1px solid rgba(88,166,255,0.3); }
+  .badge-green { background: rgba(63,185,80,0.15); color: var(--accent-green); border: 1px solid rgba(63,185,80,0.3); }
+  .badge-orange { background: rgba(247,129,102,0.15); color: var(--accent-orange); border: 1px solid rgba(247,129,102,0.3); }
+  .badge-purple { background: rgba(188,140,255,0.15); color: var(--accent-purple); border: 1px solid rgba(188,140,255,0.3); }
+  .badge-yellow { background: rgba(227,179,65,0.15); color: var(--accent-yellow); border: 1px solid rgba(227,179,65,0.3); }
+  .badge-teal { background: rgba(57,211,195,0.15); color: var(--accent-teal); border: 1px solid rgba(57,211,195,0.3); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 16px 0; }
+
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; }
+  .stat-num { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+  .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .hl { background: rgba(88,166,255,0.12); color: var(--accent-blue); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; padding: 1px 6px; border-radius: 4px; border: 1px solid rgba(88,166,255,0.2); }
+  .hl-green { background: rgba(63,185,80,0.12); color: var(--accent-green); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; padding: 1px 6px; border-radius: 4px; }
+  .hl-orange { background: rgba(247,129,102,0.12); color: var(--accent-orange); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; padding: 1px 6px; border-radius: 4px; }
+  .hl-purple { background: rgba(188,140,255,0.12); color: var(--accent-purple); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; padding: 1px 6px; border-radius: 4px; }
+
+  ul, ol { margin: 10px 0 16px 0; padding-left: 24px; }
+  li { font-size: 14px; line-height: 1.9; color: var(--text-secondary); margin-bottom: 4px; }
+  li strong { color: var(--text-primary); }
+
+  .mermaid-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; overflow-x: auto; }
+  .diagram-caption { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 16px; font-style: italic; }
+
+  .qa-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+  .qa-q { background: rgba(88,166,255,0.06); border-bottom: 1px solid var(--border); padding: 14px 20px; font-size: 14px; color: var(--text-primary); font-weight: 500; display: flex; gap: 12px; align-items: flex-start; }
+  .qa-label { background: var(--accent-blue); color: #000; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; border-radius: 4px; padding: 2px 7px; margin-top: 2px; flex-shrink: 0; }
+  .qa-a { padding: 14px 20px; font-size: 13.5px; color: var(--text-secondary); line-height: 1.8; }
+
+  .step-flow { display: flex; align-items: stretch; gap: 0; margin: 20px 0; flex-wrap: wrap; }
+  .step-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 18px 16px; flex: 1; min-width: 140px; text-align: center; position: relative; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; margin: 0 auto 10px; }
+  .step-label { font-size: 12.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+  .step-sub { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+  .step-arrow { display: flex; align-items: center; padding: 0 6px; color: var(--text-muted); font-size: 18px; }
+
+  .divider { height: 1px; background: var(--border); margin: 40px 0; }
+
+  /* WAFL diagram */
+  .wafl-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+  .wafl-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .wafl-box-title { font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+  /* Permission matrix */
+  .perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+  .perm-card { background: var(--bg-card); border-radius: 10px; padding: 16px; border-left: 3px solid; }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main-content { margin-left: 0; max-width: 100vw; }
+    #reading-progress { left: 0; }
+    .content-area { padding: 24px 20px 60px; }
+    .top-header { padding: 40px 20px 30px; }
+    .main-title { font-size: 26px; }
+    .wafl-compare, .grid-2, .grid-3, .grid-4, .perm-grid { grid-template-columns: 1fr; }
+    .step-flow { flex-direction: column; }
+    .step-arrow { transform: rotate(90deg); align-self: center; }
+  }
+</style>
+</head>
+<body>
+
+<div id="reading-progress"></div>
+
+<!-- ─────────── SIDEBAR ─────────── -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🗄️</div>
+      <span>NetApp ONTAP</span>
+    </div>
+    <div class="sidebar-subtitle">Tutorial Series · Tutorial 09</div>
+  </div>
+  <nav class="toc-nav">
+    <div class="toc-section-label">📂 Core Topics</div>
+    <a class="toc-link" href="#overview"><span class="toc-num">01</span>Tutorial Overview</a>
+    <a class="toc-link" href="#cifs-shares-intro"><span class="toc-num">02</span>CIFS Shares — Fundamentals</a>
+    <a class="toc-link sub" href="#creating-share">Creating a CIFS Share</a>
+    <a class="toc-link sub" href="#share-permissions">Share-Level Permissions</a>
+    <a class="toc-link" href="#ntfs-permissions"><span class="toc-num">03</span>NTFS / User-Level Permissions</a>
+    <a class="toc-link sub" href="#abe">Access-Based Enumeration</a>
+    <a class="toc-link" href="#share-properties"><span class="toc-num">04</span>Share Properties Deep Dive</a>
+    <a class="toc-link sub" href="#continuous-avail">Continuous Availability</a>
+    <a class="toc-link sub" href="#vscan">Antivirus Scanning (VScan)</a>
+    <a class="toc-link" href="#cifs-server-mgmt"><span class="toc-num">05</span>CIFS Server Management</a>
+    <a class="toc-link sub" href="#netbios-alias">NetBIOS Alias</a>
+    <a class="toc-link sub" href="#connections-sessions">Connections &amp; Sessions</a>
+    <a class="toc-link sub" href="#domain-management">Domain Management</a>
+    <a class="toc-link sub" href="#cifs-options">SMB Protocol Versions</a>
+    <a class="toc-link" href="#wafl"><span class="toc-num">06</span>WAFL — Write Anywhere File Layout</a>
+    <a class="toc-link sub" href="#traditional-vs-wafl">Traditional vs WAFL</a>
+    <a class="toc-link" href="#inodes"><span class="toc-num">07</span>Inodes — Capacity Planning</a>
+    <a class="toc-link sub" href="#inode-math">Inode Calculation</a>
+    <a class="toc-link" href="#interview-qa"><span class="toc-num">08</span>Interview Q&amp;A</a>
+    <a class="toc-link" href="#author"><span class="toc-num">✍️</span>About the Author</a>
+  </nav>
+</aside>
+
+<!-- ─────────── MAIN ─────────── -->
+<main class="main-content">
+
+  <!-- Header -->
+  <div class="top-header">
+    <div class="header-badge">📘 TUTORIAL 09 · NetApp ONTAP Administration Series</div>
+    <h1 class="main-title">CIFS Shares, SMB Protocol,<br>WAFL &amp; Inodes</h1>
+    <p class="header-desc">A complete guide to provisioning SMB/CIFS storage shares, managing share-level and NTFS permissions, configuring share properties (ABE, antivirus scanning, continuous availability), administering the virtual CIFS server, and understanding ONTAP's WAFL file system and inode capacity planning.</p>
+    <div class="header-meta">
+      <div class="meta-chip"><div class="dot" style="background:var(--accent-purple)"></div>SMB / CIFS</div>
+      <div class="meta-chip"><div class="dot" style="background:var(--accent-blue)"></div>Active Directory</div>
+      <div class="meta-chip"><div class="dot" style="background:var(--accent-teal)"></div>WAFL Architecture</div>
+      <div class="meta-chip"><div class="dot" style="background:var(--accent-green)"></div>Inodes &amp; Capacity</div>
+    </div>
+    <div class="progress-bar-wrap">
+      <span class="prog-chip">⏱ ~60 min read</span>
+      <span class="prog-chip">🔧 Hands-on CLI</span>
+      <span class="prog-chip">📊 Diagrams included</span>
+      <span class="prog-chip">🎤 Interview Q&amp;A</span>
+    </div>
+  </div>
+
+  <div class="content-area">
+
+    <!-- ─────────── SECTION 1: OVERVIEW ─────────── -->
+    <section class="section" id="overview">
+      <div class="section-header">
+        <div class="section-icon icon-blue">🗺️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 01</div>
+          <h2>Tutorial Overview</h2>
+        </div>
+      </div>
+      <p>In the previous tutorial, we covered setting up the CIFS virtual server on an SVM and joining it to an Active Directory domain. This tutorial picks up where that left off — we move from infrastructure setup into <strong>day-to-day storage provisioning</strong> over CIFS/SMB.</p>
+      <p>We also explore two foundational ONTAP internals that every storage engineer must understand: <strong>WAFL (Write Anywhere File Layout)</strong> — the ONTAP file system — and <strong>Inodes</strong> — the metadata mechanism that determines how many files a volume can hold.</p>
+
+      <div class="grid-4">
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--accent-purple)">4</div>
+          <div class="stat-label">Permission Types</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--accent-blue)">3</div>
+          <div class="stat-label">SMB Versions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--accent-teal)">10%</div>
+          <div class="stat-label">WAFL Reserve</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--accent-green)">32 KB</div>
+          <div class="stat-label">Default/Inode</div>
+        </div>
+      </div>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart LR
+    A[🗄️ NetApp SVM] --> B[CIFS Virtual Server]
+    B --> C[CIFS Shares]
+    C --> D[Share Permissions]
+    C --> E[Share Properties]
+    D --> F[NTFS / User ACLs]
+    E --> G[ABE · VScan · CA]
+    B --> H[SMB Protocol Stack]
+    H --> I[SMB 1 / 2 / 3 / 3.1]
+    A --> J[WAFL File System]
+    J --> K[Write Anywhere]
+    J --> L[Inodes / Metadata]
+        </div>
+        <div class="diagram-caption">CIFS provisioning and ONTAP internals covered in this tutorial</div>
+      </div>
+    </section>
+
+    <!-- ─────────── SECTION 2: CIFS SHARES ─────────── -->
+    <section class="section" id="cifs-shares-intro">
+      <div class="section-header">
+        <div class="section-icon icon-purple">📂</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 02</div>
+          <h2>CIFS Shares — Fundamentals</h2>
+        </div>
+      </div>
+
+      <p>A <strong>CIFS share</strong> (also referred to as an SMB share) is the mechanism by which ONTAP presents a volume or qtree to Windows clients. Think of a share as the "front door" — it defines what storage space is accessible over the network and under what name. When a business user requests "a 500 GB shared drive for the Finance team," what they are asking for is a CIFS share backed by an ONTAP volume.</p>
+
+      <div class="callout info">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <div class="callout-title">Key Concept</div>
+          <div class="callout-text">Before creating a CIFS share, the underlying volume must have its <strong>security style set to NTFS</strong> and a <strong>junction path configured</strong>. Without a junction path, the volume is not accessible through the NAS namespace and cannot be shared.</div>
+        </div>
+      </div>
+
+      <h3 id="creating-share">Creating a Volume and CIFS Share</h3>
+      <p>The typical workflow is: create an NTFS-style volume → assign a junction path → create the CIFS share pointing to that path.</p>
+
+      <!-- Step flow -->
+      <div class="step-flow">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-label">Create Volume</div>
+          <div class="step-sub">NTFS security style, thin provisioned, junction path assigned</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-label">Create CIFS Share</div>
+          <div class="step-sub">Map share name to volume junction path</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-label">Set Share Permissions</div>
+          <div class="step-sub">Restrict default "Everyone – Full Control"</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-label">Configure NTFS ACLs</div>
+          <div class="step-sub">Managed via Windows Computer Management or CLI</div>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step-item">
+          <div class="step-num">5</div>
+          <div class="step-label">Enable Share Properties</div>
+          <div class="step-sub">ABE, VScan profile, CA (Hyper-V only)</div>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI — Volume + Share Creation</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="comment"># Step 1 — Create an NTFS volume with junction path</span>
+<span class="prompt">::></span> <span class="cmd">volume create</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-volume</span> <span class="value">fin_data01</span> \
+    <span class="param">-aggregate</span> <span class="value">aggr_ssd_01</span> \
+    <span class="param">-size</span> <span class="value">500g</span> \
+    <span class="param">-security-style</span> <span class="value">ntfs</span> \
+    <span class="param">-space-guarantee</span> <span class="value">none</span> \
+    <span class="param">-junction-path</span> <span class="value">/fin_data01</span>
+
+<span class="comment"># Step 2 — Create the CIFS share</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs share create</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-share-name</span> <span class="value">Finance_Data</span> \
+    <span class="param">-path</span> <span class="value">/fin_data01</span>
+
+<span class="comment"># Step 3 — Verify shares on the SVM</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs share show</span> <span class="param">-vserver</span> <span class="value">svm-finance</span>
+<span class="output">          Share          Path                Properties  Comment  ACL
+--------- -------------- ------------------- ----------- -------- ---------
+svm-finance Finance_Data /fin_data01         oplocks      -       Everyone/Full Control
+svm-finance admin$       /                   browsable    -       (default)
+svm-finance ipc$         /                   browsable    -       (default)</span></div>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-content">
+          <div class="callout-title">Default Shares</div>
+          <div class="callout-text">ONTAP automatically creates several system shares (admin$, ipc$, c$) when a CIFS server is configured. These are administrative shares — do not delete them. Only the share you explicitly create (like <span class="hl">Finance_Data</span> above) is yours to manage.</div>
+        </div>
+      </div>
+
+      <h3 id="share-permissions">Share-Level Permissions</h3>
+      <p>CIFS provides two layers of access control. Share-level permissions are the <em>outer gate</em> — a user must pass share-level permissions before ONTAP even evaluates NTFS (file-level) permissions. ONTAP supports four permission types:</p>
+
+      <div class="perm-grid">
+        <div class="perm-card" style="border-color: var(--accent-orange);">
+          <div class="card-title" style="color:var(--accent-orange);">🚫 No Access</div>
+          <p style="margin:0;font-size:13px;">Explicitly denies access regardless of group membership. Even domain admins with this setting cannot enter the share.</p>
+        </div>
+        <div class="perm-card" style="border-color: var(--accent-blue);">
+          <div class="card-title" style="color:var(--accent-blue);">👁️ Read</div>
+          <p style="margin:0;font-size:13px;">View and copy files only. Cannot create, modify, or delete data. Ideal for report consumers or auditors.</p>
+        </div>
+        <div class="perm-card" style="border-color: var(--accent-teal);">
+          <div class="card-title" style="color:var(--accent-teal);">✏️ Change</div>
+          <p style="margin:0;font-size:13px;">Full data access — read, write, modify, and delete. Cannot manage permissions on the share itself.</p>
+        </div>
+        <div class="perm-card" style="border-color: var(--accent-purple);">
+          <div class="card-title" style="color:var(--accent-purple);">👑 Full Control</div>
+          <p style="margin:0;font-size:13px;">All Change privileges <em>plus</em> permission management. The user can grant/revoke other users' access. Default for "Everyone" on share creation.</p>
+        </div>
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-icon">🔴</div>
+        <div class="callout-content">
+          <div class="callout-title">Critical — Remove Everyone/Full Control Immediately</div>
+          <div class="callout-text">When a CIFS share is first created, <strong>Everyone gets Full Control by default</strong>. This means anyone who knows the share name and virtual CIFS server name can access it without authentication. Always restrict this immediately after share creation by adding specific users or AD groups, then deleting the "Everyone" ACL entry.</div>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI — Managing Share Access Control</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="comment"># Grant access — Full Control to a specific AD user</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs share access-control create</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-share</span> <span class="value">Finance_Data</span> \
+    <span class="param">-user-or-group</span> <span class="value">corp\sarah.johnson</span> \
+    <span class="param">-permission</span> <span class="value">Full_Control</span>
+
+<span class="comment"># Grant access — Read only to an AD group</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs share access-control create</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-share</span> <span class="value">Finance_Data</span> \
+    <span class="param">-user-or-group</span> <span class="value">corp\Finance_Readers</span> \
+    <span class="param">-permission</span> <span class="value">Read</span>
+
+<span class="comment"># Grant Change access to another user</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs share access-control create</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-share</span> <span class="value">Finance_Data</span> \
+    <span class="param">-user-or-group</span> <span class="value">corp\mark.chen</span> \
+    <span class="param">-permission</span> <span class="value">Change</span>
+
+<span class="comment"># Remove "Everyone" — do this LAST after adding named users</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs share access-control delete</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-share</span> <span class="value">Finance_Data</span> \
+    <span class="param">-user-or-group</span> <span class="value">Everyone</span>
+
+<span class="comment"># Modify existing permission (no need to delete and recreate)</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs share access-control modify</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-share</span> <span class="value">Finance_Data</span> \
+    <span class="param">-user-or-group</span> <span class="value">corp\mark.chen</span> \
+    <span class="param">-permission</span> <span class="value">Read</span>
+
+<span class="comment"># View current share ACLs</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs share show</span> <span class="param">-vserver</span> <span class="value">svm-finance</span></div>
+      </div>
+
+      <h3>Connecting to a CIFS Share — Windows Client</h3>
+      <p>Windows users can access CIFS shares in two ways: direct path navigation (<span class="hl">\\CIFS_SERVER\share_name</span>) or mapping as a persistent drive letter via "Map Network Drive." Using the virtual CIFS server <strong>DNS name</strong> (rather than an IP address) is strongly recommended — DNS is mapped to all data LIF IPs, providing automatic failover if one LIF becomes unreachable.</p>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+sequenceDiagram
+    participant C as Windows Client
+    participant D as DNS Server
+    participant L as Data LIF (ONTAP)
+    participant A as Active Directory
+
+    C->>D: Resolve CIFS server name (e.g. SVM-FINANCE)
+    D-->>C: IP: 172.16.10.50
+    C->>L: SMB connection request (port 445)
+    L->>A: Validate user credentials (Kerberos/NTLM)
+    A-->>L: Authentication approved
+    L-->>C: Share access granted
+    C->>L: Map drive / browse share
+        </div>
+        <div class="diagram-caption">Windows client SMB authentication and share access flow via Active Directory</div>
+      </div>
+    </section>
+
+    <!-- ─────────── SECTION 3: NTFS PERMISSIONS ─────────── -->
+    <section class="section" id="ntfs-permissions">
+      <div class="section-header">
+        <div class="section-icon icon-teal">🔐</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 03</div>
+          <h2>NTFS / User-Level Permissions</h2>
+        </div>
+      </div>
+
+      <p>Beyond share-level permissions, ONTAP volumes with NTFS security style support <strong>file and folder-level ACLs</strong> (Access Control Lists), also known as NTFS permissions. These are the same permission mechanism used by Windows NTFS volumes and are managed through the Windows <strong>Security tab</strong> in file or folder properties.</p>
+
+      <div class="callout info">
+        <div class="callout-icon">📋</div>
+        <div class="callout-content">
+          <div class="callout-title">Who Manages What</div>
+          <div class="callout-text">In most organizations: <strong>Storage team manages share-level permissions</strong> (the outer gate). <strong>Windows/AD team manages NTFS permissions</strong> (the inner gate). Storage admins typically add the Windows team's AD group to the share with Full Control, then the Windows team handles individual file/folder ACLs via Computer Management or Windows Explorer.</div>
+        </div>
+      </div>
+
+      <h3>Managing NTFS Permissions via Computer Management</h3>
+      <p>Administrators can connect to the ONTAP SVM from the Windows Computer Management console and manage shares and NTFS permissions directly, just as they would for a local Windows server. To connect:</p>
+      <ol>
+        <li>Open <strong>Computer Management</strong> on a Windows server</li>
+        <li>Right-click → <strong>Connect to another computer</strong></li>
+        <li>Enter the virtual CIFS server DNS name (e.g., <code>svm-finance.corp.example.com</code>)</li>
+        <li>Expand <strong>System Tools → Shared Folders → Shares</strong></li>
+        <li>Right-click any share → Properties → <strong>Security tab</strong> for NTFS ACLs</li>
+      </ol>
+
+      <div class="callout warning">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-content">
+          <div class="callout-title">Two-Layer Access Model</div>
+          <div class="callout-text">A user must satisfy <em>both</em> share-level AND NTFS-level permissions to access data. If a user has share-level access but no NTFS permission on a folder, they'll be denied. Conversely, NTFS permissions are <em>mandatory</em> — even if share-level access is missing, NTFS permissions still apply at the file system level. Always configure both layers.</div>
+        </div>
+      </div>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart TD
+    U[👤 User Connects to Share] --> SL{Share-Level<br/>Permission?}
+    SL -->|No Access| D1[❌ Access Denied]
+    SL -->|Allowed| NF{NTFS Permission<br/>on Folder/File?}
+    NF -->|No Permission| D2[❌ Access Denied]
+    NF -->|Read| R[👁️ View Only]
+    NF -->|Modify| W[✏️ Read + Write + Delete]
+    NF -->|Full Control| FC[👑 All + Manage Permissions]
+        </div>
+        <div class="diagram-caption">Two-layer access control evaluation — share-level then NTFS file-level</div>
+      </div>
+
+      <h3 id="abe">Access-Based Enumeration (ABE)</h3>
+      <p>Access-Based Enumeration is one of the most powerful security features available in NetApp CIFS. Without ABE, when a user browses a share, they can <em>see</em> all folders regardless of whether they have permission to access them — this gives away information about what data exists. With ABE enabled, users can <strong>only see folders and files they are permitted to access</strong>. Hidden folders simply don't appear in their view.</p>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart LR
+    subgraph Share ["📂 Department_Share (ABE Enabled)"]
+        A[📁 HR_Private\nHR team only]
+        B[📁 Finance_Reports\nFinance team only]
+        C[📁 Engineering_Docs\nEng team only]
+        D[📁 Company_Policies\nAll staff]
+    end
+
+    U1[👤 HR User] -->|Sees| A
+    U1 -->|Sees| D
+    U1 -.->|Hidden| B
+    U1 -.->|Hidden| C
+
+    U2[👤 Finance User] -->|Sees| B
+    U2 -->|Sees| D
+    U2 -.->|Hidden| A
+    U2 -.->|Hidden| C
+        </div>
+        <div class="diagram-caption">ABE hides folders from users who lack NTFS access — each user sees only their permitted folders</div>
+      </div>
+
+      <div class="callout success">
+        <div class="callout-icon">✅</div>
+        <div class="callout-content">
+          <div class="callout-title">Best Practice — Enable ABE on Shared Departmental Shares</div>
+          <div class="callout-text">ABE is especially important for shares where multiple teams store data in separate folders (HR, Finance, Legal, etc.). Without ABE, a curious user can see folder names — a security and compliance risk. ABE is added as a <strong>share property</strong> using <span class="hl">vserver cifs share properties add</span>.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────── SECTION 4: SHARE PROPERTIES ─────────── -->
+    <section class="section" id="share-properties">
+      <div class="section-header">
+        <div class="section-icon icon-orange">⚙️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 04</div>
+          <h2>Share Properties Deep Dive</h2>
+        </div>
+      </div>
+
+      <p>Share properties are optional features you can attach to a CIFS share. ONTAP applies a set of defaults automatically (oplocks, browsable, change-notify, show-previous-versions), but you can fully customize what is applied. Properties can be added or removed at any time, even after share creation.</p>
+
+      <table class="spec-table">
+        <thead>
+          <tr><th>Property</th><th>Default</th><th>Description</th><th>Use When</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="hl">oplocks</span></td><td><span class="badge badge-green">Yes</span></td><td>Opportunistic locks — clients cache data locally for performance</td><td>Most general-purpose shares</td></tr>
+          <tr><td><span class="hl">browsable</span></td><td><span class="badge badge-green">Yes</span></td><td>Share is visible when browsing the CIFS server (\\svm-name)</td><td>Standard shares; remove to hide confidential shares</td></tr>
+          <tr><td><span class="hl">changenotify</span></td><td><span class="badge badge-green">Yes</span></td><td>Notifies clients of file system changes in real time</td><td>Most shares; remove only if creating performance issues</td></tr>
+          <tr><td><span class="hl">show-previous-versions</span></td><td><span class="badge badge-green">Yes</span></td><td>Enables Windows "Previous Versions" restore tab (requires snapshots)</td><td>When snapshots are configured on the volume</td></tr>
+          <tr><td><span class="hl">access-based-enumeration</span></td><td><span class="badge badge-orange">No</span></td><td>Hide folders/files the user cannot access</td><td>Multi-tenant or multi-department shares</td></tr>
+          <tr><td><span class="hl">continuously-available</span></td><td><span class="badge badge-orange">No</span></td><td>Persistent session IDs for transparent reconnection</td><td>Hyper-V over SMB3 or SQL Server over SMB3 <em>only</em></td></tr>
+          <tr><td><span class="hl">namespace-caching</span></td><td><span class="badge badge-orange">No</span></td><td>Cache directory structure client-side for faster enumeration</td><td>Large directory trees</td></tr>
+        </tbody>
+      </table>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI — Share Properties Management</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="comment"># Create share with custom options upfront</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs share create</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-share-name</span> <span class="value">Exec_Reports</span> \
+    <span class="param">-path</span> <span class="value">/exec_data</span> \
+    <span class="param">-comment</span> <span class="value">"Confidential — C-Suite use only"</span> \
+    <span class="param">-vscan-fileop-profile</span> <span class="value">standard</span> \
+    <span class="param">-max-connections-per-share</span> <span class="value">10</span> \
+    <span class="param">-share-properties</span> <span class="value">oplocks,changenotify,access-based-enumeration</span>
+
+<span class="comment"># Add a property to an existing share</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs share properties add</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-share-name</span> <span class="value">Finance_Data</span> \
+    <span class="param">-share-properties</span> <span class="value">access-based-enumeration</span>
+
+<span class="comment"># Remove browsable to hide a share</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs share properties remove</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-share-name</span> <span class="value">Exec_Reports</span> \
+    <span class="param">-share-properties</span> <span class="value">browsable</span>
+
+<span class="comment"># Modify share settings post-creation</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs share modify</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-share-name</span> <span class="value">Finance_Data</span> \
+    <span class="param">-vscan-fileop-profile</span> <span class="value">writes-only</span> \
+    <span class="param">-max-connections-per-share</span> <span class="value">25</span>
+
+<span class="comment"># Delete a share (volume is preserved)</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs share delete</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-share-name</span> <span class="value">Finance_Data</span></div>
+      </div>
+
+      <h3 id="vscan">Antivirus Scanning (VScan Profile)</h3>
+      <p>ONTAP supports integration with external antivirus scanning engines via the VScan framework. Rather than copying data to a scanning server, the scan happens inline — data is inspected byte-by-byte during the write or read operation, over the network. Each CIFS share has its own scan profile that controls this behavior.</p>
+
+      <table class="spec-table">
+        <thead>
+          <tr><th>VScan Profile</th><th>Behavior</th><th>Performance Impact</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="hl-green">standard</span></td><td>Scans reads and writes; may skip files on timeout</td><td>Moderate — recommended default</td></tr>
+          <tr><td><span class="hl-purple">strict</span></td><td>Scans everything — no skips, no timeout bypass</td><td>High — use for highly sensitive data only</td></tr>
+          <tr><td><span class="hl">writes-only</span></td><td>Scans new incoming writes; reads bypass scanning</td><td>Lower — good compromise for performance-sensitive shares</td></tr>
+          <tr><td><span class="hl-orange">no-scan</span></td><td>Disables antivirus scanning entirely for this share</td><td>None — use only for trusted data sources</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout tip">
+        <div class="callout-icon">💜</div>
+        <div class="callout-content">
+          <div class="callout-title">Interview Tip — Why is SMB slower than other protocols?</div>
+          <div class="callout-text">SMB/CIFS is typically slower than NFS or iSCSI for high-throughput workloads primarily because of inline antivirus scanning. Every SMB write operation passes through the VScan engine by default. This overhead is why SMB is not recommended for database or high-IOPS workloads. For those, use NFS or block (iSCSI/FC).</div>
+        </div>
+      </div>
+
+      <h3 id="continuous-avail">Continuous Availability — When and Why</h3>
+      <p>SMB is a <strong>stateful protocol</strong> — it maintains connection state (session IDs, connection IDs). If a network interruption occurs or a client is idle for a period, the session is dropped and a new session ID is assigned on reconnect. For most file sharing workloads, this is acceptable. For <strong>Hyper-V virtual machines</strong> and <strong>SQL Server databases</strong> running directly over SMB3, this session disruption causes VM/database errors.</p>
+      <p>Enabling the <strong>Continuously Available (CA)</strong> share property allocates a <em>persistent</em> session ID for that share. If a brief network disruption occurs, the client reconnects using the same session ID — the application sees no interruption. ONTAP explicitly warns against using CA for general-purpose shares due to resource overhead.</p>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+sequenceDiagram
+    participant VM as Hyper-V VM
+    participant S as SMB3 Share (CA enabled)
+    participant O as ONTAP SVM
+
+    VM->>S: Connect (Session ID: 7A2F)
+    S->>O: Register persistent session
+    Note over VM,O: Brief network interruption...
+    VM->>S: Reconnect attempt
+    S->>O: Resume session ID: 7A2F
+    O-->>S: Session restored, same ID
+    S-->>VM: ✅ Transparent reconnect — no disruption
+        </div>
+        <div class="diagram-caption">Continuously Available shares maintain persistent session IDs — critical for Hyper-V and SQL over SMB3</div>
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-icon">🔴</div>
+        <div class="callout-content">
+          <div class="callout-title">Warning — Do Not Use CA on General Shares</div>
+          <div class="callout-text">ONTAP itself issues a warning when you enable Continuously Available on a non-Hyper-V/SQL share. CA shares consume additional controller resources to maintain persistent sessions. For standard file shares, this is wasted overhead. Use CA <em>only</em> for SMB3 Hyper-V or SQL Server integrations.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────── SECTION 5: CIFS SERVER MANAGEMENT ─────────── -->
+    <section class="section" id="cifs-server-mgmt">
+      <div class="section-header">
+        <div class="section-icon icon-yellow">🏢</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 05</div>
+          <h2>CIFS Server Management</h2>
+        </div>
+      </div>
+
+      <p>Beyond share management, ONTAP provides a rich set of commands to administer the virtual CIFS server itself — from creating NetBIOS aliases and monitoring active connections to controlling SMB protocol versions and managing domain controller preferences.</p>
+
+      <h3 id="netbios-alias">NetBIOS Alias</h3>
+      <p>A NetBIOS alias lets you add an alternate name to your virtual CIFS server without modifying the original configuration. This is useful when teams know the server by a legacy name, or when you want to migrate from an old server name gradually without disrupting existing mapped drives.</p>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI — NetBIOS Alias</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="comment"># Add a NetBIOS alias to the virtual CIFS server</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs add-netbios-aliases</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-netbios-aliases</span> <span class="value">FIN-SERVER,FINANCE-NAS</span>
+
+<span class="comment"># Verify — look for "NetBIOS Aliases" in the output</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs show</span> <span class="param">-vserver</span> <span class="value">svm-finance</span> <span class="param">-instance</span>
+
+<span class="comment"># Remove an alias when no longer needed</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs remove-netbios-aliases</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-netbios-aliases</span> <span class="value">FIN-SERVER</span></div>
+      </div>
+
+      <h3 id="connections-sessions">Connections, Sessions &amp; File Locks</h3>
+      <p>ONTAP provides granular visibility into every active SMB connection and session. This is invaluable during maintenance windows (to verify no users are connected before a scheduled operation) and for troubleshooting access issues.</p>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI — Connections, Sessions &amp; File Locks</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="comment"># View all active CIFS connections</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs connection show</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span>
+<span class="output">Node     Vserver   Conn-ID  Session-ID  Remote-IP      Port  LIF
+-------- --------- -------- ----------- -------------- ----- ----------
+node-01  svm-finance  4732    2819      172.16.10.101   445  data-lif-01</span>
+
+<span class="comment"># View all SMB sessions with idle time and open files count</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs session show</span> <span class="param">-vserver</span> <span class="value">svm-finance</span>
+
+<span class="comment"># View which files are currently open (great for troubleshooting locks)</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs session file show</span> <span class="param">-vserver</span> <span class="value">svm-finance</span>
+
+<span class="comment"># Force-close a stale file lock (use conn-id and session-id from above)</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs session file close</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-node</span> <span class="value">node-01</span> \
+    <span class="param">-session-id</span> <span class="value">2819</span> \
+    <span class="param">-connection-id</span> <span class="value">4732</span> \
+    <span class="param">-file-id</span> <span class="value">32</span>
+
+<span class="comment"># Force-close an idle session to free up connection slots</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs session close</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-node</span> <span class="value">node-01</span> \
+    <span class="param">-session-id</span> <span class="value">2819</span> \
+    <span class="param">-connection-id</span> <span class="value">4732</span>
+
+<span class="comment"># Stop and start the virtual CIFS server</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs stop</span> <span class="param">-vserver</span> <span class="value">svm-finance</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs start</span> <span class="param">-vserver</span> <span class="value">svm-finance</span></div>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-icon">💜</div>
+        <div class="callout-content">
+          <div class="callout-title">Real-World Scenario — Releasing a File Lock</div>
+          <div class="callout-text">A team member opened a shared Excel report before leaving for a business trip. Colleagues on a different time zone cannot save their updates because the file is locked under that user's session. Use <span class="hl">vserver cifs session file show</span> to identify the file ID and session, then <span class="hl">vserver cifs session file close</span> to release the lock. Any unsaved changes by the original user will be lost, so confirm this is acceptable before proceeding.</div>
+        </div>
+      </div>
+
+      <h3 id="domain-management">Domain Controller Management</h3>
+      <p>The CIFS server must communicate with Active Directory domain controllers (DCs) for every user authentication. ONTAP automatically discovers all DCs in the domain, but you can specify <strong>preferred DCs</strong> to prioritize local domain controllers (same datacenter) over geographically remote ones — reducing authentication latency significantly.</p>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart TD
+    SVM[🗄️ SVM CIFS Server<br/>svm-finance] --> |Auth Request| PDC
+
+    subgraph Preferred ["✅ Preferred DCs — Local Datacenter"]
+        PDC[DC-PROD-01\n172.16.20.10]
+        PDC2[DC-PROD-02\n172.16.20.11]
+    end
+
+    subgraph Remote ["🌍 Remote DCs — Fallback Only"]
+        RDC1[DC-NYC-01\n10.50.10.5]
+        RDC2[DC-SYD-01\n203.10.5.20]
+    end
+
+    PDC -.->|If unavailable| PDC2
+    PDC2 -.->|If both unavailable| RDC1
+    RDC1 -.->|Last resort| RDC2
+        </div>
+        <div class="diagram-caption">Preferred DC configuration — local DCs take priority; remote DCs are used only as fallback</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI — Domain Controller Management</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="comment"># View all discovered domain controllers</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs domain discovered-servers show</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span>
+
+<span class="comment"># Trigger manual rediscovery (if auto-discovery missed some DCs)</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs domain discovered-servers reset-servers</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span>
+
+<span class="comment"># Add preferred domain controllers (max 3)</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs domain preferred-dc add</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-domain</span> <span class="value">corp.example.com</span> \
+    <span class="param">-preferred-dc-ip</span> <span class="value">172.16.20.10,172.16.20.11</span>
+
+<span class="comment"># View preferred DCs</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs domain preferred-dc show</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span>
+
+<span class="comment"># Test communication to a specific server (like ping, but SMB-aware)</span>
+<span class="prompt">::></span> <span class="cmd">vserver cifs check</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-server-ip</span> <span class="value">172.16.20.10</span></div>
+      </div>
+
+      <h3 id="cifs-options">SMB Protocol Versions — Control &amp; Security</h3>
+      <p>ONTAP supports SMB 1, SMB 2, SMB 3, and SMB 3.1. Understanding which versions to enable is a critical security decision. SMB 1 and SMB 2 have known vulnerabilities that were exploited by ransomware attacks (WannaCry, NotPetya). SMB 3 and 3.1 include encryption and pre-authentication integrity — significantly more secure.</p>
+
+      <table class="spec-table">
+        <thead>
+          <tr><th>Version</th><th>Default (ONTAP 9.3+)</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="hl-orange">SMB 1</span></td><td><span class="badge badge-orange">Disabled</span></td><td>Ransomware-vulnerable. Do not enable unless required for legacy systems (e.g., Windows XP era devices).</td></tr>
+          <tr><td><span class="hl">SMB 2</span></td><td><span class="badge badge-green">Enabled</span></td><td>Widely compatible, but lacks encryption. Use only if SMB 3 is not supported by the client OS.</td></tr>
+          <tr><td><span class="hl-green">SMB 3</span></td><td><span class="badge badge-green">Enabled</span></td><td>End-to-end encryption, persistent handles. Required for Hyper-V and SQL over SMB.</td></tr>
+          <tr><td><span class="hl-purple">SMB 3.1</span></td><td><span class="badge badge-green">Enabled</span></td><td>Pre-authentication integrity (prevents man-in-the-middle). Recommended standard for modern environments.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI — SMB Version Control (Advanced Mode)</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="comment"># Enter advanced privilege mode</span>
+<span class="prompt">::></span> <span class="cmd">set advanced</span>
+
+<span class="comment"># View and modify CIFS options (SMB versions, security settings)</span>
+<span class="prompt">::*></span> <span class="cmd">vserver cifs options modify</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-smb1-enabled</span> <span class="value">false</span> \
+    <span class="param">-smb2-enabled</span> <span class="value">true</span> \
+    <span class="param">-smb3-enabled</span> <span class="value">true</span> \
+    <span class="param">-smb31-enabled</span> <span class="value">true</span>
+
+<span class="comment"># Verify current SMB version settings</span>
+<span class="prompt">::*></span> <span class="cmd">vserver cifs options show</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span>
+
+<span class="comment"># Return to admin mode</span>
+<span class="prompt">::*></span> <span class="cmd">set admin</span></div>
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-icon">🔴</div>
+        <div class="callout-content">
+          <div class="callout-title">Security Advisory — Disable SMB 1 Immediately</div>
+          <div class="callout-text">SMB 1 was the primary attack vector for the WannaCry and NotPetya ransomware outbreaks. ONTAP 9.3 and later disable SMB 1 by default. If you are managing systems running older ONTAP versions, explicitly verify that SMB 1 is disabled. Enabling it even temporarily for legacy device compatibility creates significant organizational risk.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────── SECTION 6: WAFL ─────────── -->
+    <section class="section" id="wafl">
+      <div class="section-header">
+        <div class="section-icon icon-teal">🌊</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 06</div>
+          <h2>WAFL — Write Anywhere File Layout</h2>
+        </div>
+      </div>
+
+      <p><strong>WAFL (Write Anywhere File Layout)</strong> is the proprietary file system at the core of ONTAP. Every storage operating system requires a file system to manage how data is physically placed on disks — in Windows it's NTFS, in Linux it's ext4/xfs, and in ONTAP it's WAFL. Understanding WAFL explains why ONTAP behaves differently from traditional storage arrays and why certain design decisions (like the 10% WAFL reserve) exist.</p>
+
+      <div class="callout info">
+        <div class="callout-icon">📘</div>
+        <div class="callout-content">
+          <div class="callout-title">What Does a File System Do?</div>
+          <div class="callout-text">A file system is responsible for deciding <em>where</em> data is physically written to disk, maintaining metadata (file names, sizes, timestamps), and tracking which blocks are free vs. used. Without a file system, a disk is just a sequence of raw blocks with no meaningful organization.</div>
+        </div>
+      </div>
+
+      <h3 id="traditional-vs-wafl">Traditional File System vs. WAFL</h3>
+      <p>The fundamental difference between WAFL and traditional file systems lies in <strong>block reservation</strong>. Traditional file systems reserve specific blocks for specific logical partitions at creation time. WAFL does not — it writes wherever the next free block is found.</p>
+
+      <div class="wafl-compare">
+        <div class="wafl-box">
+          <div class="wafl-box-title" style="color:var(--accent-orange)">🔒 Traditional File System<br><span style="font-size:11px;color:var(--text-muted)">EMC, IBM, Hitachi — legacy approach</span></div>
+          <svg viewBox="0 0 300 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;margin-bottom:12px;background:#0d1117;border-radius:8px;padding:12px;">
+            <text x="150" y="18" fill="#8b949e" font-size="10" text-anchor="middle" font-family="monospace">Storage Pool</text>
+            <rect x="20" y="28" width="260" height="200" rx="6" fill="none" stroke="#30363d" stroke-width="1.5"/>
+            <!-- LP1 blocks -->
+            <rect x="32" y="40" width="56" height="26" rx="3" fill="rgba(247,129,102,0.25)" stroke="#f78166" stroke-width="1"/>
+            <rect x="32" y="70" width="56" height="26" rx="3" fill="rgba(247,129,102,0.25)" stroke="#f78166" stroke-width="1"/>
+            <rect x="32" y="100" width="56" height="26" rx="3" fill="rgba(247,129,102,0.25)" stroke="#f78166" stroke-width="1"/>
+            <!-- LP2 blocks -->
+            <rect x="122" y="40" width="56" height="26" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+            <rect x="122" y="70" width="56" height="26" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+            <rect x="122" y="100" width="56" height="26" rx="3" fill="rgba(88,166,255,0.25)" stroke="#58a6ff" stroke-width="1"/>
+            <!-- LP3 blocks -->
+            <rect x="212" y="40" width="56" height="26" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/>
+            <rect x="212" y="70" width="56" height="26" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/>
+            <rect x="212" y="100" width="56" height="26" rx="3" fill="rgba(63,185,80,0.25)" stroke="#3fb950" stroke-width="1"/>
+            <!-- Labels -->
+            <text x="60" y="170" fill="#f78166" font-size="10" text-anchor="middle" font-family="monospace">LP1</text>
+            <text x="60" y="182" fill="#6e7681" font-size="9" text-anchor="middle" font-family="monospace">Reserved</text>
+            <text x="150" y="170" fill="#58a6ff" font-size="10" text-anchor="middle" font-family="monospace">LP2</text>
+            <text x="150" y="182" fill="#6e7681" font-size="9" text-anchor="middle" font-family="monospace">Reserved</text>
+            <text x="240" y="170" fill="#3fb950" font-size="10" text-anchor="middle" font-family="monospace">LP3</text>
+            <text x="240" y="182" fill="#6e7681" font-size="9" text-anchor="middle" font-family="monospace">Reserved</text>
+            <text x="150" y="215" fill="#e3b341" font-size="9" text-anchor="middle" font-family="sans-serif">Fixed blocks pre-allocated per partition</text>
+            <text x="150" y="228" fill="#6e7681" font-size="9" text-anchor="middle" font-family="sans-serif">✅ Fast reads (known block locations)</text>
+            <text x="150" y="241" fill="#6e7681" font-size="9" text-anchor="middle" font-family="sans-serif">❌ Slower writes (must find reserved blocks)</text>
+          </svg>
+        </div>
+        <div class="wafl-box">
+          <div class="wafl-box-title" style="color:var(--accent-teal)">🌊 WAFL — Write Anywhere<br><span style="font-size:11px;color:var(--text-muted)">NetApp ONTAP — modern approach</span></div>
+          <svg viewBox="0 0 300 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;margin-bottom:12px;background:#0d1117;border-radius:8px;padding:12px;">
+            <text x="150" y="18" fill="#8b949e" font-size="10" text-anchor="middle" font-family="monospace">Aggregate</text>
+            <rect x="20" y="28" width="260" height="200" rx="6" fill="none" stroke="#30363d" stroke-width="1.5"/>
+            <!-- Mixed blocks — scattered by volume -->
+            <rect x="32" y="40" width="34" height="22" rx="3" fill="rgba(247,129,102,0.3)" stroke="#f78166" stroke-width="1"/>
+            <text x="49" y="55" fill="#f78166" font-size="8" text-anchor="middle" font-family="monospace">V1</text>
+            <rect x="70" y="40" width="34" height="22" rx="3" fill="rgba(88,166,255,0.3)" stroke="#58a6ff" stroke-width="1"/>
+            <text x="87" y="55" fill="#58a6ff" font-size="8" text-anchor="middle" font-family="monospace">V2</text>
+            <rect x="108" y="40" width="34" height="22" rx="3" fill="rgba(63,185,80,0.3)" stroke="#3fb950" stroke-width="1"/>
+            <text x="125" y="55" fill="#3fb950" font-size="8" text-anchor="middle" font-family="monospace">V3</text>
+            <rect x="146" y="40" width="34" height="22" rx="3" fill="rgba(247,129,102,0.3)" stroke="#f78166" stroke-width="1"/>
+            <text x="163" y="55" fill="#f78166" font-size="8" text-anchor="middle" font-family="monospace">V1</text>
+            <rect x="184" y="40" width="34" height="22" rx="3" fill="rgba(88,166,255,0.3)" stroke="#58a6ff" stroke-width="1"/>
+            <text x="201" y="55" fill="#58a6ff" font-size="8" text-anchor="middle" font-family="monospace">V2</text>
+            <rect x="222" y="40" width="34" height="22" rx="3" fill="rgba(63,185,80,0.3)" stroke="#3fb950" stroke-width="1"/>
+            <text x="239" y="55" fill="#3fb950" font-size="8" text-anchor="middle" font-family="monospace">V3</text>
+            <rect x="32" y="68" width="34" height="22" rx="3" fill="rgba(63,185,80,0.3)" stroke="#3fb950" stroke-width="1"/>
+            <text x="49" y="83" fill="#3fb950" font-size="8" text-anchor="middle" font-family="monospace">V3</text>
+            <rect x="70" y="68" width="34" height="22" rx="3" fill="rgba(247,129,102,0.3)" stroke="#f78166" stroke-width="1"/>
+            <text x="87" y="83" fill="#f78166" font-size="8" text-anchor="middle" font-family="monospace">V1</text>
+            <rect x="108" y="68" width="34" height="22" rx="3" fill="rgba(88,166,255,0.3)" stroke="#58a6ff" stroke-width="1"/>
+            <text x="125" y="83" fill="#58a6ff" font-size="8" text-anchor="middle" font-family="monospace">V2</text>
+            <rect x="146" y="68" width="34" height="22" rx="3" fill="rgba(63,185,80,0.3)" stroke="#3fb950" stroke-width="1"/>
+            <text x="163" y="83" fill="#3fb950" font-size="8" text-anchor="middle" font-family="monospace">V3</text>
+            <rect x="184" y="68" width="34" height="22" rx="3" fill="rgba(247,129,102,0.3)" stroke="#f78166" stroke-width="1"/>
+            <text x="201" y="83" fill="#f78166" font-size="8" text-anchor="middle" font-family="monospace">V1</text>
+            <rect x="222" y="68" width="34" height="22" rx="3" fill="rgba(88,166,255,0.3)" stroke="#58a6ff" stroke-width="1"/>
+            <text x="239" y="83" fill="#58a6ff" font-size="8" text-anchor="middle" font-family="monospace">V2</text>
+            <!-- Legend -->
+            <rect x="30" y="130" width="12" height="10" fill="rgba(247,129,102,0.5)" stroke="#f78166"/>
+            <text x="46" y="140" fill="#8b949e" font-size="9" font-family="monospace">Volume 1</text>
+            <rect x="100" y="130" width="12" height="10" fill="rgba(88,166,255,0.5)" stroke="#58a6ff"/>
+            <text x="116" y="140" fill="#8b949e" font-size="9" font-family="monospace">Volume 2</text>
+            <rect x="170" y="130" width="12" height="10" fill="rgba(63,185,80,0.5)" stroke="#3fb950"/>
+            <text x="186" y="140" fill="#8b949e" font-size="9" font-family="monospace">Volume 3</text>
+            <text x="150" y="172" fill="#39d3c3" font-size="9" text-anchor="middle" font-family="sans-serif">No block reservation — writes to next free block</text>
+            <text x="150" y="187" fill="#6e7681" font-size="9" text-anchor="middle" font-family="sans-serif">✅ Exceptional write performance</text>
+            <text x="150" y="200" fill="#6e7681" font-size="9" text-anchor="middle" font-family="sans-serif">❌ Read requires scanning (offset by PAM/FlashCache)</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:20px;">
+        <div class="card">
+          <div class="card-title">✅ WAFL Advantages</div>
+          <ul>
+            <li><strong>Superior write performance</strong> — always writes to the next available free block, eliminating seek delays to reserved areas</li>
+            <li><strong>Efficient space utilization</strong> — no pre-allocation waste; thin provisioning works naturally</li>
+            <li><strong>Snapshot efficiency</strong> — WAFL's copy-on-write mechanism makes snapshots nearly instantaneous and space-efficient</li>
+            <li><strong>Consistent performance</strong> — no fragmentation effects of traditional reserved-block layouts</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">⚠️ WAFL Tradeoffs</div>
+          <ul>
+            <li><strong>Read latency overhead</strong> — since blocks for a volume are scattered across the aggregate, reads may scan more locations (mitigated by PAM/FlashCache)</li>
+            <li><strong>10% WAFL reserve</strong> — every aggregate reserves 10% of its capacity for WAFL metadata, Snapshot overhead management, and consistency tracking</li>
+            <li><strong>PAM dependency</strong> — to compensate for read scatter, NetApp introduced the Performance Acceleration Module (FlashCache) to cache block location metadata</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-icon">🔍</div>
+        <div class="callout-content">
+          <div class="callout-title">Why PAM/FlashCache Exists</div>
+          <div class="callout-text">WAFL's write-anywhere approach means a volume's data is spread across the entire aggregate. When reading, ONTAP must locate those scattered blocks — adding potential latency. The <strong>Performance Acceleration Module (PAM)</strong> — a PCIe flash card — caches block location indexes and frequently accessed data in extremely low-latency flash memory. This largely eliminates the read-performance disadvantage of WAFL compared to traditional reserved-block file systems.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────── SECTION 7: INODES ─────────── -->
+    <section class="section" id="inodes">
+      <div class="section-header">
+        <div class="section-icon icon-green">🔢</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 07</div>
+          <h2>Inodes — File Metadata &amp; Capacity Planning</h2>
+        </div>
+      </div>
+
+      <p>An <strong>inode</strong> is a metadata record that ONTAP assigns to every file and folder stored in a volume. The inode stores file attributes: name, size, timestamps, location of data blocks, permissions — everything except the actual file content. Think of inodes as the library catalog entries for your data.</p>
+
+      <p>This matters for capacity planning because <strong>ONTAP assigns a fixed pool of inodes per volume based on volume size at creation time</strong>. If a volume fills up its inode pool — even if raw disk space remains available — no new files can be created until inodes are freed or the pool is expanded.</p>
+
+      <div class="callout danger">
+        <div class="callout-icon">🔴</div>
+        <div class="callout-content">
+          <div class="callout-title">Common Production Issue — Inode Exhaustion</div>
+          <div class="callout-text">A user reports they cannot create new files even though the volume shows free space. Root cause: the inode pool is exhausted. This commonly happens in volumes storing millions of small files (email stores, log archives, audit trails). Always monitor both <strong>space utilization AND inode utilization</strong> for such workloads.</div>
+        </div>
+      </div>
+
+      <h3 id="inode-math">Inode Capacity Calculation</h3>
+      <p>ONTAP's default inode allocation is <strong>1 inode per 32 KB of volume capacity</strong>. You can increase this up to a maximum of <strong>1 inode per 4 KB</strong> — the smallest block size ONTAP allocates.</p>
+
+      <!-- SVG Inode calculation diagram -->
+      <div class="mermaid-wrap" style="padding:28px 24px;">
+        <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;font-family:'JetBrains Mono',monospace;">
+          <!-- Title -->
+          <text x="350" y="22" fill="#e6edf3" font-size="13" font-weight="700" text-anchor="middle" font-family="'Sora',sans-serif">Inode Allocation — 1 GB Volume Example</text>
+
+          <!-- Arrow flow boxes -->
+          <rect x="20" y="45" width="140" height="70" rx="8" fill="rgba(88,166,255,0.1)" stroke="#58a6ff" stroke-width="1.5"/>
+          <text x="90" y="70" fill="#58a6ff" font-size="11" text-anchor="middle">Volume Size</text>
+          <text x="90" y="88" fill="#e6edf3" font-size="15" font-weight="700" text-anchor="middle">1 GB</text>
+          <text x="90" y="106" fill="#6e7681" font-size="10" text-anchor="middle">= 1,048,576 KB</text>
+
+          <text x="178" y="85" fill="#6e7681" font-size="18" text-anchor="middle">÷</text>
+
+          <rect x="200" y="45" width="140" height="70" rx="8" fill="rgba(57,211,195,0.1)" stroke="#39d3c3" stroke-width="1.5"/>
+          <text x="270" y="70" fill="#39d3c3" font-size="11" text-anchor="middle">Default Ratio</text>
+          <text x="270" y="88" fill="#e6edf3" font-size="15" font-weight="700" text-anchor="middle">32 KB</text>
+          <text x="270" y="106" fill="#6e7681" font-size="10" text-anchor="middle">per inode</text>
+
+          <text x="358" y="85" fill="#6e7681" font-size="18" text-anchor="middle">=</text>
+
+          <rect x="380" y="45" width="160" height="70" rx="8" fill="rgba(63,185,80,0.1)" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="460" y="70" fill="#3fb950" font-size="11" text-anchor="middle">Default Inodes</text>
+          <text x="460" y="88" fill="#e6edf3" font-size="15" font-weight="700" text-anchor="middle">32,768</text>
+          <text x="460" y="106" fill="#6e7681" font-size="10" text-anchor="middle">files/folders max</text>
+
+          <text x="558" y="85" fill="#6e7681" font-size="18" text-anchor="middle">→</text>
+
+          <rect x="580" y="45" width="110" height="70" rx="8" fill="rgba(188,140,255,0.1)" stroke="#bc8cff" stroke-width="1.5"/>
+          <text x="635" y="68" fill="#bc8cff" font-size="10" text-anchor="middle">Max Possible</text>
+          <text x="635" y="82" fill="#e6edf3" font-size="13" font-weight="700" text-anchor="middle">262,144</text>
+          <text x="635" y="96" fill="#6e7681" font-size="9" text-anchor="middle">at 4 KB/inode</text>
+          <text x="635" y="108" fill="#6e7681" font-size="9" text-anchor="middle">limit</text>
+
+          <!-- Scale bar -->
+          <rect x="20" y="145" width="660" height="28" rx="6" fill="rgba(30,40,60,0.8)" stroke="#30363d" stroke-width="1"/>
+          <rect x="20" y="145" width="160" height="28" rx="6" fill="rgba(63,185,80,0.25)" stroke="none"/>
+          <text x="100" y="163" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">Default (32KB)</text>
+          <text x="20" y="145">
+            <rect x="180" y="145" width="500" height="28" rx="0" fill="rgba(88,166,255,0.08)" stroke="none"/>
+          </text>
+          <text x="440" y="163" fill="#58a6ff" font-size="10" text-anchor="middle">Manually increasable up to 4 KB/inode limit →</text>
+
+          <!-- Note -->
+          <rect x="20" y="195" width="660" height="55" rx="8" fill="rgba(227,179,65,0.06)" stroke="rgba(227,179,65,0.3)" stroke-width="1"/>
+          <text x="36" y="216" fill="#e3b341" font-size="11" font-weight="600">📌 Key Rule:</text>
+          <text x="36" y="232" fill="#8b949e" font-size="11">If you exhaust inodes: (1) increase the inode count manually, OR (2) grow the volume size to get more inodes automatically.</text>
+          <text x="36" y="246" fill="#8b949e" font-size="11">Increasing inodes consumes from the aggregate-level inode pool — monitor both volume and aggregate inode usage.</text>
+        </svg>
+        <div class="diagram-caption">Inode allocation math — default pool and maximum expansion limits for a 1 GB volume</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI — Inode Monitoring &amp; Management</span><div class="code-dots"><span class="dot-red"></span><span class="dot-yellow-c"></span><span class="dot-green-c"></span></div></div>
+        <div class="code-body"><span class="comment"># Method 1 — Check inodes using df (Seven-Mode style, also works in Cluster Mode)</span>
+<span class="prompt">::></span> <span class="cmd">df</span> <span class="param">-i</span> <span class="value">/vol/fin_data01</span>
+<span class="output">Filesystem              iused       ifree  %iused  Mounted on
+/vol/fin_data01          101       32667      0%    /fin_data01</span>
+
+<span class="comment"># Method 2 — Cluster Mode command (preferred for ONTAP 9.x)</span>
+<span class="prompt">::></span> <span class="cmd">volume show</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-volume</span> <span class="value">fin_data01</span> \
+    <span class="param">-fields</span> <span class="value">files,files-used</span>
+<span class="output">vserver     volume       files  files-used
+----------- ------------ ------ ----------
+svm-finance fin_data01   32768  101</span>
+
+<span class="comment"># Increase inode count manually (when running out of inodes but space is available)</span>
+<span class="prompt">::></span> <span class="cmd">volume modify</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-volume</span> <span class="value">fin_data01</span> \
+    <span class="param">-files</span> <span class="value">200000</span>
+
+<span class="comment"># Verify the updated inode pool</span>
+<span class="prompt">::></span> <span class="cmd">volume show</span> \
+    <span class="param">-vserver</span> <span class="value">svm-finance</span> \
+    <span class="param">-volume</span> <span class="value">fin_data01</span> \
+    <span class="param">-fields</span> <span class="value">files,files-used</span>
+<span class="output">vserver     volume       files   files-used
+----------- ------------ ------- ----------
+svm-finance fin_data01   200000  101</span></div>
+      </div>
+
+      <div class="callout success">
+        <div class="callout-icon">✅</div>
+        <div class="callout-content">
+          <div class="callout-title">Best Practice — Inode Capacity Planning</div>
+          <div class="callout-text">For volumes expected to store large numbers of small files (email archives, document management, log files): estimate the expected file count, divide by volume size to determine KB/inode needed, and pre-configure the inode count at volume creation. Expanding inode count after the fact is supported but requires proactive monitoring. The maximum is <strong>1 inode per 4 KB</strong> — beyond that, you must grow the volume.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────── SECTION 8: INTERVIEW Q&A ─────────── -->
+    <section class="section" id="interview-qa">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🎤</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 08</div>
+          <h2>Scenario-Based Interview Q&amp;A</h2>
+        </div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q1</span> What happens if you delete "Everyone" from share permissions before adding specific users?</div>
+        <div class="qa-a">The share becomes inaccessible to all users immediately, including the administrator who is making the change. Always add specific users or groups first, verify they appear in the ACL, and then remove "Everyone." This is the correct operational sequence. If Everyone is removed prematurely, only a user with cluster administrator access can restore share permissions via ONTAP CLI.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q2</span> A user has Full Control share permission but cannot access a specific folder. What would you check?</div>
+        <div class="qa-a">Share-level and NTFS-level permissions are independent. Having Full Control at the share level does not bypass NTFS (file-level) permission restrictions. Check the NTFS ACL on that specific folder via Computer Management → Shares → Security tab. The user or their AD group may have no NTFS permission, or may have an explicit Deny entry. Both share permission AND NTFS permission must permit access for the user to successfully open the folder.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q3</span> How would you hide a CIFS share without deleting it?</div>
+        <div class="qa-a">Remove the <span class="hl">browsable</span> share property using <span class="hl">vserver cifs share properties remove -share-properties browsable</span>. The share will no longer appear when a user browses <code>\\cifs-server-name</code>. However, users who know the exact share name can still access it directly via <code>\\cifs-server-name\share-name</code> if they have the appropriate permissions. This provides obscurity, not security — combine it with strict ACLs for true protection. A common convention is to append a <code>$</code> suffix to a share name (e.g., <code>exec$</code>) to signal it is hidden.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q4</span> What is the difference between Change and Full Control share permissions?</div>
+        <div class="qa-a"><strong>Change</strong> (sometimes called Write in older documentation) grants full data access: read, write, create, modify, and delete files and folders within the share. However, the user cannot manage the share's own permission list. <strong>Full Control</strong> includes everything Change provides, plus the ability to modify share permissions — meaning the user can grant or revoke other users' access to the share. Full Control is the CIFS equivalent of being the share owner. For most regular users, Change is sufficient and safer.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q5</span> A team member left for a long trip and forgot to close an Excel file on a CIFS share. Colleagues cannot save updates to that file. How do you resolve this?</div>
+        <div class="qa-a">Use <span class="hl">vserver cifs session file show</span> to identify the file lock — it shows the file ID, session ID, connection ID, volume, and user who holds the lock. Once identified, use <span class="hl">vserver cifs session file close</span> with the appropriate IDs to release the lock. The file becomes available for others to save changes. The original user's unsaved work is lost when the lock is released, so always confirm this is acceptable — ideally by contacting the file owner or getting management approval.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q6</span> Explain WAFL and why NetApp introduced PAM/FlashCache.</div>
+        <div class="qa-a">WAFL (Write Anywhere File Layout) is ONTAP's proprietary file system. Unlike traditional file systems that reserve specific disk blocks for specific volumes, WAFL writes data to any available free block in the aggregate. This delivers excellent write performance because the system never has to seek reserved areas. The tradeoff is read performance — since a volume's data is distributed across the aggregate rather than in reserved zones, reading requires locating scattered blocks, adding latency. NetApp introduced PAM (Performance Acceleration Module) — a PCIe-connected flash card — to cache block location metadata and frequently read data, largely eliminating this read-latency disadvantage and making WAFL's overall I/O profile competitive with traditional architectures.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q7</span> A client reports they cannot create new files on a volume even though df -h shows 40% free space. What is the likely cause and how do you fix it?</div>
+        <div class="qa-a">The volume has exhausted its inode pool. ONTAP assigns a fixed number of inodes per volume based on volume size at creation (default: 1 inode per 32 KB). If millions of small files have been written, all inodes may be consumed while disk space remains. Verify using <span class="hl">volume show -fields files,files-used</span>. Resolution: if the used count equals the files count, you have two options. First, increase the inode count with <span class="hl">volume modify -files &lt;new_count&gt;</span> — up to the maximum of 1 inode per 4 KB of volume capacity. Second, grow the volume, which automatically increases the inode pool proportionally. Increasing inodes does draw from the aggregate's inode pool, so verify aggregate-level inode availability as well.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q8</span> When should Continuously Available (CA) shares be used and when should they be avoided?</div>
+        <div class="qa-a">CA shares should be used exclusively for <strong>Hyper-V virtual machines</strong> running on ONTAP SMB3 storage and <strong>SQL Server</strong> workloads using SMB3 for database files. These workloads are sensitive to session interruption — a dropped SMB session while SQL or Hyper-V is writing can cause data corruption or VM crashes. CA shares maintain persistent session and connection IDs across brief interruptions, enabling transparent reconnection. For all other use cases (general file shares, home directories, department shares), CA is explicitly not recommended — it consumes additional controller resources to maintain persistent sessions for no meaningful benefit to regular file share workloads. ONTAP itself displays a warning when you attempt to add CA to a non-applicable share.</div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ─────────── AUTHOR SECTION ─────────── -->
+    <section class="section" id="author">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:32px;margin-bottom:32px;">
+
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border);">
+          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(88,166,255,0.2),rgba(188,140,255,0.2));border:1px solid rgba(88,166,255,0.3);display:flex;align-items:center;justify-content:center;font-size:18px;">✍️</div>
+          <div>
+            <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">About the Author</div>
+            <div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:700;color:var(--text-primary);">Mohammed Abdul</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;">
+          <div style="flex-shrink:0;">
+            <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#58a6ff,#bc8cff);display:flex;align-items:center;justify-content:center;font-size:36px;border:3px solid rgba(88,166,255,0.35);box-shadow:0 0 24px rgba(88,166,255,0.15);">👨‍💻</div>
+            <div style="margin-top:10px;text-align:center;">
+              <span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-family:'JetBrains Mono',monospace;background:rgba(63,185,80,0.15);color:var(--accent-green);border:1px solid rgba(63,185,80,0.3);">10+ Years Exp.</span>
+            </div>
+          </div>
+
+          <div style="flex:1;min-width:260px;">
+            <div style="font-family:'Sora',sans-serif;font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Data Protection Architect</div>
+            <div style="font-size:13px;color:var(--accent-blue);font-weight:500;margin-bottom:14px;">Hybrid Cloud · Enterprise Backup &amp; Recovery · Storage Architecture</div>
+            <p style="margin-bottom:14px;">Mohammed Abdul is a Data Protection Architect with more than 10 years of experience in Hybrid Cloud environments, having worked with global clients across various industries including financial services, healthcare, manufacturing, and technology.</p>
+            <p style="margin-bottom:18px;">With extensive expertise in enterprise backup and recovery solutions, Mohammed specializes in helping organizations design and implement robust, scalable data protection strategies aligned with business continuity requirements.</p>
+
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:10px;">Technology Specializations</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+              <span class="badge badge-blue">AWS</span>
+              <span class="badge badge-teal">Azure</span>
+              <span class="badge badge-green">GCP</span>
+              <span class="badge badge-orange">Commvault</span>
+              <span class="badge badge-purple">Veeam</span>
+              <span class="badge badge-yellow">NetBackup</span>
+              <span class="badge badge-blue">NetApp ONTAP</span>
+              <span class="badge badge-green">SAN · NAS</span>
+              <span class="badge badge-teal">Data Architecture</span>
+            </div>
+
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:10px;">Contact &amp; Queries</div>
+            <a href="mailto:abdul.md.20000102@gmail.com" style="display:inline-flex;align-items:center;gap:10px;background:rgba(88,166,255,0.08);border:1px solid rgba(88,166,255,0.35);border-radius:10px;padding:12px 20px;text-decoration:none;transition:all 0.2s;margin-bottom:0;">
+              <span style="font-size:18px;">✉️</span>
+              <div>
+                <div style="font-size:12px;color:var(--text-muted);font-weight:500;margin-bottom:2px;">Email</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent-blue);font-weight:600;">abdul.md.20000102@gmail.com</div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <div style="margin-top:32px;border-radius:10px;padding:18px 22px;background:rgba(227,179,65,0.07);border:1px solid rgba(227,179,65,0.3);display:flex;gap:14px;align-items:flex-start;">
+          <span style="font-size:20px;flex-shrink:0;margin-top:2px;">⚠️</span>
+          <div>
+            <div style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--accent-yellow);margin-bottom:8px;">Disclaimer</div>
+            <div style="font-size:13px;color:var(--text-secondary);line-height:1.75;">
+              This content is for <strong style="color:var(--text-primary);">educational purposes and knowledge sharing</strong> only. Always refer to official NetApp documentation and follow your organization's procedures for production implementations.<br><br>
+              I am not affiliated with or endorsed by NetApp, Inc. <strong style="color:var(--text-primary);">NetApp®</strong> and <strong style="color:var(--text-primary);">ONTAP®</strong> are registered trademarks of NetApp, Inc. All references are made purely for learning purposes. All IP addresses, hostnames, SVM names, and configuration parameters used in this tutorial are illustrative examples only and do not reflect any real environment.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      darkMode: true,
+      background: '#1c2333',
+      primaryColor: '#1c2333',
+      primaryTextColor: '#e6edf3',
+      primaryBorderColor: '#30363d',
+      lineColor: '#8b949e',
+      secondaryColor: '#161b22',
+      tertiaryColor: '#0d1117',
+      edgeLabelBackground: '#1c2333',
+      clusterBkg: '#1c2333',
+      clusterBorder: '#30363d',
+      titleColor: '#e6edf3',
+      fontFamily: "'Inter', sans-serif",
+      fontSize: '13px'
+    }
+  });
+
+  const sections = document.querySelectorAll('section[id]');
+  const tocLinks = document.querySelectorAll('.toc-link');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.toc-link[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '-30px 0px -60% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  const progressBar = document.getElementById('reading-progress');
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = docHeight > 0 ? scrollTop / docHeight : 0;
+    progressBar.style.transform = `scaleX(${progress})`;
+  });
+</script>
+</body>
+</html>
