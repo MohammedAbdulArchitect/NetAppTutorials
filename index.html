@@ -571,7 +571,7 @@
   </p>
   <div class="hero-stats">
     <div class="stat">
-      <div class="stat-num">8</div>
+      <div class="stat-num">10</div>
       <div class="stat-label">Tutorials</div>
     </div>
     <div class="stat">
@@ -601,19 +601,18 @@
       <div class="card-num-badge">01</div>
       <div class="card-meta">
         <div class="card-series">Tutorial 1 · Foundations</div>
-        <div class="card-title">NetApp Storage Fundamentals</div>
+        <div class="card-title">NetApp Storage Fundamentals, Products &amp; HA Architecture</div>
       </div>
     </div>
     <p class="card-desc">
-      Build a rock-solid foundation in enterprise storage. Understand how NetApp ONTAP is architected,
-      how data is organised and accessed, and the core principles that underpin every other tutorial in this series.
+      Build a rock-solid foundation in enterprise storage. Survey the vendor landscape, explore NetApp's FAS/AFF product portfolio and ONTAP history, understand controller terminology, and learn SAN vs NAS with standalone vs HA pair configurations.
     </p>
     <div class="card-topics">
-      <span class="topic-tag">Storage Basics</span>
-      <span class="topic-tag">ONTAP Overview</span>
-      <span class="topic-tag">Data Protocols</span>
-      <span class="topic-tag">SVMs</span>
-      <span class="topic-tag">Volumes & Qtrees</span>
+      <span class="topic-tag">Storage Landscape</span>
+      <span class="topic-tag">FAS / AFF Portfolio</span>
+      <span class="topic-tag">ONTAP History</span>
+      <span class="topic-tag">SAN vs NAS</span>
+      <span class="topic-tag">HA Pair Architecture</span>
     </div>
     <div class="card-footer">
       <div class="card-level">🟢 Beginner</div>
@@ -756,20 +755,19 @@
     <div class="card-top">
       <div class="card-num-badge">07</div>
       <div class="card-meta">
-        <div class="card-series">Tutorial 7 · Networking</div>
-        <div class="card-title">NFS, CIFS & iSCSI Protocol Configuration</div>
+        <div class="card-series">Tutorial 7 · Storage Provisioning</div>
+        <div class="card-title">SVM Architecture, LIF Design &amp; Volume Management</div>
       </div>
     </div>
     <p class="card-desc">
-      Configure and manage data access protocols on ONTAP. Learn how to set up NFS exports, CIFS shares,
-      and iSCSI LUNs, manage access control, and understand the protocol stack that serves data to clients.
+      Master the three core building blocks of ONTAP data delivery — create and configure Storage Virtual Machines, design logical interfaces (LIFs) for NAS and SAN, provision thick and thin volumes, and understand the namespace via junction points.
     </p>
     <div class="card-topics">
-      <span class="topic-tag">NFS Exports</span>
-      <span class="topic-tag">CIFS/SMB Shares</span>
-      <span class="topic-tag">iSCSI LUNs</span>
-      <span class="topic-tag">Access Control</span>
-      <span class="topic-tag">Protocol Stack</span>
+      <span class="topic-tag">SVM / vServer</span>
+      <span class="topic-tag">LIF Architecture</span>
+      <span class="topic-tag">Volume Types</span>
+      <span class="topic-tag">Thick vs Thin</span>
+      <span class="topic-tag">Junction Paths</span>
     </div>
     <div class="card-footer">
       <div class="card-level">🔴 Expert</div>
@@ -782,20 +780,69 @@
     <div class="card-top">
       <div class="card-num-badge">08</div>
       <div class="card-meta">
-        <div class="card-series">Tutorial 8 · Data Protection</div>
-        <div class="card-title">SnapMirror, SnapVault & Data Protection</div>
+        <div class="card-series">Tutorial 8 · NAS Management</div>
+        <div class="card-title">Qtrees, Security Styles, Quotas &amp; CIFS Setup</div>
       </div>
     </div>
     <p class="card-desc">
-      Master ONTAP's native data protection capabilities. Explore Snapshot policies, SnapMirror replication
-      for disaster recovery, SnapVault for long-term retention, and end-to-end data protection design.
+      Deep-dive into ONTAP namespace management — understand Qtree architecture and oplocks, apply volume security styles, configure hard/soft quota policies, and set up a CIFS server joined to Active Directory for Windows file sharing.
     </p>
     <div class="card-topics">
-      <span class="topic-tag">Snapshots</span>
-      <span class="topic-tag">SnapMirror</span>
-      <span class="topic-tag">SnapVault</span>
-      <span class="topic-tag">Disaster Recovery</span>
-      <span class="topic-tag">RPO &amp; RTO</span>
+      <span class="topic-tag">Qtrees &amp; Oplocks</span>
+      <span class="topic-tag">Security Styles</span>
+      <span class="topic-tag">Quota Policies</span>
+      <span class="topic-tag">CIFS / SMB Setup</span>
+      <span class="topic-tag">AD Join</span>
+    </div>
+    <div class="card-footer">
+      <div class="card-level">🔴 Expert</div>
+      <div class="card-cta">Start Tutorial →</div>
+    </div>
+  </a>
+
+  <!-- Tutorial 9 -->
+  <a href="https://mohammedabdularchitect.github.io/NetAppTutorials/netapp-tutorial9.html" class="card card-9" target="_blank">
+    <div class="card-top">
+      <div class="card-num-badge">09</div>
+      <div class="card-meta">
+        <div class="card-series">Tutorial 9 · SMB &amp; File System</div>
+        <div class="card-title">CIFS Shares, SMB Protocol, WAFL &amp; Inodes</div>
+      </div>
+    </div>
+    <p class="card-desc">
+      Complete your SMB knowledge — provision CIFS shares, configure share-level and NTFS permissions, enable Access-Based Enumeration and antivirus scanning, manage CIFS server sessions, and master ONTAP's WAFL file system architecture and inode capacity planning.
+    </p>
+    <div class="card-topics">
+      <span class="topic-tag">CIFS Shares</span>
+      <span class="topic-tag">NTFS Permissions</span>
+      <span class="topic-tag">SMB Protocol</span>
+      <span class="topic-tag">WAFL Architecture</span>
+      <span class="topic-tag">Inode Planning</span>
+    </div>
+    <div class="card-footer">
+      <div class="card-level">🔴 Expert</div>
+      <div class="card-cta">Start Tutorial →</div>
+    </div>
+  </a>
+
+  <!-- Tutorial 10 -->
+  <a href="https://mohammedabdularchitect.github.io/NetAppTutorials/netapp-tutorial10.html" class="card card-10" target="_blank">
+    <div class="card-top">
+      <div class="card-num-badge">10</div>
+      <div class="card-meta">
+        <div class="card-series">Tutorial 10 · NFS &amp; Identity</div>
+        <div class="card-title">NFS Configuration, Export Policies, User Management &amp; AD Integration</div>
+      </div>
+    </div>
+    <p class="card-desc">
+      Configure NFS for Linux and Unix clients with layered export policies, mount volumes via LIF or DNS, manage bulk access using subnets and netgroups, create local users with custom RBAC roles, and integrate Active Directory for centralised multi-cluster authentication.
+    </p>
+    <div class="card-topics">
+      <span class="topic-tag">NFS v3 / v4</span>
+      <span class="topic-tag">Export Policies</span>
+      <span class="topic-tag">Linux Mounting</span>
+      <span class="topic-tag">RBAC &amp; Local Users</span>
+      <span class="topic-tag">AD Integration</span>
     </div>
     <div class="card-footer">
       <div class="card-level">🔴 Expert</div>
