@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetApp Administration Series — Tutorial 11: Snapshots, Scheduling, Volume Autosize & Snap Autodelete</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-card: #1c2333;
+    --bg-card-hover: #21283a;
+    --accent-blue: #58a6ff;
+    --accent-green: #3fb950;
+    --accent-orange: #f78166;
+    --accent-purple: #bc8cff;
+    --accent-yellow: #e3b341;
+    --accent-teal: #39d3c3;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --border: #30363d;
+    --border-bright: #484f58;
+    --sidebar-width: 290px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  #reading-progress {
+    position: fixed; top: 0; left: var(--sidebar-width); right: 0;
+    height: 3px; background: linear-gradient(90deg, var(--accent-blue), var(--accent-teal), var(--accent-purple));
+    transform-origin: left; transform: scaleX(0);
+    z-index: 999; transition: transform 0.1s linear;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    position: fixed; top: 0; left: 0;
+    height: 100vh; overflow-y: auto;
+    z-index: 100; display: flex; flex-direction: column;
+  }
+  .sidebar-header {
+    padding: 20px 16px; border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary); position: sticky; top: 0; z-index: 10;
+  }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .sidebar-logo .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent-teal), var(--accent-blue));
+    border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .sidebar-logo span { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px; color: var(--text-primary); letter-spacing: 0.5px; }
+  .sidebar-subtitle { font-size: 11px; color: var(--text-muted); padding-left: 42px; }
+  .toc-nav { padding: 12px 0; flex: 1; }
+  .toc-section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); padding: 12px 16px 6px; }
+  .toc-link {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 16px; font-size: 12.5px;
+    color: var(--text-secondary); text-decoration: none;
+    transition: all 0.2s ease;
+    border-left: 2px solid transparent; line-height: 1.4;
+  }
+  .toc-link:hover { background: var(--bg-card); color: var(--text-primary); border-left-color: var(--accent-blue); }
+  .toc-link.active { background: rgba(88,166,255,0.1); color: var(--accent-blue); border-left-color: var(--accent-blue); font-weight: 500; }
+  .toc-link .toc-num { font-size: 10px; font-weight: 700; color: var(--text-muted); min-width: 18px; font-family: 'JetBrains Mono', monospace; }
+  .toc-link.sub { padding-left: 32px; font-size: 12px; }
+
+  /* ── MAIN ── */
+  .main-content { margin-left: var(--sidebar-width); flex: 1; max-width: calc(100vw - var(--sidebar-width)); }
+
+  .top-header {
+    background: linear-gradient(135deg, #0d1117 0%, #0d2035 50%, #0d1a2e 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 60px 60px 50px; position: relative; overflow: hidden;
+  }
+  .top-header::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(57,211,195,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(88,166,255,0.06) 0%, transparent 50%);
+  }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(57,211,195,0.12); border: 1px solid rgba(57,211,195,0.3);
+    border-radius: 20px; padding: 4px 14px;
+    font-size: 12px; color: var(--accent-teal); font-weight: 500;
+    margin-bottom: 18px; font-family: 'JetBrains Mono', monospace;
+  }
+  .main-title {
+    font-family: 'Sora', sans-serif; font-size: 36px; font-weight: 800;
+    line-height: 1.15; margin-bottom: 16px;
+    background: linear-gradient(135deg, #e6edf3 20%, #39d3c3 55%, #58a6ff 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; position: relative;
+  }
+  .header-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.7; max-width: 680px; position: relative; }
+  .header-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 20px; position: relative; }
+  .meta-chip { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-secondary); }
+  .meta-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .prog-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; position: relative; }
+  .prog-chip { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px; padding: 3px 10px; font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+  .content-area { padding: 40px 60px 80px; max-width: 1020px; }
+  .section { margin-bottom: 64px; scroll-margin-top: 30px; }
+  .section-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .section-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .icon-teal  { background: rgba(57,211,195,0.15);  border: 1px solid rgba(57,211,195,0.3); }
+  .icon-blue  { background: rgba(88,166,255,0.15);  border: 1px solid rgba(88,166,255,0.3); }
+  .icon-green { background: rgba(63,185,80,0.15);   border: 1px solid rgba(63,185,80,0.3); }
+  .icon-orange{ background: rgba(247,129,102,0.15); border: 1px solid rgba(247,129,102,0.3); }
+  .icon-purple{ background: rgba(188,140,255,0.15); border: 1px solid rgba(188,140,255,0.3); }
+  .icon-yellow{ background: rgba(227,179,65,0.15);  border: 1px solid rgba(227,179,65,0.3); }
+
+  .section-title-wrap h2 { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+  .section-title-wrap .section-num { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); font-weight: 400; margin-bottom: 4px; }
+
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; transition: border-color 0.2s; }
+  .card:hover { border-color: var(--border-bright); }
+  .card-title { font-family: 'Sora', sans-serif; font-weight: 600; font-size: 15px; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+  p { font-size: 14.5px; line-height: 1.8; color: var(--text-secondary); margin-bottom: 14px; }
+
+  .callout { border-radius: 10px; padding: 16px 20px; margin: 20px 0; display: flex; gap: 14px; align-items: flex-start; }
+  .callout-icon { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+  .callout-content { flex: 1; }
+  .callout-title { font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .callout-text { font-size: 13.5px; line-height: 1.7; color: var(--text-secondary); }
+  .callout.info    { background: rgba(88,166,255,0.08);  border: 1px solid rgba(88,166,255,0.25);  }
+  .callout.info    .callout-title { color: var(--accent-blue); }
+  .callout.success { background: rgba(63,185,80,0.08);   border: 1px solid rgba(63,185,80,0.25);   }
+  .callout.success .callout-title { color: var(--accent-green); }
+  .callout.warning { background: rgba(227,179,65,0.08);  border: 1px solid rgba(227,179,65,0.3);   }
+  .callout.warning .callout-title { color: var(--accent-yellow); }
+  .callout.danger  { background: rgba(247,129,102,0.08); border: 1px solid rgba(247,129,102,0.3);  }
+  .callout.danger  .callout-title { color: var(--accent-orange); }
+  .callout.tip     { background: rgba(188,140,255,0.08); border: 1px solid rgba(188,140,255,0.25); }
+  .callout.tip     .callout-title { color: var(--accent-purple); }
+  .callout.teal    { background: rgba(57,211,195,0.08);  border: 1px solid rgba(57,211,195,0.25);  }
+  .callout.teal    .callout-title { color: var(--accent-teal); }
+
+  .code-block { background: #080c10; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 16px 0; }
+  .code-header { background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .code-lang { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; font-family: 'JetBrains Mono', monospace; }
+  .code-dots { display: flex; gap: 5px; }
+  .code-dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-red { background: #ff5f56; } .dot-ylw { background: #ffbd2e; } .dot-grn { background: #27c93f; }
+  .code-body { padding: 20px; font-size: 12.5px; line-height: 1.85; color: #79c0ff; overflow-x: auto; white-space: pre; font-family: 'JetBrains Mono', monospace; }
+  .code-body .cmd     { color: #3fb950; }
+  .code-body .comment { color: #6e7681; font-style: italic; }
+  .code-body .param   { color: #ffa657; }
+  .code-body .value   { color: #a5d6ff; }
+  .code-body .output  { color: #8b949e; }
+  .code-body .prompt  { color: #e3b341; }
+  .code-body .hl      { color: #39d3c3; }
+
+  .spec-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; }
+  .spec-table th { background: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 16px; text-align: left; border-bottom: 2px solid var(--border); }
+  .spec-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
+  .spec-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+  .badge-blue   { background: rgba(88,166,255,0.15);  color: var(--accent-blue);   border: 1px solid rgba(88,166,255,0.3);  }
+  .badge-green  { background: rgba(63,185,80,0.15);   color: var(--accent-green);  border: 1px solid rgba(63,185,80,0.3);  }
+  .badge-orange { background: rgba(247,129,102,0.15); color: var(--accent-orange); border: 1px solid rgba(247,129,102,0.3);}
+  .badge-purple { background: rgba(188,140,255,0.15); color: var(--accent-purple); border: 1px solid rgba(188,140,255,0.3);}
+  .badge-yellow { background: rgba(227,179,65,0.15);  color: var(--accent-yellow); border: 1px solid rgba(227,179,65,0.3); }
+  .badge-teal   { background: rgba(57,211,195,0.15);  color: var(--accent-teal);   border: 1px solid rgba(57,211,195,0.3); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin: 16px 0; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; }
+  .stat-num { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+  .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .step-list { list-style: none; margin: 12px 0; }
+  .step-list li { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(48,54,61,0.5); font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; align-items: flex-start; }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num { width: 22px; height: 22px; border-radius: 6px; background: rgba(57,211,195,0.15); border: 1px solid rgba(57,211,195,0.3); color: var(--accent-teal); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
+
+  .bullet-list { list-style: none; margin: 10px 0; }
+  .bullet-list li { padding: 6px 0 6px 20px; position: relative; font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; }
+  .bullet-list li::before { content: '▸'; position: absolute; left: 0; color: var(--accent-teal); font-size: 11px; top: 8px; }
+
+  h3 { font-family: 'Sora', sans-serif; font-size: 17px; font-weight: 600; color: var(--text-primary); margin: 24px 0 12px; }
+  h4 { font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 600; color: var(--accent-teal); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .mermaid-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 28px 20px 16px; margin: 20px 0; overflow-x: auto; }
+  .diagram-caption { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 10px; font-style: italic; }
+
+  .svg-diagram { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; overflow-x: auto; }
+
+  .qa-block { background: var(--bg-card); border: 1px solid rgba(188,140,255,0.3); border-radius: 12px; padding: 20px 24px; margin: 16px 0; }
+  .qa-q { font-size: 14px; font-weight: 600; color: var(--accent-purple); margin-bottom: 10px; display: flex; gap: 10px; }
+  .qa-a { font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; padding-left: 26px; }
+  .qa-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; }
+
+  .divider { height: 1px; background: var(--border); margin: 40px 0; }
+  .hl      { background: rgba(57,211,195,0.12);  color: var(--accent-teal);   padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-blue { background: rgba(88,166,255,0.12);  color: var(--accent-blue);   padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-grn  { background: rgba(63,185,80,0.12);   color: var(--accent-green);  padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-org  { background: rgba(247,129,102,0.12); color: var(--accent-orange); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+  .hl-ylw  { background: rgba(227,179,65,0.12);  color: var(--accent-yellow); padding: 1px 6px; border-radius: 4px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; }
+
+  /* ── Snapshot block visualiser ── */
+  .snap-vis { display: flex; gap: 14px; flex-wrap: wrap; margin: 20px 0; align-items: flex-start; }
+  .snap-vol-box { background: rgba(88,166,255,0.06); border: 2px solid rgba(88,166,255,0.35); border-radius: 12px; padding: 18px; min-width: 160px; flex: 1; }
+  .snap-vol-title { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 12px; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+  .blk-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .blk { width: 36px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; border: 1px solid; }
+  .blk-a { background: rgba(88,166,255,0.18);  border-color: rgba(88,166,255,0.5);  color: #58a6ff; }
+  .blk-b { background: rgba(63,185,80,0.18);   border-color: rgba(63,185,80,0.5);   color: #3fb950; }
+  .blk-c { background: rgba(247,129,102,0.18); border-color: rgba(247,129,102,0.5); color: #f78166; }
+  .blk-d { background: rgba(188,140,255,0.18); border-color: rgba(188,140,255,0.5); color: #bc8cff; }
+  .blk-mod { background: rgba(227,179,65,0.18); border-color: rgba(227,179,65,0.5); color: #e3b341; }
+  .blk-del { background: rgba(48,54,61,0.4); border-color: rgba(72,79,88,0.5); color: #6e7681; text-decoration: line-through; }
+  .snap-box { background: rgba(57,211,195,0.05); border: 2px solid rgba(57,211,195,0.3); border-radius: 12px; padding: 18px; min-width: 140px; flex: 1; }
+  .snap-box-title { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 12px; color: var(--accent-teal); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .snap-time { font-size: 10px; color: var(--text-muted); margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; }
+  .snap-arrow { color: var(--text-muted); font-size: 24px; padding-top: 30px; flex-shrink: 0; }
+
+  /* Reserve comparison */
+  .reserve-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0; }
+  .rc-card { border-radius: 10px; padding: 18px; border: 1px solid var(--border); background: var(--bg-card); }
+  .rc-ver { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .rc-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: var(--text-secondary); }
+  .rc-pct { font-family: 'Sora', sans-serif; font-size: 20px; font-weight: 800; }
+
+  /* Autosize mode cards */
+  .mode-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin: 18px 0; }
+  .mode-card { border-radius: 10px; padding: 18px; border: 1px solid var(--border); background: var(--bg-card); text-align: center; }
+  .mode-icon { font-size: 28px; margin-bottom: 10px; }
+  .mode-name { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .mode-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+  /* Policy schedule table visual */
+  .sched-vis { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
+  .sched-row { display: flex; align-items: center; gap: 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
+  .sched-name { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: var(--accent-teal); min-width: 140px; }
+  .sched-bar { flex: 1; height: 8px; border-radius: 4px; }
+  .sched-count { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; min-width: 70px; text-align: right; }
+
+  /* Autodelete option cards */
+  .commit-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin: 16px 0; }
+  .commit-card { border-radius: 10px; padding: 14px 16px; border: 1px solid; }
+  .commit-try     { border-color: rgba(63,185,80,0.4);   background: rgba(63,185,80,0.05); }
+  .commit-disrupt { border-color: rgba(227,179,65,0.4);  background: rgba(227,179,65,0.05); }
+  .commit-destroy { border-color: rgba(247,129,102,0.4); background: rgba(247,129,102,0.05);}
+  .commit-badge { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+  .commit-try     .commit-badge { color: var(--accent-green); }
+  .commit-disrupt .commit-badge { color: var(--accent-yellow); }
+  .commit-destroy .commit-badge { color: var(--accent-orange); }
+  .commit-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* Space priority flow */
+  .prio-flow { display: flex; align-items: center; gap: 0; margin: 20px 0; flex-wrap: wrap; justify-content: center; }
+  .prio-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; text-align: center; min-width: 130px; }
+  .prio-box.primary { border-color: rgba(57,211,195,0.5); background: rgba(57,211,195,0.06); }
+  .prio-box.secondary { border-color: rgba(88,166,255,0.4); background: rgba(88,166,255,0.05); }
+  .prio-label { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+  .prio-name { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 13px; color: var(--text-primary); }
+  .prio-arrow { color: var(--accent-blue); font-size: 22px; padding: 0 10px; }
+
+  /* Quiz */
+  .quiz-wrap { background: var(--bg-card); border: 1px solid rgba(57,211,195,0.3); border-radius: 12px; padding: 24px; margin: 20px 0; }
+  .quiz-question { font-size: 14.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 16px; }
+  .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+  .quiz-option {
+    background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 16px; cursor: pointer; font-size: 13.5px; color: var(--text-secondary);
+    transition: all 0.2s; display: flex; align-items: center; gap: 10px;
+  }
+  .quiz-option:hover { border-color: var(--accent-teal); color: var(--text-primary); }
+  .quiz-option.correct { border-color: var(--accent-green); background: rgba(63,185,80,0.08); color: var(--accent-green); }
+  .quiz-option.wrong   { border-color: var(--accent-orange); background: rgba(247,129,102,0.08); color: var(--accent-orange); }
+  .quiz-opt-key { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; width: 20px; height: 20px; border-radius: 4px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .quiz-feedback { margin-top: 14px; font-size: 13px; padding: 10px 14px; border-radius: 8px; display: none; }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.ok  { background: rgba(63,185,80,0.1);  border: 1px solid rgba(63,185,80,0.3);  color: var(--accent-green); }
+  .quiz-feedback.bad { background: rgba(247,129,102,0.1);border: 1px solid rgba(247,129,102,0.3);color: var(--accent-orange);}
+  .quiz-reset { margin-top: 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px; padding: 6px 14px; cursor: pointer; font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; display: none; }
+  .quiz-reset.show { display: inline-block; }
+
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); }
+    .main-content { margin-left: 0; max-width: 100vw; }
+    #reading-progress { left: 0; }
+    .top-header { padding: 30px 20px; }
+    .content-area { padding: 20px; }
+    .grid-2,.grid-3,.reserve-compare,.mode-grid,.commit-grid { grid-template-columns: 1fr; }
+    .main-title { font-size: 24px; }
+    .prio-flow { flex-direction: column; }
+    .prio-arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<div id="reading-progress"></div>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="logo-icon">📸</div>
+      <span>NetApp ONTAP</span>
+    </div>
+    <div class="sidebar-subtitle">Administration Tutorial Series</div>
+  </div>
+  <nav class="toc-nav">
+    <div class="toc-section-label">Overview</div>
+    <a href="#intro"           class="toc-link"><span class="toc-num">00</span> Introduction</a>
+
+    <div class="toc-section-label">Snapshot Fundamentals</div>
+    <a href="#snap-concept"    class="toc-link"><span class="toc-num">01</span> How Snapshots Work</a>
+    <a href="#snap-cow"        class="toc-link sub"><span class="toc-num">↳</span> Copy-on-Write Internals</a>
+    <a href="#snap-reserve"    class="toc-link"><span class="toc-num">02</span> Snapshot Reserve</a>
+    <a href="#snap-limits"     class="toc-link sub"><span class="toc-num">↳</span> Version Limits & Counts</a>
+
+    <div class="toc-section-label">Snapshot Operations</div>
+    <a href="#snap-create"     class="toc-link"><span class="toc-num">03</span> Creating Snapshots</a>
+    <a href="#snap-restore"    class="toc-link"><span class="toc-num">04</span> Restoring Data</a>
+    <a href="#snap-restore-nfs"class="toc-link sub"><span class="toc-num">↳</span> NFS Client Restore</a>
+    <a href="#snap-immutable"  class="toc-link sub"><span class="toc-num">↳</span> Immutability</a>
+
+    <div class="toc-section-label">Snapshot Scheduling</div>
+    <a href="#snap-schedule"   class="toc-link"><span class="toc-num">05</span> CRON Schedules</a>
+    <a href="#snap-policy"     class="toc-link"><span class="toc-num">06</span> Snapshot Policies</a>
+    <a href="#snap-retention"  class="toc-link sub"><span class="toc-num">↳</span> Retention & Prefix</a>
+
+    <div class="toc-section-label">Space Management</div>
+    <a href="#vol-autosize"    class="toc-link"><span class="toc-num">07</span> Volume Autosize</a>
+    <a href="#autosize-modes"  class="toc-link sub"><span class="toc-num">↳</span> Grow vs Grow+Shrink</a>
+    <a href="#snap-autodelete" class="toc-link"><span class="toc-num">08</span> Snapshot Autodelete</a>
+    <a href="#space-priority"  class="toc-link"><span class="toc-num">09</span> Space Management Priority</a>
+
+    <div class="toc-section-label">Reference</div>
+    <a href="#quiz"            class="toc-link"><span class="toc-num">10</span> Self-Check Quiz</a>
+    <a href="#interview-qa"    class="toc-link"><span class="toc-num">11</span> Interview Q&amp;A</a>
+    <a href="#author"          class="toc-link"><span class="toc-num">—</span> About the Author</a>
+  </nav>
+</aside>
+
+<!-- ── MAIN ── -->
+<main class="main-content">
+
+  <!-- HEADER -->
+  <div class="top-header">
+    <div class="header-badge">📚 ONTAP Storage · Tutorial Series · Episode 11</div>
+    <h1 class="main-title">Snapshots, Scheduling,<br>Volume Autosize &amp; Autodelete</h1>
+    <p class="header-desc">
+      Master NetApp ONTAP's local data protection engine — from Copy-on-Write snapshot internals and granular restore options, to automated snapshot policies, volume autosize modes, and intelligent autodelete strategies for space management.
+    </p>
+    <div class="header-meta">
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-teal)"></span>Intermediate</div>
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-blue)"></span>ONTAP 9.x</div>
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-purple)"></span>NFS &amp; CIFS</div>
+      <div class="meta-chip"><span class="dot" style="background:var(--accent-yellow)"></span>Space Management</div>
+    </div>
+    <div class="prog-chips">
+      <span class="prog-chip">copy-on-write</span>
+      <span class="prog-chip">snapshot reserve</span>
+      <span class="prog-chip">cron schedule</span>
+      <span class="prog-chip">snapshot policy</span>
+      <span class="prog-chip">retention count</span>
+      <span class="prog-chip">volume autosize</span>
+      <span class="prog-chip">grow &amp; shrink</span>
+      <span class="prog-chip">snap autodelete</span>
+      <span class="prog-chip">space priority</span>
+    </div>
+  </div>
+
+  <div class="content-area">
+
+    <!-- 00 INTRO -->
+    <section class="section" id="intro">
+      <div class="section-header">
+        <div class="section-icon icon-teal">🎯</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 00</div>
+          <h2>What You Will Learn</h2>
+        </div>
+      </div>
+      <p>Snapshots are often described as the <strong style="color:var(--text-primary)">heartbeat of NetApp</strong>. Nearly every advanced ONTAP feature — SnapMirror, SnapVault, FlexClone — relies on the snapshot engine. This tutorial builds a complete picture from first principles to production-grade automation.</p>
+      <div class="grid-3">
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--accent-teal)">CoW</div>
+          <div class="stat-label">Copy-on-Write internals</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--accent-blue)">1024</div>
+          <div class="stat-label">Max snapshots per vol (ONTAP 9.3+)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--accent-purple)">5</div>
+          <div class="stat-label">Schedules per policy</div>
+        </div>
+      </div>
+      <div class="callout teal">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <div class="callout-title">Tutorial Approach</div>
+          <div class="callout-text">Each section builds on the previous. Start with how snapshots work internally, then move to operations, scheduling, and finally automated space management. An interactive quiz and interview Q&amp;A are included at the end. All IPs, hostnames, and volume names are illustrative examples only.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 01 HOW SNAPSHOTS WORK -->
+    <section class="section" id="snap-concept">
+      <div class="section-header">
+        <div class="section-icon icon-teal">📸</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 01</div>
+          <h2>How Snapshots Work</h2>
+        </div>
+      </div>
+
+      <p>An ONTAP <strong style="color:var(--text-primary)">snapshot</strong> is a point-in-time, read-only image of a volume. Unlike traditional backup copies that duplicate all data, a snapshot stores only metadata pointers to existing blocks at the moment of creation — making it near-instantaneous and initially space-free.</p>
+
+      <p>Snapshots can be created at <span class="hl-blue">volume level</span> and <span class="hl-blue">aggregate level</span>. However, NetApp strongly recommends volume-level snapshots only (covered in Section 02).</p>
+
+      <!-- Block visualiser -->
+      <div class="snap-vis">
+        <div class="snap-vol-box">
+          <div class="snap-vol-title">📦 Volume Data</div>
+          <div class="blk-row">
+            <div class="blk blk-a">A</div>
+            <div class="blk blk-b">B</div>
+            <div class="blk blk-c">C</div>
+            <div class="blk blk-d">D</div>
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:var(--text-muted);">Live blocks — all intact at T=09:00</div>
+        </div>
+        <div class="snap-arrow">→</div>
+        <div class="snap-box">
+          <div class="snap-box-title">🔒 Snap-Alpha</div>
+          <div class="snap-time">Created: 09:00 AM</div>
+          <div class="blk-row">
+            <div class="blk blk-a" style="font-size:9px">img-A→A</div>
+            <div class="blk blk-b" style="font-size:9px">img-B→B</div>
+            <div class="blk blk-c" style="font-size:9px">img-C→C</div>
+            <div class="blk blk-d" style="font-size:9px">img-D→D</div>
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:var(--text-muted);">Pointers to original blocks — near-zero size</div>
+        </div>
+      </div>
+      <div class="diagram-caption">At creation time, a snapshot holds only lightweight pointers — no data is duplicated</div>
+
+      <section id="snap-cow">
+        <h3>Copy-on-Write: What Happens After Snapshot Creation</h3>
+        <p>Once a snapshot exists, ONTAP implements <strong style="color:var(--text-primary)">Copy-on-Write (CoW)</strong>: before any live block is modified or deleted, its original content is preserved inside the snapshot's reserved space. The snapshot grows only as data changes accumulate.</p>
+
+        <div class="mermaid-wrap">
+          <div class="mermaid">
+flowchart LR
+    subgraph VOL["📦 Volume (Live)"]
+        A1["Block A → A1\n(modified)"]
+        B_del["Block B\n(deleted)"]
+        C["Block C\n(unchanged)"]
+        D["Block D\n(unchanged)"]
+    end
+    subgraph SNAP["🔒 Snap-Alpha (09:00)"]
+        SA["img-A\n(original A)"]
+        SB["img-B\n(original B, now only here)"]
+        SC["img-C → ptr → C"]
+        SD["img-D → ptr → D"]
+    end
+    A1 -. "CoW: original A\ncopied to snapshot" .-> SA
+    B_del -. "deleted B moved\ninto snapshot" .-> SB
+    C --> SC
+    D --> SD
+    style VOL fill:#1c2333,stroke:#58a6ff
+    style SNAP fill:#1c2333,stroke:#39d3c3
+          </div>
+          <div class="diagram-caption">After modifications and deletions — snapshot grows to hold changed/deleted blocks; unchanged blocks share pointers</div>
+        </div>
+
+        <div class="callout teal">
+          <div class="callout-icon">🧠</div>
+          <div class="callout-content">
+            <div class="callout-title">Key Insight — Data Protection Window</div>
+            <div class="callout-text">A snapshot only protects data that <strong>existed at the time of its creation</strong>. Any data written and then deleted between two consecutive snapshot checkpoints cannot be recovered from either snapshot. The protection window is the interval between snapshots — shorter intervals mean smaller gaps in recoverability.</div>
+          </div>
+        </div>
+
+        <h3>Multiple Snapshot Chain</h3>
+        <div class="mermaid-wrap">
+          <div class="mermaid">
+flowchart LR
+    VOL["📦 Volume\nLive Data: A1, C, D"]
+    S1["🔒 Snap-Alpha\n09:00 AM\nHolds: orig-A, orig-B\nPtrs: C, D"]
+    S2["🔒 Snap-Beta\n10:00 AM\nHolds: A1 ptr→vol\nPtrs: C,D → via Snap-Alpha"]
+
+    VOL -->|"captures changes\nfrom 09:00–10:00"| S1
+    VOL -->|"captures changes\nfrom 10:00 onwards"| S2
+    S2 -->|"unchanged blocks\nchain back"| S1
+    style VOL fill:#1c2333,stroke:#58a6ff
+    style S1 fill:#1c2333,stroke:#39d3c3
+    style S2 fill:#1c2333,stroke:#bc8cff
+          </div>
+          <div class="diagram-caption">Snapshots form a chain — newer snapshots reference unchanged blocks from older ones, saving space</div>
+        </div>
+      </section>
+    </section>
+
+    <!-- 02 SNAPSHOT RESERVE -->
+    <section class="section" id="snap-reserve">
+      <div class="section-header">
+        <div class="section-icon icon-blue">💾</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 02</div>
+          <h2>Snapshot Reserve Space</h2>
+        </div>
+      </div>
+
+      <p>ONTAP carves out a dedicated portion of each volume (and historically, aggregate) as <strong style="color:var(--text-primary)">snapshot reserve</strong> — space exclusively for snapshot blocks. Understanding how this reserve changed between ONTAP versions is a common interview topic.</p>
+
+      <div class="reserve-compare">
+        <div class="rc-card">
+          <div class="rc-ver" style="color:var(--accent-orange)">⚠️ ONTAP ≤ 7.3 (Legacy)</div>
+          <div class="rc-row"><span>Volume snapshot reserve:</span><span class="rc-pct" style="color:var(--accent-orange)">20%</span></div>
+          <div class="rc-row"><span>Aggregate snapshot reserve:</span><span class="rc-pct" style="color:var(--accent-orange)">5%</span></div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">On a 100 GB volume, only 80 GB was usable for data</div>
+        </div>
+        <div class="rc-card">
+          <div class="rc-ver" style="color:var(--accent-green)">✅ ONTAP 8.0+ (Current)</div>
+          <div class="rc-row"><span>Volume snapshot reserve:</span><span class="rc-pct" style="color:var(--accent-green)">5%</span></div>
+          <div class="rc-row"><span>Aggregate snapshot reserve:</span><span class="rc-pct" style="color:var(--accent-green)">0%</span></div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">Aggregate-level snapshots are no longer recommended</div>
+        </div>
+      </div>
+
+      <h3>Why Aggregate Snapshots Are Discouraged</h3>
+      <ul class="bullet-list">
+        <li>Restoring an aggregate snapshot would affect <strong>all volumes</strong> on that aggregate simultaneously — collateral impact is unacceptable in most cases</li>
+        <li>Aggregate-level snapshots introduce measurable <strong>I/O performance overhead</strong> due to the scale of tracked block changes</li>
+        <li>Granular recovery is not possible — you cannot restore a single file or single volume from an aggregate snapshot</li>
+      </ul>
+
+      <div class="callout warning">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-content">
+          <div class="callout-title">Best Practice</div>
+          <div class="callout-text">Always operate with <strong>volume-level snapshots only</strong>. Set aggregate snapshot reserve to 0 (it already defaults to 0 from ONTAP 8.0+). If you encounter an older system still using aggregate snapshots, evaluate migrating to a volume-level strategy.</div>
+        </div>
+      </div>
+
+      <section id="snap-limits">
+        <h3>Setting Snapshot Reserve at Volume Creation</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+          <div class="code-body"><span class="comment"># Create volume with custom snapshot reserve</span>
+<span class="prompt">::></span> <span class="cmd">volume create</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_appdata</span> \
+    <span class="param">-aggregate</span> <span class="value">aggr1_node01</span> <span class="param">-size</span> <span class="value">200g</span> \
+    <span class="param">-junction-path</span> <span class="value">/vol_appdata</span> \
+    <span class="param">-percent-snapshot-space</span> <span class="value">10</span>
+<span class="comment"># 10% = 20 GB reserved for snapshots; 180 GB usable for data</span>
+
+<span class="comment"># Verify snapshot reserve on all volumes</span>
+<span class="prompt">::></span> <span class="cmd">volume show</span> <span class="param">-fields</span> <span class="value">percent-snapshot-space</span></div>
+        </div>
+
+        <h4>Snapshot Count Limits</h4>
+        <table class="spec-table">
+          <thead><tr><th>ONTAP Version</th><th>Max Snapshots per Volume</th></tr></thead>
+          <tbody>
+            <tr><td>Up to ONTAP 9.2</td><td><span class="badge badge-yellow">255</span></td></tr>
+            <tr><td>ONTAP 9.3 and later</td><td><span class="badge badge-green">1024</span></td></tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+
+    <!-- 03 CREATING SNAPSHOTS -->
+    <section class="section" id="snap-create">
+      <div class="section-header">
+        <div class="section-icon icon-green">➕</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 03</div>
+          <h2>Creating &amp; Viewing Snapshots</h2>
+        </div>
+      </div>
+
+      <p>Snapshots can be created on-demand (manually) or automatically via a schedule. Both methods use the same underlying <span class="hl">volume snapshot</span> command namespace.</p>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI — Snapshot Lifecycle</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+        <div class="code-body"><span class="comment"># Create a manual snapshot</span>
+<span class="prompt">::></span> <span class="cmd">volume snapshot create</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_appdata</span> \
+    <span class="param">-snapshot</span> <span class="value">snap_pre_patching_20240515</span>
+
+<span class="comment"># List all snapshots on a volume</span>
+<span class="prompt">::></span> <span class="cmd">volume snapshot show</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_appdata</span>
+<span class="output">                                          ---Blocks---
+Vserver  Volume   Snapshot                  State  Size  Total  %Inode
+-------- -------- ------------------------  -----  ----  -----  ------
+svm-prod01 vol_appdata
+                  snap_pre_patching_20240515 valid   48KB  10%    0%</span>
+
+<span class="comment"># Delete a specific snapshot (admin only)</span>
+<span class="prompt">::></span> <span class="cmd">volume snapshot delete</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_appdata</span> \
+    <span class="param">-snapshot</span> <span class="value">snap_pre_patching_20240515</span></div>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <div class="callout-title">Initial Snapshot Size</div>
+          <div class="callout-text">A newly created snapshot consumes only a few KB (typically 4–20 KB). It grows only as data on the volume changes. After heavy write activity, a snapshot may grow to several GB as it accumulates block deltas.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 RESTORING DATA -->
+    <section class="section" id="snap-restore">
+      <div class="section-header">
+        <div class="section-icon icon-orange">🔄</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 04</div>
+          <h2>Restoring Data from Snapshots</h2>
+        </div>
+      </div>
+
+      <p>ONTAP supports two distinct restore approaches. Choosing the right method prevents unnecessary disruption to other data on the volume.</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">🔁 Volume-Level Restore</div>
+          <p style="margin-bottom:10px;">Reverts the <strong>entire volume</strong> to the state at snapshot creation time. All data written after that snapshot is permanently discarded.</p>
+          <span class="badge badge-orange">Use with caution</span>
+          <span style="margin-left:8px;" class="badge badge-blue">CLI command</span>
+        </div>
+        <div class="card">
+          <div class="card-title">📄 File / Folder Restore</div>
+          <p style="margin-bottom:10px;">Navigate the hidden <span class="hl">.snapshot</span> directory and manually copy only the needed files back. Selective and non-disruptive.</p>
+          <span class="badge badge-green">Preferred for granular recovery</span>
+        </div>
+      </div>
+
+      <h3>Volume-Level Restore (CLI)</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI — Full Volume Restore</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+        <div class="code-body"><span class="comment"># Restore entire volume to a specific snapshot</span>
+<span class="prompt">::></span> <span class="cmd">volume snapshot restore</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> \
+    <span class="param">-volume</span> <span class="value">vol_appdata</span> \
+    <span class="param">-snapshot</span> <span class="value">snap_pre_patching_20240515</span>
+<span class="comment"># ⚠️ This is irreversible — all post-snapshot data is lost</span></div>
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-icon">🚫</div>
+        <div class="callout-content">
+          <div class="callout-title">Warning — Volume Restore Is Destructive</div>
+          <div class="callout-text">Performing a volume-level snapshot restore permanently discards all data written after the chosen snapshot. Always confirm with the application team before proceeding. For single-file or folder recovery, use the <strong>.snapshot directory method</strong> instead.</div>
+        </div>
+      </div>
+
+      <section id="snap-restore-nfs">
+        <h3>Granular File Restore via NFS Client</h3>
+        <p>On NFS-mounted volumes, ONTAP exposes a hidden <span class="hl">.snapshot</span> directory at the root of every mount point. Clients can browse this directory to access any historical snapshot and copy files directly — no admin intervention required.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">Linux Shell — NFS Snapshot Browse &amp; Restore</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+          <div class="code-body"><span class="comment"># List all contents including hidden items</span>
+<span class="prompt">root@linux-host:~#</span> <span class="cmd">ls -a</span> /mnt/vol_appdata/
+<span class="output">.  ..  app_configs  logs  <span class="hl">.snapshot</span></span>
+
+<span class="comment"># Browse available snapshots</span>
+<span class="prompt">root@linux-host:~#</span> <span class="cmd">ls</span> /mnt/vol_appdata/.snapshot/
+<span class="output">snap_pre_patching_20240515   hourly.2024-05-15_1005</span>
+
+<span class="comment"># Access files inside a specific snapshot</span>
+<span class="prompt">root@linux-host:~#</span> <span class="cmd">ls</span> /mnt/vol_appdata/.snapshot/snap_pre_patching_20240515/
+<span class="output">app_configs  logs  settings.conf  run.sh</span>
+
+<span class="comment"># Copy a specific file back to live location</span>
+<span class="prompt">root@linux-host:~#</span> <span class="cmd">cp</span> /mnt/vol_appdata/.snapshot/snap_pre_patching_20240515/settings.conf \
+    /mnt/vol_appdata/settings.conf</span></div>
+        </div>
+
+        <div class="callout success">
+          <div class="callout-icon">✅</div>
+          <div class="callout-content">
+            <div class="callout-title">NFS vs CIFS Snapshot Visibility</div>
+            <div class="callout-text">On <strong>NFS</strong>, the <span class="hl">.snapshot</span> directory is visible by default. To hide it, disable the option with <span class="hl-blue">vserver nfs modify -vserver &lt;name&gt; -v3-hide-snapshot enabled</span>. On <strong>CIFS/SMB</strong>, snapshots are hidden by default. They become visible when the <em>Show Snapshot</em> share property is enabled per-share.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="snap-immutable">
+        <h3>Snapshot Immutability</h3>
+        <p>Snapshot data is <strong style="color:var(--text-primary)">immutable</strong> — end users and server teams cannot modify or delete files inside the <span class="hl">.snapshot</span> directory, even if they have full write access to the live volume. Any attempt to delete or overwrite snapshot content returns a permission error.</p>
+
+        <div class="mermaid-wrap">
+          <div class="mermaid">
+flowchart TD
+    A[User or Application] -->|"Try to DELETE\nfile in .snapshot"| B{ONTAP Kernel\nPermission Check}
+    B -->|"Snapshot = Immutable"| C["❌ Operation Denied\n'Read-only file system'"]
+    B -->|"Live volume data"| D["✅ Operation Allowed"]
+    A -->|"Try to MODIFY\nfile in .snapshot"| B
+    style A fill:#1c2333,stroke:#58a6ff,color:#e6edf3
+    style B fill:#1c2333,stroke:#e3b341,color:#e6edf3
+    style C fill:#1c2333,stroke:#f78166,color:#f78166
+    style D fill:#1c2333,stroke:#3fb950,color:#3fb950
+          </div>
+          <div class="diagram-caption">Snapshot immutability is enforced at the ONTAP kernel level — not configurable by end users</div>
+        </div>
+
+        <div class="callout tip">
+          <div class="callout-icon">📝</div>
+          <div class="callout-content">
+            <div class="callout-title">Admin vs End-User Permissions</div>
+            <div class="callout-text">While end users cannot delete snapshot data, a <strong>cluster admin can delete an entire snapshot</strong> using <span class="hl-blue">volume snapshot delete</span>. This removes the snapshot and frees any space it was consuming. SnapLock is a separate, licensed feature that prevents even admins from deleting snapshot data — covered in advanced topics.</div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- 05 SNAPSHOT SCHEDULING -->
+    <section class="section" id="snap-schedule">
+      <div class="section-header">
+        <div class="section-icon icon-purple">⏰</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 05</div>
+          <h2>CRON-Based Snapshot Schedules</h2>
+        </div>
+      </div>
+
+      <p>ONTAP uses a <strong style="color:var(--text-primary)">CRON-style job scheduler</strong> to define when snapshots are created. Schedules are decoupled from snapshot policies, allowing the same schedule to be reused across multiple policies.</p>
+
+      <h3>Default Schedules Available</h3>
+      <div class="sched-vis">
+        <div class="sched-row"><span class="sched-name">5min</span><div class="sched-bar" style="background:linear-gradient(90deg,rgba(57,211,195,0.6),rgba(57,211,195,0.1));"></div><span class="sched-count">Every 5 min</span></div>
+        <div class="sched-row"><span class="sched-name">hourly</span><div class="sched-bar" style="background:linear-gradient(90deg,rgba(88,166,255,0.6),rgba(88,166,195,0.1));"></div><span class="sched-count">HH:05 each hour</span></div>
+        <div class="sched-row"><span class="sched-name">daily</span><div class="sched-bar" style="background:linear-gradient(90deg,rgba(188,140,255,0.6),rgba(188,140,255,0.1));"></div><span class="sched-count">00:10 daily</span></div>
+        <div class="sched-row"><span class="sched-name">weekly</span><div class="sched-bar" style="background:linear-gradient(90deg,rgba(227,179,65,0.6),rgba(227,179,65,0.1));"></div><span class="sched-count">Sunday 00:15</span></div>
+        <div class="sched-row"><span class="sched-name">monthly</span><div class="sched-bar" style="background:linear-gradient(90deg,rgba(247,129,102,0.6),rgba(247,129,102,0.1));"></div><span class="sched-count">1st of month</span></div>
+        <div class="sched-row"><span class="sched-name">8hour</span><div class="sched-bar" style="background:linear-gradient(90deg,rgba(63,185,80,0.6),rgba(63,185,80,0.1));"></div><span class="sched-count">02:15, 10:15, 18:15</span></div>
+      </div>
+
+      <h3>Creating a Custom Schedule</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI — Custom CRON Schedule</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+        <div class="code-body"><span class="comment"># View existing schedules</span>
+<span class="prompt">::></span> <span class="cmd">job schedule cron show</span>
+
+<span class="comment"># Create a schedule: every Tuesday &amp; Friday at 03:00 AM</span>
+<span class="prompt">::></span> <span class="cmd">job schedule cron create</span> \
+    <span class="param">-name</span>        <span class="value">tue_fri_03am</span> \
+    <span class="param">-minute</span>      <span class="value">0</span> \
+    <span class="param">-hour</span>        <span class="value">3</span> \
+    <span class="param">-dayofweek</span>   <span class="value">Tuesday,Friday</span>
+
+<span class="comment"># Create a schedule: 1st of every month at 10:30 AM</span>
+<span class="prompt">::></span> <span class="cmd">job schedule cron create</span> \
+    <span class="param">-name</span>        <span class="value">monthly_1st_1030</span> \
+    <span class="param">-minute</span>      <span class="value">30</span> \
+    <span class="param">-hour</span>        <span class="value">10</span> \
+    <span class="param">-day</span>         <span class="value">1</span>
+<span class="comment"># Note: -day and -dayofweek cannot be used simultaneously</span>
+
+<span class="comment"># Verify created schedule</span>
+<span class="prompt">::></span> <span class="cmd">job schedule cron show</span> <span class="param">-name</span> <span class="value">tue_fri_03am</span></div>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <div class="callout-title">Cluster-Level vs SVM-Level Schedules</div>
+          <div class="callout-text">Schedules created at the <strong>cluster level</strong> are reusable across all SVMs. Schedules created within a specific SVM context are scoped to that SVM only. Best practice is to create shared schedules at the cluster level for maximum reusability.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 SNAPSHOT POLICIES -->
+    <section class="section" id="snap-policy">
+      <div class="section-header">
+        <div class="section-icon icon-purple">📋</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 06</div>
+          <h2>Snapshot Policies</h2>
+        </div>
+      </div>
+
+      <p>A <strong style="color:var(--text-primary)">snapshot policy</strong> bundles up to five schedules with their retention counts (how many snapshots of each type to keep) and optional naming prefixes. Applying a policy to a volume automates the entire snapshot lifecycle.</p>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart LR
+    SCH1["⏰ Schedule: hourly\nRetain: 12"]
+    SCH2["⏰ Schedule: daily\nRetain: 7"]
+    SCH3["⏰ Schedule: weekly\nRetain: 4"]
+    SCH4["⏰ Schedule: monthly\nRetain: 12"]
+    SCH5["⏰ Custom Schedule\nRetain: 6"]
+    POL["📋 Snapshot Policy\nvol-prod-snaps"]
+    VOL["📦 Volume\nvol_appdata"]
+
+    SCH1 --> POL
+    SCH2 --> POL
+    SCH3 --> POL
+    SCH4 --> POL
+    SCH5 --> POL
+    POL -->|"Applied to"| VOL
+    style POL fill:#1c2333,stroke:#bc8cff,color:#e6edf3
+    style VOL fill:#1c2333,stroke:#58a6ff,color:#e6edf3
+        </div>
+        <div class="diagram-caption">A snapshot policy can combine up to 5 schedules — each with its own retention count — applied to one or many volumes</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI — Snapshot Policy Creation</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+        <div class="code-body"><span class="comment"># View existing policies</span>
+<span class="prompt">::></span> <span class="cmd">volume snapshot policy show</span>
+
+<span class="comment"># Create a multi-schedule snapshot policy</span>
+<span class="prompt">::></span> <span class="cmd">volume snapshot policy create</span> \
+    <span class="param">-policy</span>       <span class="value">vol-prod-snaps</span> \
+    <span class="param">-enabled</span>      <span class="value">true</span> \
+    <span class="param">-schedule1</span>    <span class="value">hourly</span>          <span class="param">-count1</span>   <span class="value">12</span>  <span class="param">-prefix1</span> <span class="value">hrly</span> \
+    <span class="param">-schedule2</span>    <span class="value">daily</span>           <span class="param">-count2</span>   <span class="value">7</span>  \
+    <span class="param">-schedule3</span>    <span class="value">weekly</span>          <span class="param">-count3</span>   <span class="value">4</span>  \
+    <span class="param">-schedule4</span>    <span class="value">monthly_1st_1030</span> <span class="param">-count4</span>  <span class="value">12</span>  \
+    <span class="param">-schedule5</span>    <span class="value">tue_fri_03am</span>    <span class="param">-count5</span>   <span class="value">8</span>
+
+<span class="comment"># Apply policy to a volume</span>
+<span class="prompt">::></span> <span class="cmd">volume modify</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_appdata</span> \
+    <span class="param">-snapshot-policy</span> <span class="value">vol-prod-snaps</span>
+
+<span class="comment"># Apply "none" policy to disable automated snapshots</span>
+<span class="prompt">::></span> <span class="cmd">volume modify</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_appdata</span> \
+    <span class="param">-snapshot-policy</span> <span class="value">none</span></div>
+      </div>
+
+      <section id="snap-retention">
+        <h3>Retention Count Behaviour</h3>
+        <p>The <span class="hl-blue">-count</span> parameter controls how many snapshots created by that schedule are kept simultaneously. When the count is exceeded, the <strong>oldest snapshot from that schedule</strong> is automatically deleted — a rolling window mechanism.</p>
+
+        <div class="svg-diagram">
+          <svg viewBox="0 0 700 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px;display:block;margin:0 auto;">
+            <text x="10" y="20" font-family="Sora,sans-serif" font-size="12" fill="#8b949e">Hourly snapshots — count=4 (retention window)</text>
+            <!-- 5 boxes: first is being deleted -->
+            <rect x="10"  y="35" width="110" height="60" rx="8" fill="rgba(247,129,102,0.1)" stroke="rgba(247,129,102,0.4)" stroke-width="1.5" stroke-dasharray="4,2"/>
+            <text x="65"  y="58" font-family="JetBrains Mono,monospace" font-size="10" fill="#f78166" text-anchor="middle">hrly.08:00</text>
+            <text x="65"  y="74" font-family="JetBrains Mono,monospace" font-size="9"  fill="#6e7681" text-anchor="middle">OLDEST</text>
+            <text x="65"  y="87" font-family="Inter,sans-serif" font-size="9" fill="#f78166" text-anchor="middle">→ AUTO-DELETE</text>
+
+            <rect x="135" y="35" width="110" height="60" rx="8" fill="rgba(57,211,195,0.08)" stroke="rgba(57,211,195,0.3)" stroke-width="1.5"/>
+            <text x="190" y="62" font-family="JetBrains Mono,monospace" font-size="10" fill="#39d3c3" text-anchor="middle">hrly.09:00</text>
+            <rect x="260" y="35" width="110" height="60" rx="8" fill="rgba(57,211,195,0.08)" stroke="rgba(57,211,195,0.3)" stroke-width="1.5"/>
+            <text x="315" y="62" font-family="JetBrains Mono,monospace" font-size="10" fill="#39d3c3" text-anchor="middle">hrly.10:00</text>
+            <rect x="385" y="35" width="110" height="60" rx="8" fill="rgba(57,211,195,0.08)" stroke="rgba(57,211,195,0.3)" stroke-width="1.5"/>
+            <text x="440" y="62" font-family="JetBrains Mono,monospace" font-size="10" fill="#39d3c3" text-anchor="middle">hrly.11:00</text>
+            <rect x="510" y="35" width="110" height="60" rx="8" fill="rgba(88,166,255,0.12)" stroke="rgba(88,166,255,0.5)" stroke-width="1.5"/>
+            <text x="565" y="58" font-family="JetBrains Mono,monospace" font-size="10" fill="#58a6ff" text-anchor="middle">hrly.12:00</text>
+            <text x="565" y="74" font-family="Inter,sans-serif" font-size="9" fill="#58a6ff" text-anchor="middle">NEW — triggers</text>
+            <text x="565" y="86" font-family="Inter,sans-serif" font-size="9" fill="#58a6ff" text-anchor="middle">count overflow</text>
+          </svg>
+          <div class="diagram-caption">When count=4 and the 5th snapshot is created, the oldest is automatically purged — maintaining exactly 4</div>
+        </div>
+
+        <h3>Snapshot Naming with Prefix</h3>
+        <p>By default, auto-created snapshots use the <strong>schedule name</strong> as a prefix (e.g., <span class="hl">hourly.2024-05-15_1005</span>). A custom prefix can be set per schedule entry in the policy. This helps with filtering and autodelete prefix matching.</p>
+      </section>
+    </section>
+
+    <!-- 07 VOLUME AUTOSIZE -->
+    <section class="section" id="vol-autosize">
+      <div class="section-header">
+        <div class="section-icon icon-blue">📈</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 07</div>
+          <h2>Volume Autosize</h2>
+        </div>
+      </div>
+
+      <p><strong style="color:var(--text-primary)">Volume Autosize</strong> is an ONTAP feature that automatically grows (and optionally shrinks) a volume's allocated size based on usage thresholds — eliminating the need for constant manual capacity monitoring.</p>
+
+      <h3>How Autosize Works</h3>
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart TD
+    A[Volume Usage Monitored by ONTAP] --> B{Usage ≥ Growth\nThreshold %?}
+    B -->|"No"| A
+    B -->|"Yes"| C{Current Size\n< Max Size?}
+    C -->|"No — max reached"| D["🚫 Stop Growing\nAlert admin"]
+    C -->|"Yes"| E[ONTAP Auto-increases\nvolume size]
+    E --> F[Growth increment\nauto-calculated by ONTAP]
+    F --> A
+    style A fill:#1c2333,stroke:#58a6ff,color:#e6edf3
+    style B fill:#1c2333,stroke:#e3b341,color:#e6edf3
+    style C fill:#1c2333,stroke:#39d3c3,color:#e6edf3
+    style D fill:#1c2333,stroke:#f78166,color:#f78166
+    style E fill:#1c2333,stroke:#3fb950,color:#3fb950
+    style F fill:#1c2333,stroke:#3fb950,color:#e6edf3
+        </div>
+        <div class="diagram-caption">Volume autosize loop — ONTAP monitors usage and triggers growth when threshold is crossed</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI — Configure Volume Autosize</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+        <div class="code-body"><span class="comment"># Check current autosize status</span>
+<span class="prompt">::></span> <span class="cmd">volume autosize</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_appdata</span>
+
+<span class="comment"># Enable autosize in GROW mode</span>
+<span class="prompt">::></span> <span class="cmd">volume autosize</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_appdata</span> \
+    <span class="param">-maximum-size</span>         <span class="value">300g</span> \
+    <span class="param">-grow-threshold-percent</span> <span class="value">98</span> \
+    <span class="param">-mode</span>                 <span class="value">grow</span>
+<span class="comment"># Current: 200 GB → will grow up to 300 GB when usage hits 98%</span>
+
+<span class="comment"># Verify configuration</span>
+<span class="prompt">::></span> <span class="cmd">volume autosize</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_appdata</span>
+<span class="output">Volume vol_appdata is set to grow to a maximum of 300GB
+when volume used space is above 98%. Mode: grow.</span></div>
+      </div>
+
+      <section id="autosize-modes">
+        <h3>Autosize Modes</h3>
+        <div class="mode-grid">
+          <div class="mode-card">
+            <div class="mode-icon">🔴</div>
+            <div class="mode-name" style="color:var(--text-muted)">Off</div>
+            <div class="mode-desc">Autosize disabled. Volume must be manually expanded when full.</div>
+          </div>
+          <div class="mode-card" style="border-color:rgba(57,211,195,0.3);background:rgba(57,211,195,0.04);">
+            <div class="mode-icon">📈</div>
+            <div class="mode-name" style="color:var(--accent-teal)">Grow</div>
+            <div class="mode-desc">Volume grows automatically when threshold is hit, up to the configured maximum. Volume never shrinks.</div>
+          </div>
+          <div class="mode-card" style="border-color:rgba(188,140,255,0.3);background:rgba(188,140,255,0.04);">
+            <div class="mode-icon">↕️</div>
+            <div class="mode-name" style="color:var(--accent-purple)">Grow + Shrink</div>
+            <div class="mode-desc">Volume grows on high usage AND shrinks when usage drops below the shrink threshold, down to a configured minimum size.</div>
+          </div>
+        </div>
+
+        <h3>Grow + Shrink Configuration</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">ONTAP CLI — Grow + Shrink Mode</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+          <div class="code-body"><span class="prompt">::></span> <span class="cmd">volume autosize</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_appdata</span> \
+    <span class="param">-maximum-size</span>           <span class="value">300g</span> \
+    <span class="param">-minimum-size</span>           <span class="value">200g</span> \
+    <span class="param">-grow-threshold-percent</span>  <span class="value">98</span> \
+    <span class="param">-shrink-threshold-percent</span><span class="value">60</span> \
+    <span class="param">-mode</span>                   <span class="value">grow_shrink</span>
+<span class="comment"># Shrinks when used space drops below 60%; never goes below 200 GB minimum</span></div>
+        </div>
+
+        <div class="callout tip">
+          <div class="callout-icon">🧠</div>
+          <div class="callout-content">
+            <div class="callout-title">Grow + Shrink Caution</div>
+            <div class="callout-text">While grow+shrink optimises aggregate space efficiency, be careful with the minimum size and shrink threshold. ONTAP will not shrink a volume below the amount of data it contains. Set a realistic minimum that accounts for typical data patterns. Most production environments use <strong>grow-only mode</strong> for predictability.</div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- 08 SNAPSHOT AUTODELETE -->
+    <section class="section" id="snap-autodelete">
+      <div class="section-header">
+        <div class="section-icon icon-orange">🗑️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 08</div>
+          <h2>Snapshot Autodelete</h2>
+        </div>
+      </div>
+
+      <p><strong style="color:var(--text-primary)">Snapshot Autodelete</strong> is a safety net that automatically removes snapshots when a volume is approaching capacity — preventing volumes from going full due to snapshot accumulation. This is distinct from policy-based retention.</p>
+
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart TD
+    A[Volume fills up — snapshots accumulating] --> B{Trigger threshold\nreached?}
+    B -->|"No"| A
+    B -->|"Yes"| C[Autodelete activates]
+    C --> D{Commitment\nMode?}
+    D -->|"try"| E["Delete only free\n(unlocked) snapshots ✅"]
+    D -->|"disrupt"| F["Delete replication snapshots\n⚠️ May break SnapMirror"]
+    D -->|"destroy"| G["Delete 3rd-party\nbackup snapshots ⚠️"]
+    E --> H{Target free space\nachieved?}
+    H -->|"No"| E
+    H -->|"Yes"| I[Autodelete stops]
+    style A fill:#1c2333,stroke:#58a6ff,color:#e6edf3
+    style B fill:#1c2333,stroke:#e3b341,color:#e6edf3
+    style C fill:#1c2333,stroke:#39d3c3,color:#e6edf3
+    style D fill:#1c2333,stroke:#bc8cff,color:#e6edf3
+    style E fill:#1c2333,stroke:#3fb950,color:#3fb950
+    style F fill:#1c2333,stroke:#e3b341,color:#e3b341
+    style G fill:#1c2333,stroke:#f78166,color:#f78166
+    style H fill:#1c2333,stroke:#39d3c3,color:#e6edf3
+    style I fill:#1c2333,stroke:#3fb950,color:#e6edf3
+        </div>
+        <div class="diagram-caption">Autodelete flow — the commitment mode determines which snapshots are eligible for deletion</div>
+      </div>
+
+      <h3>Commitment Mode Options</h3>
+      <div class="commit-grid">
+        <div class="commit-card commit-try">
+          <div class="commit-badge">try ✅</div>
+          <div class="commit-desc">Deletes only free (unlocked) snapshots. Does not impact SnapMirror, SnapVault, or backup application snapshots. <strong>Recommended for all environments.</strong></div>
+        </div>
+        <div class="commit-card commit-disrupt">
+          <div class="commit-badge">disrupt ⚠️</div>
+          <div class="commit-desc">Also deletes snapshots used by replication (SnapMirror). Will break active replication relationships. Use only if you understand the impact.</div>
+        </div>
+        <div class="commit-card commit-destroy">
+          <div class="commit-badge">destroy ⛔</div>
+          <div class="commit-desc">Deletes snapshots held by third-party backup tools. May corrupt ongoing backup jobs. Rarely justified in production.</div>
+        </div>
+      </div>
+
+      <h3>Deferred Delete Options</h3>
+      <table class="spec-table">
+        <thead><tr><th>Option</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-blue">scheduled</span></td><td>Deletes only auto-created (scheduled) snapshots first</td></tr>
+          <tr><td><span class="badge badge-purple">user_created</span></td><td>Deletes only manually created snapshots first</td></tr>
+          <tr><td><span class="badge badge-teal">prefix</span></td><td>Deletes snapshots whose names start with a specified prefix</td></tr>
+          <tr><td><span class="badge badge-yellow">none</span></td><td>No preference — deletes oldest snapshots regardless of origin</td></tr>
+        </tbody>
+      </table>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI — Configure Snapshot Autodelete</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+        <div class="code-body"><span class="comment"># Enable snapshot autodelete on a volume</span>
+<span class="prompt">::></span> <span class="cmd">volume snapshot autodelete modify</span> \
+    <span class="param">-vserver</span>         <span class="value">svm-prod01</span> \
+    <span class="param">-volume</span>          <span class="value">vol_appdata</span> \
+    <span class="param">-enabled</span>         <span class="value">true</span> \
+    <span class="param">-trigger</span>         <span class="value">volume</span> \
+    <span class="param">-target-free-space</span><span class="value">15</span> \
+    <span class="param">-delete-order</span>    <span class="value">oldest_first</span> \
+    <span class="param">-commitment</span>      <span class="value">try</span> \
+    <span class="param">-defer-delete</span>    <span class="value">scheduled</span>
+<span class="comment"># Triggers when volume is full; stops when 15% free space is restored
+# Deletes oldest scheduled snapshots first; never touches locked snapshots</span>
+
+<span class="comment"># Verify configuration</span>
+<span class="prompt">::></span> <span class="cmd">volume snapshot autodelete show</span> \
+    <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_appdata</span></div>
+      </div>
+
+      <div class="callout success">
+        <div class="callout-icon">✅</div>
+        <div class="callout-content">
+          <div class="callout-title">Best Practice — Autodelete Settings</div>
+          <div class="callout-text">Always use <strong>commitment: try</strong>. Set the trigger to <strong>volume</strong> (not snapshot-reserve, since that should be 0 or low). Target free space of <strong>10–20%</strong> gives breathing room. Use <strong>deferred-delete: scheduled</strong> so manually created important snapshots are preserved while routine scheduled ones are cleaned first.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 SPACE PRIORITY -->
+    <section class="section" id="space-priority">
+      <div class="section-header">
+        <div class="section-icon icon-yellow">⚖️</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 09</div>
+          <h2>Space Management Priority</h2>
+        </div>
+      </div>
+
+      <p>When both <strong style="color:var(--text-primary)">Volume Autosize</strong> and <strong style="color:var(--text-primary)">Snapshot Autodelete</strong> are configured on the same volume, ONTAP allows you to control which mechanism runs first when the volume fills up. This is configured via the <span class="hl">space-mgmt-try-first</span> parameter.</p>
+
+      <h3>Priority Options</h3>
+      <div class="prio-flow">
+        <div class="prio-box primary">
+          <div class="prio-label">Option A — Default</div>
+          <div class="prio-name">Volume Grow First</div>
+        </div>
+        <div class="prio-arrow">→</div>
+        <div class="prio-box secondary">
+          <div class="prio-label">Fallback</div>
+          <div class="prio-name">Snap Autodelete</div>
+        </div>
+      </div>
+      <div class="prio-flow" style="margin-top:12px;">
+        <div class="prio-box" style="border-color:rgba(247,129,102,0.4);background:rgba(247,129,102,0.05);">
+          <div class="prio-label">Option B</div>
+          <div class="prio-name">Snap Autodelete First</div>
+        </div>
+        <div class="prio-arrow">→</div>
+        <div class="prio-box secondary">
+          <div class="prio-label">Fallback</div>
+          <div class="prio-name">Volume Grow</div>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">ONTAP CLI — Set Space Management Priority</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+        <div class="code-body"><span class="comment"># Set volume grow as first responder (default and recommended)</span>
+<span class="prompt">::></span> <span class="cmd">volume modify</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_appdata</span> \
+    <span class="param">-space-mgmt-try-first</span> <span class="value">volume_grow</span>
+
+<span class="comment"># Set snap autodelete as first responder</span>
+<span class="prompt">::></span> <span class="cmd">volume modify</span> <span class="param">-vserver</span> <span class="value">svm-prod01</span> <span class="param">-volume</span> <span class="value">vol_appdata</span> \
+    <span class="param">-space-mgmt-try-first</span> <span class="value">snap_delete</span></div>
+      </div>
+
+      <div class="callout teal">
+        <div class="callout-icon">🧠</div>
+        <div class="callout-content">
+          <div class="callout-title">Why Volume Grow First Is the Default</div>
+          <div class="callout-text">Deleting snapshots means compromising data protection history. If aggregate space allows, growing the volume first preserves your snapshot archive intact. Autodelete should be the last resort. The default setting reflects this safety-first philosophy — always exhaust the grow option before sacrificing snapshots.</div>
+        </div>
+      </div>
+
+      <h3>Decision Architecture Summary</h3>
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart TD
+    VOL["Volume approaching capacity"]
+    CFG["Check space-mgmt-try-first"]
+    GRW["Volume Grow\n(up to max-size)"]
+    ADE["Snap Autodelete\n(commitment=try)"]
+    OOA["Both exhausted\n→ Volume goes full\n→ Writes blocked"]
+
+    VOL --> CFG
+    CFG -->|"volume_grow (default)"| GRW
+    GRW -->|"Max size hit,\nstill filling"| ADE
+    ADE -->|"No more deletable\nsnapshots"| OOA
+    CFG -->|"snap_delete"| ADE
+    ADE -->|"No snapshots\nleft, still filling"| GRW
+    GRW -->|"Max hit"| OOA
+    style VOL fill:#1c2333,stroke:#58a6ff,color:#e6edf3
+    style CFG fill:#1c2333,stroke:#e3b341,color:#e6edf3
+    style GRW fill:#1c2333,stroke:#39d3c3,color:#39d3c3
+    style ADE fill:#1c2333,stroke:#bc8cff,color:#bc8cff
+    style OOA fill:#1c2333,stroke:#f78166,color:#f78166
+        </div>
+        <div class="diagram-caption">Full space management decision tree — ONTAP tries the primary mechanism first, falls back to secondary</div>
+      </div>
+    </section>
+
+    <!-- 10 SELF-CHECK QUIZ -->
+    <section class="section" id="quiz">
+      <div class="section-header">
+        <div class="section-icon icon-teal">🧩</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 10</div>
+          <h2>Self-Check Quiz</h2>
+        </div>
+      </div>
+
+      <!-- Q1 -->
+      <div class="quiz-wrap" id="q1">
+        <div class="quiz-question">Q1 — What is the default snapshot reserve percentage on a volume in ONTAP 8.0 and later?</div>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="checkAnswer('q1','A','B')"><span class="quiz-opt-key">A</span> 20%</div>
+          <div class="quiz-option" onclick="checkAnswer('q1','B','B')"><span class="quiz-opt-key">B</span> 5%</div>
+          <div class="quiz-option" onclick="checkAnswer('q1','C','B')"><span class="quiz-opt-key">C</span> 10%</div>
+          <div class="quiz-option" onclick="checkAnswer('q1','D','B')"><span class="quiz-opt-key">D</span> 0%</div>
+        </div>
+        <div class="quiz-feedback" id="q1-fb"></div>
+        <button class="quiz-reset" id="q1-reset" onclick="resetQuiz('q1')">↺ Reset</button>
+      </div>
+
+      <!-- Q2 -->
+      <div class="quiz-wrap" id="q2">
+        <div class="quiz-question">Q2 — Which snapshot autodelete commitment mode should you use to avoid impacting SnapMirror replication?</div>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="checkAnswer('q2','A','A')"><span class="quiz-opt-key">A</span> try</div>
+          <div class="quiz-option" onclick="checkAnswer('q2','B','A')"><span class="quiz-opt-key">B</span> disrupt</div>
+          <div class="quiz-option" onclick="checkAnswer('q2','C','A')"><span class="quiz-opt-key">C</span> destroy</div>
+          <div class="quiz-option" onclick="checkAnswer('q2','D','A')"><span class="quiz-opt-key">D</span> scheduled</div>
+        </div>
+        <div class="quiz-feedback" id="q2-fb"></div>
+        <button class="quiz-reset" id="q2-reset" onclick="resetQuiz('q2')">↺ Reset</button>
+      </div>
+
+      <!-- Q3 -->
+      <div class="quiz-wrap" id="q3">
+        <div class="quiz-question">Q3 — A volume is 10 GB. Autosize max is set to 15 GB. Volume grow + shrink is enabled with a minimum of 10 GB. The volume grew to 13 GB and usage dropped to 40%. What happens?</div>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="checkAnswer('q3','A','C')"><span class="quiz-opt-key">A</span> Volume stays at 13 GB — grow-only mode ignores usage drops</div>
+          <div class="quiz-option" onclick="checkAnswer('q3','B','C')"><span class="quiz-opt-key">B</span> Volume shrinks to 0 GB</div>
+          <div class="quiz-option" onclick="checkAnswer('q3','C','C')"><span class="quiz-opt-key">C</span> Volume shrinks toward 10 GB (minimum) since usage is below shrink threshold</div>
+          <div class="quiz-option" onclick="checkAnswer('q3','D','C')"><span class="quiz-opt-key">D</span> ONTAP alerts admin but takes no action</div>
+        </div>
+        <div class="quiz-feedback" id="q3-fb"></div>
+        <button class="quiz-reset" id="q3-reset" onclick="resetQuiz('q3')">↺ Reset</button>
+      </div>
+
+      <!-- Q4 -->
+      <div class="quiz-wrap" id="q4">
+        <div class="quiz-question">Q4 — How many schedules can be added to a single snapshot policy?</div>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="checkAnswer('q4','A','C')"><span class="quiz-opt-key">A</span> 3</div>
+          <div class="quiz-option" onclick="checkAnswer('q4','B','C')"><span class="quiz-opt-key">B</span> 10</div>
+          <div class="quiz-option" onclick="checkAnswer('q4','C','C')"><span class="quiz-opt-key">C</span> 5</div>
+          <div class="quiz-option" onclick="checkAnswer('q4','D','C')"><span class="quiz-opt-key">D</span> Unlimited</div>
+        </div>
+        <div class="quiz-feedback" id="q4-fb"></div>
+        <button class="quiz-reset" id="q4-reset" onclick="resetQuiz('q4')">↺ Reset</button>
+      </div>
+    </section>
+
+    <!-- 11 INTERVIEW Q&A -->
+    <section class="section" id="interview-qa">
+      <div class="section-header">
+        <div class="section-icon icon-purple">🎤</div>
+        <div class="section-title-wrap">
+          <div class="section-num">SECTION 11</div>
+          <h2>Scenario-Based Interview Q&amp;A</h2>
+        </div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q1</span> Explain how Copy-on-Write works in ONTAP snapshots and why snapshots start with almost zero size.</div>
+        <div class="qa-a">At the moment of snapshot creation, ONTAP stores only lightweight metadata pointers to all existing live blocks — no data is duplicated. The snapshot consumes just a few KB. As data on the live volume is modified or deleted, the original blocks are redirected into the snapshot's space before being overwritten. This means the snapshot grows incrementally only as changes accumulate. If no data changes occur after snapshot creation, the snapshot remains near-zero in size indefinitely.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q2</span> A user accidentally deleted a critical configuration file on an NFS share. The admin does not want to do a full volume restore. What is the procedure?</div>
+        <div class="qa-a">Navigate to the root of the NFS mount point and run <span class="hl-blue">ls -a</span> to reveal the hidden <span class="hl">.snapshot</span> directory. Enter that directory and list the available snapshots by name and timestamp. Identify the snapshot taken before the deletion occurred, browse into it, locate the deleted file, and use <span class="hl-blue">cp</span> to copy it back to its original path. This is non-disruptive — no volume restore is needed and no other data is affected.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q3</span> Why does NetApp no longer recommend aggregate-level snapshots, and what is the default reserve set to?</div>
+        <div class="qa-a">From ONTAP 8.0 onwards, NetApp changed the default aggregate snapshot reserve to 0% and deprecated the practice. Two reasons drive this: (1) Restoring an aggregate snapshot impacts all volumes on that aggregate simultaneously — there is no way to restore a single volume or file without affecting neighbours. (2) Aggregate-level snapshots introduce significant performance overhead due to the volume of block-change tracking required at that scale. Volume-level snapshots provide granular, targeted protection without these drawbacks.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q4</span> What is the difference between Volume Autosize and Snapshot Autodelete, and when should each trigger?</div>
+        <div class="qa-a">Volume Autosize grows (and optionally shrinks) the volume's allocated size from the aggregate — adding more capacity without admin intervention. Snapshot Autodelete removes existing snapshots to reclaim space already allocated to the volume. They are complementary: Autosize extends the volume's ceiling; Autodelete cleans up internal space consumers. The <span class="hl-blue">space-mgmt-try-first</span> parameter controls which runs first when the volume fills. The recommended approach is to attempt volume growth first (preserving snapshot history) and only resort to autodelete as a fallback.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q5</span> What happens if a volume has snap autodelete enabled with commitment=disrupt?</div>
+        <div class="qa-a">The <span class="hl-org">disrupt</span> mode allows ONTAP to delete snapshots that are currently in use by SnapMirror replication. If a SnapMirror baseline or delta snapshot is deleted, the replication relationship will fail and may require a full re-baseline. This is why <span class="hl-grn">try</span> is strongly recommended in all production environments — it only deletes free (unlocked) snapshots that are not referenced by any ONTAP service, leaving replication and backup snapshots intact.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q6</span> Can an end user delete snapshot data they can see in the .snapshot directory?</div>
+        <div class="qa-a">No. Snapshots are <strong>immutable</strong> — ONTAP enforces this at the kernel level. Even if a user has full read/write permissions on the live volume, any attempt to modify, delete, or overwrite files inside the <span class="hl">.snapshot</span> directory returns a "read-only file system" or "permission denied" error. Only a cluster administrator can delete an entire snapshot via <span class="hl-blue">volume snapshot delete</span>, which removes the snapshot object — not individual files within it.</div>
+      </div>
+
+      <div class="qa-block">
+        <div class="qa-q"><span class="qa-label">Q7</span> How does snapshot retention work when count is set to 12 for the hourly schedule?</div>
+        <div class="qa-a">ONTAP maintains a rolling window of exactly 12 hourly snapshots. When the 13th hourly snapshot is created, the oldest hourly snapshot is automatically purged to bring the count back to 12. This cycle continues indefinitely. The retention count applies <em>per schedule</em> within a policy — so a policy with both hourly (count 12) and daily (count 7) schedules maintains up to 12 hourly + 7 daily = 19 snapshots simultaneously on the volume.</div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- AUTHOR -->
+    <section class="section" id="author">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:32px;">
+
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border);">
+          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(57,211,195,0.2),rgba(88,166,255,0.2));border:1px solid rgba(57,211,195,0.3);display:flex;align-items:center;justify-content:center;font-size:18px;">✍️</div>
+          <div>
+            <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">About the Author</div>
+            <div style="font-family:'Sora',sans-serif;font-size:22px;font-weight:700;color:var(--text-primary);">Mohammed Abdul</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;">
+          <div style="flex-shrink:0;">
+            <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#39d3c3,#58a6ff);display:flex;align-items:center;justify-content:center;font-size:36px;border:3px solid rgba(57,211,195,0.35);box-shadow:0 0 24px rgba(57,211,195,0.15);">👨‍💻</div>
+            <div style="margin-top:10px;text-align:center;">
+              <span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-family:'JetBrains Mono',monospace;background:rgba(63,185,80,0.15);color:var(--accent-green);border:1px solid rgba(63,185,80,0.3);">10+ Years Exp.</span>
+            </div>
+          </div>
+
+          <div style="flex:1;min-width:260px;">
+            <div style="font-family:'Sora',sans-serif;font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Data Protection Architect</div>
+            <div style="font-size:13px;color:var(--accent-teal);font-weight:500;margin-bottom:14px;">Hybrid Cloud · Enterprise Backup &amp; Recovery · Storage Architecture</div>
+            <p style="margin-bottom:14px;">Mohammed Abdul is a Data Protection Architect with more than 10 years of experience in Hybrid Cloud environments, having worked with global clients across financial services, healthcare, manufacturing, and technology industries.</p>
+            <p style="margin-bottom:18px;">With deep expertise in enterprise backup and recovery solutions, Mohammed specialises in designing and implementing robust, scalable data protection strategies aligned with business continuity requirements.</p>
+
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:10px;">Technology Specialisations</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+              <span class="badge badge-blue">AWS</span>
+              <span class="badge badge-teal">Azure</span>
+              <span class="badge badge-green">GCP</span>
+              <span class="badge badge-orange">Commvault</span>
+              <span class="badge badge-purple">Veeam</span>
+              <span class="badge badge-yellow">NetBackup</span>
+              <span class="badge badge-blue">NetApp ONTAP</span>
+              <span class="badge badge-green">SAN · NAS</span>
+              <span class="badge badge-teal">Data Architecture</span>
+            </div>
+
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:10px;">Contact &amp; Queries</div>
+            <a href="mailto:abdul.md.20000102@gmail.com" style="display:inline-flex;align-items:center;gap:10px;background:rgba(57,211,195,0.08);border:1px solid rgba(57,211,195,0.35);border-radius:10px;padding:12px 20px;text-decoration:none;">
+              <span style="font-size:18px;">✉️</span>
+              <div>
+                <div style="font-size:12px;color:var(--text-muted);font-weight:500;margin-bottom:2px;">Email</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent-teal);font-weight:600;">abdul.md.20000102@gmail.com</div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <div style="margin-top:32px;border-radius:10px;padding:18px 22px;background:rgba(227,179,65,0.07);border:1px solid rgba(227,179,65,0.3);display:flex;gap:14px;align-items:flex-start;">
+          <span style="font-size:20px;flex-shrink:0;margin-top:2px;">⚠️</span>
+          <div>
+            <div style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--accent-yellow);margin-bottom:8px;">Disclaimer</div>
+            <div style="font-size:13px;color:var(--text-secondary);line-height:1.75;">
+              This content is for <strong style="color:var(--text-primary);">educational purposes and knowledge sharing</strong> only. Always refer to official NetApp documentation and follow your organisation's procedures for production implementations.<br><br>
+              I am not affiliated with or endorsed by NetApp, Inc. <strong style="color:var(--text-primary);">NetApp®</strong> and <strong style="color:var(--text-primary);">ONTAP®</strong> are registered trademarks of NetApp, Inc. All references are made purely for learning purposes. All IP addresses, hostnames, volume names, and configuration parameters used in this tutorial are illustrative examples only and do not reflect any real environment.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div><!-- /content-area -->
+</main>
+
+<script>
+/* ── Mermaid ── */
+mermaid.initialize({
+  startOnLoad: true, theme: 'dark',
+  themeVariables: {
+    darkMode: true, background: '#1c2333',
+    primaryColor: '#1c2333', primaryTextColor: '#e6edf3',
+    primaryBorderColor: '#30363d', lineColor: '#8b949e',
+    secondaryColor: '#161b22', tertiaryColor: '#0d1117',
+    edgeLabelBackground: '#1c2333', clusterBkg: '#1c2333',
+    clusterBorder: '#30363d', titleColor: '#e6edf3',
+    fontFamily: "'Inter', sans-serif", fontSize: '13px'
+  }
+});
+
+/* ── TOC active link ── */
+const sections = document.querySelectorAll('section[id]');
+const tocLinks = document.querySelectorAll('.toc-link');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      tocLinks.forEach(l => l.classList.remove('active'));
+      const a = document.querySelector(`.toc-link[href="#${e.target.id}"]`);
+      if (a) a.classList.add('active');
+    }
+  });
+}, { threshold: 0.2, rootMargin: '-30px 0px -60% 0px' });
+sections.forEach(s => observer.observe(s));
+
+/* ── Reading progress bar ── */
+const bar = document.getElementById('reading-progress');
+window.addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  bar.style.transform = `scaleX(${h > 0 ? window.scrollY / h : 0})`;
+});
+
+/* ── Quiz ── */
+const feedback = {
+  q1: { B: "✅ Correct! From ONTAP 8.0 onwards the default volume snapshot reserve is 5%. The old default was 20% (up to ONTAP 7.3)." },
+  q2: { A: "✅ Correct! 'try' only deletes free (unlocked) snapshots and never touches SnapMirror or backup snapshots." },
+  q3: { C: "✅ Correct! In grow+shrink mode, when usage drops below the shrink threshold, ONTAP shrinks the volume toward the minimum size (10 GB)." },
+  q4: { C: "✅ Correct! A snapshot policy supports up to 5 schedules, each with its own count and optional prefix." }
+};
+const wrong = {
+  q1: "❌ Not quite. The legacy (≤7.3) default was 20% on volumes. From ONTAP 8.0 the default dropped to 5%.",
+  q2: "❌ Not quite. 'disrupt' breaks SnapMirror; 'destroy' breaks backup. Only 'try' is safe for replication.",
+  q3: "❌ Not quite. Grow+shrink mode does reduce the volume size when usage drops below the shrink threshold, down to the configured minimum.",
+  q4: "❌ Not quite. ONTAP snapshot policies support a maximum of 5 schedules."
+};
+
+function checkAnswer(qid, chosen, correct) {
+  const wrap = document.getElementById(qid);
+  if (wrap.dataset.answered) return;
+  wrap.dataset.answered = 'yes';
+  const opts = wrap.querySelectorAll('.quiz-option');
+  opts.forEach((o, i) => {
+    const key = String.fromCharCode(65 + i);
+    if (key === correct)  o.classList.add('correct');
+    else if (key === chosen && chosen !== correct) o.classList.add('wrong');
+    o.style.pointerEvents = 'none';
+  });
+  const fb = document.getElementById(qid + '-fb');
+  fb.className = 'quiz-feedback show ' + (chosen === correct ? 'ok' : 'bad');
+  fb.textContent = chosen === correct ? feedback[qid][correct] : wrong[qid];
+  document.getElementById(qid + '-reset').classList.add('show');
+}
+
+function resetQuiz(qid) {
+  const wrap = document.getElementById(qid);
+  delete wrap.dataset.answered;
+  wrap.querySelectorAll('.quiz-option').forEach(o => {
+    o.classList.remove('correct', 'wrong');
+    o.style.pointerEvents = '';
+  });
+  const fb = document.getElementById(qid + '-fb');
+  fb.className = 'quiz-feedback';
+  fb.textContent = '';
+  document.getElementById(qid + '-reset').classList.remove('show');
+}
+</script>
+</body>
+</html>

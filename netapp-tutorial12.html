@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetApp Administration Series — Tutorial 12: FlexClone, System Shell, Logs & Networking Fundamentals</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-card: #1c2333;
+    --bg-card-hover: #21283a;
+    --accent-blue: #58a6ff;
+    --accent-green: #3fb950;
+    --accent-orange: #f78166;
+    --accent-purple: #bc8cff;
+    --accent-yellow: #e3b341;
+    --accent-teal: #39d3c3;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --border: #30363d;
+    --border-bright: #484f58;
+    --sidebar-width: 290px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  #reading-progress {
+    position: fixed; top: 0; left: var(--sidebar-width); right: 0;
+    height: 3px; background: linear-gradient(90deg, var(--accent-blue), var(--accent-teal), var(--accent-purple));
+    transform-origin: left; transform: scaleX(0);
+    z-index: 999; transition: transform 0.1s linear;
+  }
+
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    position: fixed; top: 0; left: 0;
+    height: 100vh; overflow-y: auto;
+    z-index: 100; display: flex; flex-direction: column;
+  }
+  .sidebar-header {
+    padding: 20px 16px; border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary); position: sticky; top: 0; z-index: 10;
+  }
+  .sidebar-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .sidebar-logo .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent-teal), var(--accent-blue));
+    border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .sidebar-logo span { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 14px; color: var(--text-primary); letter-spacing: 0.5px; }
+  .sidebar-subtitle { font-size: 11px; color: var(--text-muted); padding-left: 42px; }
+  .toc-nav { padding: 12px 0; flex: 1; }
+  .toc-section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); padding: 12px 16px 6px; }
+  .toc-link {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 16px; font-size: 12.5px;
+    color: var(--text-secondary); text-decoration: none;
+    transition: all 0.2s ease;
+    border-left: 2px solid transparent; line-height: 1.4;
+  }
+  .toc-link:hover { background: var(--bg-card); color: var(--text-primary); border-left-color: var(--accent-blue); }
+  .toc-link.active { background: rgba(88,166,255,0.1); color: var(--accent-blue); border-left-color: var(--accent-blue); font-weight: 500; }
+  .toc-link .toc-num { font-size: 10px; font-weight: 700; color: var(--text-muted); min-width: 18px; font-family: 'JetBrains Mono', monospace; }
+  .toc-link.sub { padding-left: 32px; font-size: 12px; }
+
+  .main-content { margin-left: var(--sidebar-width); flex: 1; max-width: calc(100vw - var(--sidebar-width)); }
+
+  .top-header {
+    background: linear-gradient(135deg, #0d1117 0%, #0d2035 50%, #0d1a2e 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 60px 60px 50px; position: relative; overflow: hidden;
+  }
+  .top-header::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(57,211,195,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(88,166,255,0.06) 0%, transparent 50%);
+  }
+  .header-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(57,211,195,0.12); border: 1px solid rgba(57,211,195,0.3);
+    border-radius: 20px; padding: 4px 14px;
+    font-size: 12px; color: var(--accent-teal); font-weight: 500;
+    margin-bottom: 18px; font-family: 'JetBrains Mono', monospace;
+  }
+  .main-title {
+    font-family: 'Sora', sans-serif; font-size: 36px; font-weight: 800;
+    line-height: 1.15; margin-bottom: 16px;
+    background: linear-gradient(135deg, #e6edf3 20%, #39d3c3 55%, #58a6ff 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; position: relative;
+  }
+  .header-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.7; max-width: 680px; position: relative; }
+  .header-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 20px; position: relative; }
+  .meta-chip { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-secondary); }
+  .meta-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .prog-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; position: relative; }
+  .prog-chip { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px; padding: 3px 10px; font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+  .content-area { padding: 40px 60px 80px; max-width: 1020px; }
+  .section { margin-bottom: 64px; scroll-margin-top: 30px; }
+  .section-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .section-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .icon-teal  { background: rgba(57,211,195,0.15);  border: 1px solid rgba(57,211,195,0.3); }
+  .icon-blue  { background: rgba(88,166,255,0.15);  border: 1px solid rgba(88,166,255,0.3); }
+  .icon-green { background: rgba(63,185,80,0.15);   border: 1px solid rgba(63,185,80,0.3); }
+  .icon-orange{ background: rgba(247,129,102,0.15); border: 1px solid rgba(247,129,102,0.3); }
+  .icon-purple{ background: rgba(188,140,255,0.15); border: 1px solid rgba(188,140,255,0.3); }
+  .icon-yellow{ background: rgba(227,179,65,0.15);  border: 1px solid rgba(227,179,65,0.3); }
+
+  .section-title-wrap h2 { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+  .section-title-wrap .section-num { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); font-weight: 400; margin-bottom: 4px; }
+
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; transition: border-color 0.2s; }
+  .card:hover { border-color: var(--border-bright); }
+  .card-title { font-family: 'Sora', sans-serif; font-weight: 600; font-size: 15px; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+  p { font-size: 14.5px; line-height: 1.8; color: var(--text-secondary); margin-bottom: 14px; }
+
+  .callout { border-radius: 10px; padding: 16px 20px; margin: 20px 0; display: flex; gap: 14px; align-items: flex-start; }
+  .callout-icon { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+  .callout-content { flex: 1; }
+  .callout-title { font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .callout-text { font-size: 13.5px; line-height: 1.7; color: var(--text-secondary); }
+  .callout.info    { background: rgba(88,166,255,0.08);  border: 1px solid rgba(88,166,255,0.25);  }
+  .callout.info    .callout-title { color: var(--accent-blue); }
+  .callout.success { background: rgba(63,185,80,0.08);   border: 1px solid rgba(63,185,80,0.25);   }
+  .callout.success .callout-title { color: var(--accent-green); }
+  .callout.warning { background: rgba(227,179,65,0.08);  border: 1px solid rgba(227,179,65,0.3);   }
+  .callout.warning .callout-title { color: var(--accent-yellow); }
+  .callout.danger  { background: rgba(247,129,102,0.08); border: 1px solid rgba(247,129,102,0.3);  }
+  .callout.danger  .callout-title { color: var(--accent-orange); }
+  .callout.tip     { background: rgba(188,140,255,0.08); border: 1px solid rgba(188,140,255,0.25); }
+  .callout.tip     .callout-title { color: var(--accent-purple); }
+  .callout.teal    { background: rgba(57,211,195,0.08);  border: 1px solid rgba(57,211,195,0.25);  }
+  .callout.teal    .callout-title { color: var(--accent-teal); }
+
+  .code-block { background: #080c10; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 16px 0; }
+  .code-header { background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .code-lang { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; font-family: 'JetBrains Mono', monospace; }
+  .code-dots { display: flex; gap: 5px; }
+  .code-dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-red { background: #ff5f56; } .dot-ylw { background: #ffbd2e; } .dot-grn { background: #27c93f; }
+  .code-body { padding: 20px; font-size: 12.5px; line-height: 1.85; color: #79c0ff; overflow-x: auto; white-space: pre; font-family: 'JetBrains Mono', monospace; }
+  .code-body .cmd     { color: #3fb950; }
+  .code-body .comment { color: #6e7681; font-style: italic; }
+  .code-body .param   { color: #ffa657; }
+  .code-body .value   { color: #a5d6ff; }
+  .code-body .output  { color: #8b949e; }
+  .code-body .prompt  { color: #e3b341; }
+  .code-body .hl      { color: #39d3c3; }
+
+  .spec-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; }
+  .spec-table th { background: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 16px; text-align: left; border-bottom: 2px solid var(--border); }
+  .spec-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
+  .spec-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+  .badge-blue   { background: rgba(88,166,255,0.15);  color: var(--accent-blue);   border: 1px solid rgba(88,166,255,0.3);  }
+  .badge-green  { background: rgba(63,185,80,0.15);   color: var(--accent-green);  border: 1px solid rgba(63,185,80,0.3);  }
+  .badge-orange { background: rgba(247,129,102,0.15); color: var(--accent-orange); border: 1px solid rgba(247,129,102,0.3);}
+  .badge-purple { background: rgba(188,140,255,0.15); color: var(--accent-purple); border: 1px solid rgba(188,140,255,0.3);}
+  .badge-yellow { background: rgba(227,179,65,0.15);  color: var(--accent-yellow); border: 1px solid rgba(227,179,65,0.3); }
+  .badge-teal   { background: rgba(57,211,195,0.15);  color: var(--accent-teal);   border: 1px solid rgba(57,211,195,0.3); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin: 16px 0; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; }
+  .stat-num { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+  .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .step-list { list-style: none; margin: 12px 0; }
+  .step-list li { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(48,54,61,0.5); font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; align-items: flex-start; }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num { width: 22px; height: 22px; border-radius: 6px; background: rgba(57,211,195,0.15); border: 1px solid rgba(57,211,195,0.3); color: var(--accent-teal); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
+
+  .bullet-list { list-style: none; margin: 10px 0; }
+  .bullet-list li { padding: 6px 0 6px 20px; position: relative; font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; }
+  .bullet-list li::before { content: '▸'; position: absolute; left: 0; color: var(--accent-teal); font-size: 11px; top: 8px; }
+
+  h3 { font-family: 'Sora', sans-serif; font-size: 17px; font-weight: 600; color: var(--text-primary); margin: 24px 0 12px; }
+  h4 { font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 600; color: var(--accent-teal); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Mermaid container */
+  .diagram-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; }
+  .diagram-caption { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 12px; font-style: italic; }
+  .mermaid { display: flex; justify-content: center; }
+
+  /* SVG diagrams */
+  .svg-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; overflow-x: auto; }
+
+  /* Quiz section */
+  .quiz-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 22px; margin-bottom: 16px; }
+  .quiz-q { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; }
+  .quiz-a { display: none; background: rgba(57,211,195,0.06); border: 1px solid rgba(57,211,195,0.2); border-radius: 8px; padding: 14px 16px; margin-top: 10px; font-size: 13.5px; color: var(--text-secondary); line-height: 1.7; }
+  .quiz-btn { background: rgba(57,211,195,0.1); border: 1px solid rgba(57,211,195,0.3); color: var(--accent-teal); border-radius: 6px; padding: 6px 14px; font-size: 12px; cursor: pointer; font-family: 'JetBrains Mono', monospace; transition: all 0.2s; }
+  .quiz-btn:hover { background: rgba(57,211,195,0.2); }
+
+  /* Gauge animation */
+  .gauge-wrap { display: flex; flex-direction: column; align-items: center; padding: 20px; }
+  .gauge-label { font-size: 13px; color: var(--text-muted); margin-top: 8px; }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 28px; margin: 20px 0; }
+  .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, var(--accent-teal), var(--accent-blue)); border-radius: 2px; }
+  .tl-item { position: relative; padding: 0 0 24px 20px; }
+  .tl-item::before { content: ''; position: absolute; left: -24px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent-teal); border: 2px solid var(--bg-primary); box-shadow: 0 0 0 3px rgba(57,211,195,0.2); }
+  .tl-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+  .tl-body { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+  /* Author card */
+  .author-card { background: linear-gradient(135deg, #161b22, #1c2333); border: 1px solid var(--border); border-radius: 16px; padding: 32px; margin-top: 40px; position: relative; overflow: hidden; }
+  .author-card::before { content: ''; position: absolute; top: -40px; right: -40px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(57,211,195,0.08), transparent 70%); border-radius: 50%; }
+  .author-avatar { width: 64px; height: 64px; background: linear-gradient(135deg, var(--accent-teal), var(--accent-blue)); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 16px; }
+  .author-name { font-family: 'Sora', sans-serif; font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .author-title { font-size: 13px; color: var(--accent-teal); margin-bottom: 16px; font-family: 'JetBrains Mono', monospace; }
+  .author-bio { font-size: 14px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px; }
+  .tech-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .tech-badge { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 6px; padding: 4px 12px; font-size: 12px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; }
+  .contact-link { display: inline-flex; align-items: center; gap: 8px; background: rgba(57,211,195,0.1); border: 1px solid rgba(57,211,195,0.3); border-radius: 8px; padding: 10px 18px; color: var(--accent-teal); text-decoration: none; font-size: 13.5px; font-weight: 500; transition: all 0.2s; }
+  .contact-link:hover { background: rgba(57,211,195,0.2); }
+
+  /* Progress bar */
+  #reading-progress { position: fixed; top: 0; left: var(--sidebar-width); right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-blue), var(--accent-teal), var(--accent-purple)); transform-origin: left; transform: scaleX(0); z-index: 999; transition: transform 0.1s linear; }
+
+  /* Animated port diagram */
+  .port-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
+  .port-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 14px; text-align: center; transition: all 0.3s; cursor: pointer; }
+  .port-item:hover { border-color: var(--accent-teal); background: rgba(57,211,195,0.05); }
+  .port-item .port-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent-teal); font-weight: 600; }
+  .port-item .port-vlan { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  .port-item .port-status { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green); margin: 6px auto 0; }
+  .port-item .port-status.down { background: var(--accent-orange); }
+
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); }
+    .main-content { margin-left: 0; max-width: 100vw; }
+    .top-header { padding: 30px 20px; }
+    .content-area { padding: 20px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    #reading-progress { left: 0; }
+  }
+</style>
+</head>
+<body>
+<div id="reading-progress"></div>
+
+<!-- ═══════════════════════ SIDEBAR ═══════════════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🗄️</div>
+      <span>NetApp Series</span>
+    </div>
+    <div class="sidebar-subtitle">Tutorial 12 · Storage & Networking</div>
+  </div>
+  <div class="toc-nav">
+    <div class="toc-section-label">FlexClone</div>
+    <a class="toc-link" href="#s1"><span class="toc-num">01</span>What Is FlexClone?</a>
+    <a class="toc-link sub" href="#s1a"><span class="toc-num">↳</span>Snapshot vs Clone</a>
+    <a class="toc-link sub" href="#s1b"><span class="toc-num">↳</span>How Data Is Accessed</a>
+    <a class="toc-link" href="#s2"><span class="toc-num">02</span>Clone Split & Best Practices</a>
+    <a class="toc-link sub" href="#s2a"><span class="toc-num">↳</span>Splitting a Clone</a>
+    <a class="toc-link sub" href="#s2b"><span class="toc-num">↳</span>Snapshot Locking</a>
+    <a class="toc-link" href="#s3"><span class="toc-num">03</span>CLI: Creating & Managing Clones</a>
+    <div class="toc-section-label">System Shell & Logs</div>
+    <a class="toc-link" href="#s4"><span class="toc-num">04</span>System Shell Access</a>
+    <a class="toc-link sub" href="#s4a"><span class="toc-num">↳</span>Diag User Setup</a>
+    <a class="toc-link sub" href="#s4b"><span class="toc-num">↳</span>SPI Web Console</a>
+    <a class="toc-link" href="#s5"><span class="toc-num">05</span>Log File Types & Locations</a>
+    <div class="toc-section-label">Networking</div>
+    <a class="toc-link" href="#s6"><span class="toc-num">06</span>IP Address Fundamentals</a>
+    <a class="toc-link sub" href="#s6a"><span class="toc-num">↳</span>IP Classes & Ranges</a>
+    <a class="toc-link sub" href="#s6b"><span class="toc-num">↳</span>Public vs Private IPs</a>
+    <a class="toc-link" href="#s7"><span class="toc-num">07</span>IPspace in ONTAP</a>
+    <a class="toc-link" href="#s8"><span class="toc-num">08</span>Broadcast Domains</a>
+    <a class="toc-link sub" href="#s8a"><span class="toc-num">↳</span>LIF Failover Control</a>
+    <a class="toc-link sub" href="#s8b"><span class="toc-num">↳</span>CLI Reference</a>
+    <a class="toc-link" href="#s9"><span class="toc-num">09</span>Interview Q&amp;A</a>
+    <a class="toc-link" href="#author"><span class="toc-num">★</span>About the Author</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════ MAIN ═══════════════════════ -->
+<div class="main-content">
+<header class="top-header">
+  <div class="header-badge">📘 Tutorial 12 · NetApp ONTAP Administration</div>
+  <h1 class="main-title">FlexClone, System Shell,<br>Logs & Networking Fundamentals</h1>
+  <p class="header-desc">A practical deep-dive into volume cloning, diagnostic shell access, log collection strategies, and ONTAP networking building blocks — IPspace, Broadcast Domains, and LIF failover.</p>
+  <div class="header-meta">
+    <div class="meta-chip"><span class="dot" style="background:var(--accent-teal)"></span>FlexClone</div>
+    <div class="meta-chip"><span class="dot" style="background:var(--accent-blue)"></span>System Shell</div>
+    <div class="meta-chip"><span class="dot" style="background:var(--accent-purple)"></span>IPspace</div>
+    <div class="meta-chip"><span class="dot" style="background:var(--accent-yellow)"></span>Broadcast Domains</div>
+  </div>
+  <div class="prog-chips">
+    <span class="prog-chip">ONTAP 9.x</span>
+    <span class="prog-chip">FlexClone</span>
+    <span class="prog-chip">System Shell</span>
+    <span class="prog-chip">IPspace</span>
+    <span class="prog-chip">Broadcast Domain</span>
+    <span class="prog-chip">LIF Failover</span>
+    <span class="prog-chip">IPv4 Classes</span>
+  </div>
+</header>
+
+<div class="content-area">
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 1 — FlexClone Concepts -->
+<!-- ══════════════════════════════════════════════════════ -->
+<section class="section" id="s1">
+  <div class="section-header">
+    <div class="section-icon icon-teal">🧬</div>
+    <div class="section-title-wrap">
+      <div class="section-num">SECTION 01</div>
+      <h2>Understanding FlexClone</h2>
+    </div>
+  </div>
+
+  <p>FlexClone is one of the most powerful features in ONTAP. It enables administrators to create an instantly available, writable copy of a volume without duplicating the underlying data. The result is a fully functional volume that starts out occupying almost no extra space.</p>
+
+  <div class="grid-2">
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--accent-orange)">Read-Only</div>
+      <div class="stat-label">Snapshot — point-in-time image</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--accent-teal)">Read-Write</div>
+      <div class="stat-label">FlexClone — fully writable copy</div>
+    </div>
+  </div>
+
+  <div id="s1a">
+  <h3>Snapshot vs FlexClone — Key Distinctions</h3>
+  <p>Both snapshots and FlexClones start as pointer-based structures that reference the parent volume's data blocks. However, they serve very different purposes:</p>
+
+  <table class="spec-table">
+    <thead><tr><th>Attribute</th><th>Snapshot</th><th>FlexClone</th></tr></thead>
+    <tbody>
+      <tr><td>Access mode</td><td><span class="badge badge-orange">Read-Only</span></td><td><span class="badge badge-green">Read-Write</span></td></tr>
+      <tr><td>Initial data storage</td><td>Pointer images only</td><td>Pointer images only</td></tr>
+      <tr><td>Can be mounted to servers</td><td>Limited (read-only export)</td><td>Yes — as a full NFS/CIFS share</td></tr>
+      <tr><td>Primary purpose</td><td>Data protection / restore</td><td>Dev/test, application testing</td></tr>
+      <tr><td>Can be deleted independently</td><td>Yes (unless locked)</td><td>Yes — deleting frees snapshot too</td></tr>
+      <tr><td>Requires parent snapshot</td><td>N/A</td><td>Yes — a snapshot is the reference point</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div id="s1b">
+  <h3>How Data Access Works in a FlexClone</h3>
+  <p>When a FlexClone volume is created from a snapshot, it initially contains only metadata pointers — not real data blocks. When a client modifies a file on the clone, ONTAP uses a <strong>redirect-on-write</strong> mechanism:</p>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+sequenceDiagram
+    participant C as Client
+    participant CL as FlexClone Volume
+    participant SN as Snapshot
+    participant PV as Production Volume
+
+    C->>CL: Requests to modify Block-A
+    CL->>SN: Block-A is pointer only — request data
+    SN->>PV: Forward request to production
+    PV-->>SN: Copy Block-A to snapshot
+    SN-->>CL: Block-A delivered to clone
+    CL->>CL: Modification written as new block in clone
+    Note over CL: Unchanged blocks remain as pointers
+    </div>
+    <div class="diagram-caption">Fig 1 — FlexClone redirect-on-write: only modified blocks are copied from production to the clone</div>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-icon">ℹ️</div>
+    <div class="callout-content">
+      <div class="callout-title">Space Efficiency Explained</div>
+      <div class="callout-text">A clone of a 200 GB volume may initially occupy only a few megabytes. It grows over time only as clients modify data. Unchanged blocks continue to be served from the parent volume via the snapshot — zero duplication required.</div>
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 2 — Clone Split -->
+<!-- ══════════════════════════════════════════════════════ -->
+<section class="section" id="s2">
+  <div class="section-header">
+    <div class="section-icon icon-blue">✂️</div>
+    <div class="section-title-wrap">
+      <div class="section-num">SECTION 02</div>
+      <h2>Clone Split & Best Practices</h2>
+    </div>
+  </div>
+
+  <p>While a clone is in relationship with its parent volume via a snapshot, every write operation travels through the snapshot chain. As the snapshot grows, it can consume space on the parent aggregate — and potentially impact production. The solution: <strong>splitting the clone</strong>.</p>
+
+  <div id="s2a">
+  <h3>What Happens During a Split</h3>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart LR
+    A["Production Volume\n200 GB"] -->|Snapshot reference| B["Snapshot\n(locked)"]
+    B -->|Pointer images| C["FlexClone Volume\nSmall footprint"]
+
+    D["After Split"] 
+    E["Production Volume\n200 GB"] 
+    F["FlexClone Volume\nIndependent - full data copy"]
+    G["Snapshot\nFreed — deletable"]
+
+    D --> E
+    D --> F
+    D --> G
+
+    style C fill:#1c2333,stroke:#58a6ff,color:#e6edf3
+    style F fill:#1c2333,stroke:#39d3c3,color:#e6edf3
+    style G fill:#1c2333,stroke:#3fb950,color:#e6edf3
+    </div>
+    <div class="diagram-caption">Fig 2 — Before and after splitting a FlexClone from its parent volume</div>
+  </div>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-title">1. Clone in parent relationship</div>
+      <div class="tl-body">Clone exists as pointer images. Snapshot is locked. Any write triggers a copy from production → snapshot → clone.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-title">2. Split initiated</div>
+      <div class="tl-body">ONTAP begins copying all production data blocks to the clone in the background. Clients experience no interruption during this process.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-title">3. Split completes</div>
+      <div class="tl-body">Clone becomes a fully independent volume. The parent snapshot is unlocked and can now be deleted safely.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-title">4. Split stopped mid-way (optional)</div>
+      <div class="tl-body">If aggregate space runs out, the split can be paused. Data already copied remains as real blocks; the rest stays as pointers. No rollback occurs.</div>
+    </div>
+  </div>
+  </div>
+
+  <div id="s2b">
+  <h3>Snapshot Locking — What You Must Know</h3>
+  <p>As long as a FlexClone is in relationship with a snapshot, that snapshot is <strong>locked</strong>. Any attempt to delete it will return an error. This lock is intentional — it protects data integrity for the clone.</p>
+
+  <div class="callout danger">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-content">
+      <div class="callout-title">Never Use Scheduled Snapshots as Clone References</div>
+      <div class="callout-text">Two critical reasons:<br><br>
+      <strong>1. Rotation disruption</strong> — if a retention policy tries to delete the snapshot used by the clone, it will fail silently. Your snapshot rotation will operate with fewer available slots than expected.<br><br>
+      <strong>2. Data staleness</strong> — a scheduled snapshot captures data at a fixed past time. Changes made after that snapshot but before clone creation are not included in the clone. Always create a <em>manual snapshot</em> immediately before cloning.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout success">
+    <div class="callout-icon">✅</div>
+    <div class="callout-content">
+      <div class="callout-title">Best Practice</div>
+      <div class="callout-text">Always create a manual snapshot immediately before running <code>volume clone create</code>. This ensures the clone reflects the most current state of production data at that exact moment.</div>
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 3 — FlexClone CLI -->
+<!-- ══════════════════════════════════════════════════════ -->
+<section class="section" id="s3">
+  <div class="section-header">
+    <div class="section-icon icon-green">💻</div>
+    <div class="section-title-wrap">
+      <div class="section-num">SECTION 03</div>
+      <h2>CLI: Creating & Managing FlexClones</h2>
+    </div>
+  </div>
+
+  <h3>Step 1 — Create a Manual Snapshot</h3>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+    <div class="code-body"><span class="comment"># Create a manual snapshot on the source volume</span>
+<span class="prompt">cluster1::></span> <span class="cmd">volume snapshot create</span> <span class="param">-vserver</span> <span class="value">svm_prod</span> <span class="param">-volume</span> <span class="value">data_vol1</span> <span class="param">-snapshot</span> <span class="value">snap_for_clone_20241101</span>
+
+<span class="output"># Verify the snapshot was created</span>
+<span class="prompt">cluster1::></span> <span class="cmd">volume snapshot show</span> <span class="param">-vserver</span> <span class="value">svm_prod</span> <span class="param">-volume</span> <span class="value">data_vol1</span></div>
+  </div>
+
+  <h3>Step 2 — Create the FlexClone Volume</h3>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+    <div class="code-body"><span class="comment"># Create a read-write thin clone from the manual snapshot</span>
+<span class="prompt">cluster1::></span> <span class="cmd">volume clone create</span> \
+  <span class="param">-vserver</span>          <span class="value">svm_prod</span> \
+  <span class="param">-flexclone</span>        <span class="value">data_vol1_clone</span> \
+  <span class="param">-type</span>             <span class="value">RW</span> \
+  <span class="param">-parent-vserver</span>   <span class="value">svm_prod</span> \
+  <span class="param">-parent-volume</span>    <span class="value">data_vol1</span> \
+  <span class="param">-parent-snapshot</span>  <span class="value">snap_for_clone_20241101</span> \
+  <span class="param">-junction-path</span>    <span class="value">/data_vol1_clone</span> \
+  <span class="param">-space-guarantee</span>  <span class="value">none</span>
+
+<span class="comment"># Verify clone was created</span>
+<span class="prompt">cluster1::></span> <span class="cmd">volume clone show</span></div>
+  </div>
+
+  <h3>Step 3 — Present Clone via CIFS Share</h3>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+    <div class="code-body"><span class="prompt">cluster1::></span> <span class="cmd">vserver cifs share create</span> \
+  <span class="param">-vserver</span>    <span class="value">svm_prod</span> \
+  <span class="param">-share-name</span> <span class="value">clone_share</span> \
+  <span class="param">-path</span>       <span class="value">/data_vol1_clone</span></div>
+  </div>
+
+  <h3>Split the Clone from Parent</h3>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+    <div class="code-body"><span class="comment"># Initiate split — clone becomes independent</span>
+<span class="prompt">cluster1::></span> <span class="cmd">volume clone split start</span> <span class="param">-vserver</span> <span class="value">svm_prod</span> <span class="param">-flexclone</span> <span class="value">data_vol1_clone</span>
+
+<span class="comment"># Monitor split progress</span>
+<span class="prompt">cluster1::></span> <span class="cmd">volume clone split status</span>
+
+<span class="comment"># Stop split if aggregate space is low</span>
+<span class="prompt">cluster1::></span> <span class="cmd">volume clone split stop</span> <span class="param">-vserver</span> <span class="value">svm_prod</span> <span class="param">-flexclone</span> <span class="value">data_vol1_clone</span>
+
+<span class="comment"># After split, volume clone show returns empty — clone is now a standalone volume</span>
+<span class="prompt">cluster1::></span> <span class="cmd">volume clone show</span>
+<span class="output">  There are no entries matching your query.</span></div>
+  </div>
+
+  <div class="callout tip">
+    <div class="callout-icon">💡</div>
+    <div class="callout-content">
+      <div class="callout-title">Interview Tip</div>
+      <div class="callout-text">Be ready to explain: "Why does a snapshot show <code>busy: true</code>?" — Answer: because a FlexClone is referencing it. The snapshot is locked until the clone is either split or deleted. This is also why deleting a clone first frees the snapshot.</div>
+    </div>
+  </div>
+
+  <h3>FlexClone Command Reference</h3>
+  <table class="spec-table">
+    <thead><tr><th>Task</th><th>Command</th></tr></thead>
+    <tbody>
+      <tr><td>List all clones</td><td><code>volume clone show</code></td></tr>
+      <tr><td>Create clone</td><td><code>volume clone create -vserver … -flexclone … -parent-volume … -parent-snapshot …</code></td></tr>
+      <tr><td>Start split</td><td><code>volume clone split start -vserver … -flexclone …</code></td></tr>
+      <tr><td>Check split status</td><td><code>volume clone split status</code></td></tr>
+      <tr><td>Stop split</td><td><code>volume clone split stop -vserver … -flexclone …</code></td></tr>
+      <tr><td>Check snapshot lock status</td><td><code>volume snapshot show -fields busy,owners</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 4 — System Shell -->
+<!-- ══════════════════════════════════════════════════════ -->
+<section class="section" id="s4">
+  <div class="section-header">
+    <div class="section-icon icon-purple">🔧</div>
+    <div class="section-title-wrap">
+      <div class="section-num">SECTION 04</div>
+      <h2>Accessing the System Shell</h2>
+    </div>
+  </div>
+
+  <p>ONTAP exposes three interactive shells: <strong>Cluster Shell</strong> (default), <strong>Node Shell</strong>, and <strong>System Shell</strong>. The System Shell is a Unix-like environment that gives you direct access to node internals, log files, core dumps, and firmware directories. It is used primarily for advanced diagnostics.</p>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TD
+    A["Cluster Shell\n(default login)"] --> B["Node Shell\n(::> system node run)"]
+    A --> C["System Shell\n(requires diag user)"]
+    C --> D["mroot / filesystem"]
+    D --> E["/etc/log — Messages & Audit Logs"]
+    D --> F["/log — Operational Logs"]
+    D --> G["/coredump — Core Dumps"]
+    D --> H["/firmware — HBA, Disk, ACP"]
+    style C fill:#1c2333,stroke:#bc8cff,color:#e6edf3
+    style D fill:#1c2333,stroke:#39d3c3,color:#e6edf3
+    </div>
+    <div class="diagram-caption">Fig 3 — ONTAP shell hierarchy and System Shell directory structure</div>
+  </div>
+
+  <div id="s4a">
+  <h3>Setting Up the Diag User</h3>
+  <p>The System Shell is accessed via a special account called <strong>diag</strong>. Before using it, you must ensure the account is unlocked and you know the password. This requires cluster admin privileges.</p>
+
+  <ol class="step-list">
+    <li><span class="step-num">1</span>Verify whether the diag account is locked or unlocked</li>
+    <li><span class="step-num">2</span>Unlock it if it is in a locked state</li>
+    <li><span class="step-num">3</span>Reset the password (safe to do — diag is only used for shell access)</li>
+    <li><span class="step-num">4</span>Log in to the System Shell for the target node</li>
+  </ol>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+    <div class="code-body"><span class="comment"># Step 1: Check diag account status</span>
+<span class="prompt">cluster1::></span> <span class="cmd">security login show</span> <span class="param">-vserver</span> <span class="value">cluster1</span> <span class="param">-user-or-group-name</span> <span class="value">diag</span>
+<span class="output">  User/Group  Auth     Acct   Role Name
+  ----------  -------  -----  ----------
+  diag        console  unlocked  none</span>
+
+<span class="comment"># Step 2: Unlock if locked</span>
+<span class="prompt">cluster1::></span> <span class="cmd">security login unlock</span> <span class="param">-username</span> <span class="value">diag</span>
+
+<span class="comment"># Step 3: Reset diag password</span>
+<span class="prompt">cluster1::></span> <span class="cmd">security login password</span> <span class="param">-username</span> <span class="value">diag</span>
+<span class="output">Enter a new password: ****
+Confirm the new password: ****</span>
+
+<span class="comment"># Step 4: Enter System Shell for a specific node</span>
+<span class="prompt">cluster1::></span> <span class="cmd">system node systemshell</span> <span class="param">-node</span> <span class="value">node01</span>
+<span class="output">  (diag password required)
+  Password: ****</span>
+<span class="prompt">node01%</span>   <span class="comment"># ← % symbol confirms you are in System Shell (Linux-like)</span></div>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-content">
+      <div class="callout-title">Important — Do Not Touch These Directories</div>
+      <div class="callout-text">While in System Shell, many directories contain configuration files, firmware, and auto-support data. Browse them for inspection only. Modifying files here without NetApp guidance can destabilize the controller.</div>
+    </div>
+  </div>
+  </div>
+
+  <div id="s4b">
+  <h3>SPI Web Console — Easier Log Access</h3>
+  <p>Not every administrator is comfortable with Linux. ONTAP provides a browser-based log viewer called the <strong>Service Processor Interface (SPI)</strong>. It exposes the same log directories as System Shell but through a clickable web interface.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Browser URL</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+    <div class="code-body"><span class="comment"># Replace with your cluster management FQDN</span>
+<span class="hl">http://&lt;cluster-mgmt-hostname&gt;/spi</span>
+
+<span class="comment"># Login with cluster admin credentials</span>
+<span class="comment"># Navigate: Node → log → messages / audit / snap-related logs</span></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">🖥️ System Shell</div>
+      <ul class="bullet-list">
+        <li>Requires Linux/Unix familiarity</li>
+        <li>Full filesystem navigation</li>
+        <li>Can collect shelf & firmware logs</li>
+        <li>Access via <code>diag</code> user</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">🌐 SPI Web Console</div>
+      <ul class="bullet-list">
+        <li>Browser-based, click to download logs</li>
+        <li>No Linux knowledge needed</li>
+        <li>Use Ctrl+F in text editor after download</li>
+        <li>Access via admin credentials</li>
+      </ul>
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 5 — Log Types -->
+<!-- ══════════════════════════════════════════════════════ -->
+<section class="section" id="s5">
+  <div class="section-header">
+    <div class="section-icon icon-yellow">📋</div>
+    <div class="section-title-wrap">
+      <div class="section-num">SECTION 05</div>
+      <h2>Log File Types & Locations</h2>
+    </div>
+  </div>
+
+  <p>ONTAP maintains several categories of logs under <code>/mroot/etc/log</code> and <code>/mroot/log</code>. Understanding which log captures what is essential during incident response and troubleshooting.</p>
+
+  <table class="spec-table">
+    <thead><tr><th>Log File</th><th>What It Captures</th><th>Use Case</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>messages</code> / <code>messages.0</code></td>
+        <td>Hardware events, port failures, controller reboots, disk events</td>
+        <td>General system health monitoring</td>
+      </tr>
+      <tr>
+        <td><code>audit.log</code></td>
+        <td>Admin commands run by any user, with timestamp and source IP</td>
+        <td>Who deleted that volume? Who modified a policy?</td>
+      </tr>
+      <tr>
+        <td><code>snapmirror.log</code></td>
+        <td>Replication job status, failure reasons, transfer history</td>
+        <td>Diagnosing SnapMirror or SnapVault failures</td>
+      </tr>
+      <tr>
+        <td><code>coredump</code></td>
+        <td>Memory dump generated before a controller crash</td>
+        <td>Upload to NetApp support for crash root-cause analysis</td>
+      </tr>
+      <tr>
+        <td><code>shelf.log</code></td>
+        <td>Disk shelf and disk-level events</td>
+        <td>Diagnosing shelf connectivity or disk hardware issues</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout teal">
+    <div class="callout-icon">🔍</div>
+    <div class="callout-content">
+      <div class="callout-title">Quick CLI Alternative — Event Log Show</div>
+      <div class="callout-text">Without entering System Shell, you can filter recent events directly from cluster shell using <code>event log show</code>. Use wildcard message names to filter by topic — for example, enter <code>*mirror*</code> to see replication-related events, or <code>*snap*</code> for snapshot activity.</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">ONTAP CLI — Event Log Filtering</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+    <div class="code-body"><span class="comment"># Show all events</span>
+<span class="prompt">cluster1::></span> <span class="cmd">event log show</span>
+
+<span class="comment"># Filter events related to snapshots using wildcard</span>
+<span class="prompt">cluster1::></span> <span class="cmd">event log show</span> <span class="param">-messagename</span> <span class="value">*snap*</span>
+
+<span class="comment"># Filter events related to aggregates</span>
+<span class="prompt">cluster1::></span> <span class="cmd">event log show</span> <span class="param">-messagename</span> <span class="value">*agg*</span>
+
+<span class="comment"># Pro tip: copy output to a text editor and use Ctrl+F for fast searching</span></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 6 — IP Fundamentals -->
+<!-- ══════════════════════════════════════════════════════ -->
+<section class="section" id="s6">
+  <div class="section-header">
+    <div class="section-icon icon-blue">🌐</div>
+    <div class="section-title-wrap">
+      <div class="section-num">SECTION 06</div>
+      <h2>IP Address Fundamentals</h2>
+    </div>
+  </div>
+
+  <p>Before diving into ONTAP networking configuration, it is essential to understand how IP addresses are organized. Every device in a network — including NetApp controllers, SVMs, and LIFs — requires an IP address to communicate.</p>
+
+  <div id="s6a">
+  <h3>IPv4 Address Classes</h3>
+  <p>IPv4 addresses (e.g., <code>172.16.30.10</code>) are 32-bit numbers grouped into four octets, each ranging from 0–255. They are divided into five classes, of which only A, B, and C are used in production environments.</p>
+
+  <div class="svg-wrap">
+    <svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px;display:block;margin:auto;">
+      <defs>
+        <linearGradient id="ga" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#39d3c3" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="#58a6ff" stop-opacity="0.8"/>
+        </linearGradient>
+      </defs>
+      <!-- Class A -->
+      <rect x="10" y="20" width="200" height="52" rx="8" fill="#1c2333" stroke="#39d3c3" stroke-width="1.5"/>
+      <text x="20" y="42" font-family="JetBrains Mono,monospace" font-size="12" fill="#39d3c3" font-weight="600">Class A</text>
+      <text x="20" y="58" font-family="JetBrains Mono,monospace" font-size="11" fill="#8b949e">1.0.0.1 – 126.255.255.255</text>
+      <text x="20" y="72" font-family="Inter,sans-serif" font-size="10" fill="#6e7681">126 networks · Millions of hosts</text>
+
+      <!-- Class B -->
+      <rect x="10" y="90" width="200" height="52" rx="8" fill="#1c2333" stroke="#58a6ff" stroke-width="1.5"/>
+      <text x="20" y="112" font-family="JetBrains Mono,monospace" font-size="12" fill="#58a6ff" font-weight="600">Class B</text>
+      <text x="20" y="128" font-family="JetBrains Mono,monospace" font-size="11" fill="#8b949e">128.0.0.1 – 191.255.255.255</text>
+      <text x="20" y="142" font-family="Inter,sans-serif" font-size="10" fill="#6e7681">16,384 networks · 65k hosts each</text>
+
+      <!-- Class C -->
+      <rect x="10" y="160" width="200" height="52" rx="8" fill="#1c2333" stroke="#bc8cff" stroke-width="1.5"/>
+      <text x="20" y="182" font-family="JetBrains Mono,monospace" font-size="12" fill="#bc8cff" font-weight="600">Class C</text>
+      <text x="20" y="198" font-family="JetBrains Mono,monospace" font-size="11" fill="#8b949e">192.0.0.1 – 223.255.255.255</text>
+      <text x="20" y="212" font-family="Inter,sans-serif" font-size="10" fill="#6e7681">2M+ networks · 254 hosts each</text>
+
+      <!-- Class D & E -->
+      <rect x="10" y="230" width="200" height="52" rx="8" fill="#1c2333" stroke="#30363d" stroke-width="1.5"/>
+      <text x="20" y="252" font-family="JetBrains Mono,monospace" font-size="12" fill="#6e7681" font-weight="600">Class D &amp; E</text>
+      <text x="20" y="268" font-family="JetBrains Mono,monospace" font-size="11" fill="#6e7681">224.x.x.x – 255.x.x.x</text>
+      <text x="20" y="282" font-family="Inter,sans-serif" font-size="10" fill="#484f58">Multicast / Reserved — not used</text>
+
+      <!-- Diagram right: network vs host -->
+      <rect x="250" y="20" width="430" height="260" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+      <text x="270" y="45" font-family="Sora,sans-serif" font-size="13" fill="#e6edf3" font-weight="600">Network Digit vs Host Digit</text>
+
+      <!-- Class A row -->
+      <rect x="270" y="58" width="80" height="28" rx="4" fill="#39d3c310" stroke="#39d3c3" stroke-width="1.2"/>
+      <text x="280" y="77" font-family="JetBrains Mono,monospace" font-size="11" fill="#39d3c3">10.x.x.x</text>
+      <rect x="360" y="58" width="200" height="28" rx="4" fill="#30363d" stroke="#30363d"/>
+      <text x="368" y="77" font-family="Inter,sans-serif" font-size="11" fill="#8b949e">1 net digit · 3 host digits</text>
+      <text x="570" y="77" font-family="JetBrains Mono,monospace" font-size="10" fill="#39d3c3">A</text>
+
+      <!-- Class B row -->
+      <rect x="270" y="96" width="100" height="28" rx="4" fill="#58a6ff10" stroke="#58a6ff" stroke-width="1.2"/>
+      <text x="278" y="115" font-family="JetBrains Mono,monospace" font-size="11" fill="#58a6ff">172.16.x.x</text>
+      <rect x="380" y="96" width="180" height="28" rx="4" fill="#30363d" stroke="#30363d"/>
+      <text x="388" y="115" font-family="Inter,sans-serif" font-size="11" fill="#8b949e">2 net digits · 2 host digits</text>
+      <text x="570" y="115" font-family="JetBrains Mono,monospace" font-size="10" fill="#58a6ff">B</text>
+
+      <!-- Class C row -->
+      <rect x="270" y="134" width="120" height="28" rx="4" fill="#bc8cff10" stroke="#bc8cff" stroke-width="1.2"/>
+      <text x="278" y="153" font-family="JetBrains Mono,monospace" font-size="11" fill="#bc8cff">192.168.1.x</text>
+      <rect x="400" y="134" width="160" height="28" rx="4" fill="#30363d" stroke="#30363d"/>
+      <text x="408" y="153" font-family="Inter,sans-serif" font-size="11" fill="#8b949e">3 net digits · 1 host digit</text>
+      <text x="570" y="153" font-family="JetBrains Mono,monospace" font-size="10" fill="#bc8cff">C</text>
+
+      <!-- Gateway / Subnet note -->
+      <rect x="270" y="175" width="390" height="90" rx="8" fill="#1c2333" stroke="#30363d"/>
+      <text x="282" y="196" font-family="Sora,sans-serif" font-size="12" fill="#e3b341" font-weight="600">⚡ Reserved IPs in Every Network</text>
+      <text x="282" y="216" font-family="Inter,sans-serif" font-size="11" fill="#8b949e">First IP (.1) → Gateway address</text>
+      <text x="282" y="232" font-family="Inter,sans-serif" font-size="11" fill="#8b949e">Last IP (.255) → Subnet broadcast address</text>
+      <text x="282" y="248" font-family="Inter,sans-serif" font-size="11" fill="#6e7681">Usable range → .2 through .254</text>
+      <text x="282" y="260" font-family="Inter,sans-serif" font-size="11" fill="#6e7681">127.x.x.x → Loopback (not assigned to hosts)</text>
+    </svg>
+    <div class="diagram-caption">Fig 4 — IPv4 Class A/B/C ranges, network vs host structure, and reserved addresses</div>
+  </div>
+
+  <table class="spec-table">
+    <thead><tr><th>Class</th><th>Range (First Octet)</th><th>Default Subnet Mask</th><th>Typical Use</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-teal">A</span></td><td>1 – 126</td><td>255.0.0.0</td><td>Very large enterprise data centers (10,000+ devices)</td></tr>
+      <tr><td><span class="badge badge-blue">B</span></td><td>128 – 191</td><td>255.255.0.0</td><td>Medium-sized organizations</td></tr>
+      <tr><td><span class="badge badge-purple">C</span></td><td>192 – 223</td><td>255.255.255.0</td><td>Small environments, branch offices</td></tr>
+      <tr><td><span class="badge badge-yellow">D</span></td><td>224 – 239</td><td>N/A</td><td>Multicast — not assigned to hosts</td></tr>
+      <tr><td>E</td><td>240 – 255</td><td>N/A</td><td>Research / reserved</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div id="s6b">
+  <h3>Public vs Private IP Addresses</h3>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title" style="color:var(--accent-orange)">🌍 Public IPs</div>
+      <ul class="bullet-list">
+        <li>Globally routable across the internet</li>
+        <li>Must be purchased from an ISP</li>
+        <li>Required to host internet-facing services</li>
+        <li>All addresses not in the private ranges below</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--accent-green)">🏠 Private IPs</div>
+      <ul class="bullet-list">
+        <li>Free to use — no registration needed</li>
+        <li>Not routable on the public internet</li>
+        <li>Used for internal LAN communication</li>
+        <li>Standard for database, storage, and app tiers</li>
+      </ul>
+    </div>
+  </div>
+
+  <table class="spec-table">
+    <thead><tr><th>Class</th><th>Private IP Range</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-teal">A</span></td><td><code>10.0.0.0 – 10.255.255.255</code> (entire 10.x.x.x network)</td></tr>
+      <tr><td><span class="badge badge-blue">B</span></td><td><code>172.16.0.0 – 172.31.255.255</code></td></tr>
+      <tr><td><span class="badge badge-purple">C</span></td><td><code>192.168.0.0 – 192.168.255.255</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 7 — IPspace -->
+<!-- ══════════════════════════════════════════════════════ -->
+<section class="section" id="s7">
+  <div class="section-header">
+    <div class="section-icon icon-orange">📦</div>
+    <div class="section-title-wrap">
+      <div class="section-num">SECTION 07</div>
+      <h2>IPspace in ONTAP</h2>
+    </div>
+  </div>
+
+  <p>An <strong>IPspace</strong> is a virtual networking boundary within an ONTAP cluster. It allows you to isolate SVMs, ports, and LIFs so that multiple tenants can use overlapping IP address ranges without conflict. This is essential in multi-tenant storage service environments.</p>
+
+  <h3>The Problem IPspace Solves</h3>
+  <p>Consider a storage provider hosting two separate enterprise clients. Both organizations independently chose the same private IP range for their servers. Without IPspace, the NetApp cluster would be confused when both clients try to mount storage — it cannot distinguish which server belongs to which organization.</p>
+
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TB
+    subgraph CLUSTER["4-Node NetApp Cluster"]
+      subgraph IPS1["IPspace: ips-clientA"]
+        SVM1["SVM: svm_clientA"]
+        P1["Ports: e0g (node1-4)"]
+        BD1["Broadcast Domain: bd_clientA"]
+      end
+      subgraph IPS2["IPspace: ips-clientB"]
+        SVM2["SVM: svm_clientB"]
+        P2["Ports: e0f (node1-4)"]
+        BD2["Broadcast Domain: bd_clientB"]
+      end
+    end
+
+    ClientA["ClientA Servers\n192.168.5.x"] -->|NFS/CIFS| SVM1
+    ClientB["ClientB Servers\n192.168.5.x"] -->|NFS/CIFS| SVM2
+
+    style IPS1 fill:#1c2333,stroke:#39d3c3
+    style IPS2 fill:#1c2333,stroke:#58a6ff
+    style CLUSTER fill:#0d1117,stroke:#30363d
+    </div>
+    <div class="diagram-caption">Fig 5 — IPspace isolates two SVMs serving clients with overlapping IP ranges</div>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-icon">ℹ️</div>
+    <div class="callout-content">
+      <div class="callout-title">Default IPspaces in Every Cluster</div>
+      <div class="callout-text"><strong>Cluster IPspace</strong> — used exclusively for the private inter-node cluster network. Do not modify.<br><br><strong>Default IPspace</strong> — all SVMs, ports, and LIFs are placed here unless you explicitly create and assign another IPspace.</div>
+    </div>
+  </div>
+
+  <div class="callout danger">
+    <div class="callout-icon">🚫</div>
+    <div class="callout-content">
+      <div class="callout-title">Critical — IPspace Cannot Be Changed After SVM Creation</div>
+      <div class="callout-text">Once an SVM is created and assigned to an IPspace, that assignment is permanent. To change it, you must delete the SVM and recreate it in the correct IPspace. Always design your IPspace architecture before provisioning SVMs.</div>
+    </div>
+  </div>
+
+  <h3>IPspace CLI Commands</h3>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+    <div class="code-body"><span class="comment"># View all IPspaces</span>
+<span class="prompt">cluster1::></span> <span class="cmd">network ipspace show</span>
+<span class="output">  IPspace         Ports                    Broadcast Domains    Svms
+  --------------- ------------------------ -------------------- --------
+  Cluster         cluster-01:e0a,e0b       Cluster              -
+  Default         cluster-01:e0c,e0d       Default              svm_prod
+  ips-clientA     cluster-01:e0g           bd_clientA           svm_clientA</span>
+
+<span class="comment"># Create a new IPspace</span>
+<span class="prompt">cluster1::></span> <span class="cmd">network ipspace create</span> <span class="param">-ipspace</span> <span class="value">ips-clientB</span>
+
+<span class="comment"># Create SVM in a specific IPspace</span>
+<span class="prompt">cluster1::></span> <span class="cmd">vserver create</span> <span class="param">-vserver</span> <span class="value">svm_clientB</span> <span class="param">-ipspace</span> <span class="value">ips-clientB</span> \
+  <span class="param">-rootvolume</span> <span class="value">svm_clientB_root</span> <span class="param">-aggregate</span> <span class="value">aggr1_node01</span> \
+  <span class="param">-rootvolume-security-style</span> <span class="value">unix</span></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 8 — Broadcast Domains -->
+<!-- ══════════════════════════════════════════════════════ -->
+<section class="section" id="s8">
+  <div class="section-header">
+    <div class="section-icon icon-teal">📡</div>
+    <div class="section-title-wrap">
+      <div class="section-num">SECTION 08</div>
+      <h2>Broadcast Domains & LIF Failover</h2>
+    </div>
+  </div>
+
+  <p>A <strong>Broadcast Domain</strong> is a logical grouping of physical ports that are connected to the same Layer 2 VLAN. ONTAP uses broadcast domain membership to control where a LIF is permitted to fail over when a port or link goes down.</p>
+
+  <h3>Why Broadcast Domains Matter for LIF Failover</h3>
+  <p>In a typical environment, you might have ports on each controller dedicated to CIFS traffic (connected to VLAN 100) and separate ports for NFS traffic (connected to VLAN 200). If a CIFS LIF migrates to an NFS port, it lands on the wrong VLAN — the IP becomes unreachable. Broadcast domains prevent this.</p>
+
+  <div id="s8a">
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart LR
+    subgraph BD_CIFS["Broadcast Domain: bd_cifs (VLAN 100)"]
+      direction TB
+      C1["node01 · e0g\n192.168.10.21"]
+      C2["node02 · e0g\n192.168.10.22"]
+      C3["node03 · e0g\n192.168.10.23"]
+      C4["node04 · e0g\n192.168.10.24"]
+    end
+    subgraph BD_NFS["Broadcast Domain: bd_nfs (VLAN 200)"]
+      direction TB
+      N1["node01 · e0f\n10.20.30.11"]
+      N2["node02 · e0f\n10.20.30.12"]
+      N3["node03 · e0f\n10.20.30.13"]
+      N4["node04 · e0f\n10.20.30.14"]
+    end
+
+    LIF["CIFS LIF fails over"] -->|"Allowed ✅"| C2
+    LIF -->|"Blocked ❌"| N1
+
+    style BD_CIFS fill:#1c2333,stroke:#39d3c3
+    style BD_NFS fill:#1c2333,stroke:#58a6ff
+    </div>
+    <div class="diagram-caption">Fig 6 — CIFS LIF can only fail over within the bd_cifs broadcast domain (same VLAN)</div>
+  </div>
+
+  <div class="callout success">
+    <div class="callout-icon">✅</div>
+    <div class="callout-content">
+      <div class="callout-title">Key Rule</div>
+      <div class="callout-text">A LIF can only fail over to ports within the <em>same broadcast domain</em>. If you attempt to migrate a LIF to a port in a different broadcast domain, ONTAP will reject the operation with a clear error message. This is by design — it ensures network reachability is preserved after every failover.</div>
+    </div>
+  </div>
+
+  <h3>Interactive Port Layout — Example Cluster</h3>
+  <p>In this example cluster, each node has ports organized by function. Hover over a port to highlight it:</p>
+  <div class="port-grid">
+    <div class="port-item">
+      <div class="port-name">e0g · node01</div>
+      <div class="port-vlan">VLAN 100 · CIFS</div>
+      <div class="port-status"></div>
+    </div>
+    <div class="port-item">
+      <div class="port-name">e0g · node02</div>
+      <div class="port-vlan">VLAN 100 · CIFS</div>
+      <div class="port-status"></div>
+    </div>
+    <div class="port-item">
+      <div class="port-name">e0f · node01</div>
+      <div class="port-vlan">VLAN 200 · NFS</div>
+      <div class="port-status"></div>
+    </div>
+    <div class="port-item">
+      <div class="port-name">e0f · node02</div>
+      <div class="port-vlan">VLAN 200 · NFS</div>
+      <div class="port-status"></div>
+    </div>
+    <div class="port-item">
+      <div class="port-name">e0m · node01</div>
+      <div class="port-vlan">MGMT VLAN</div>
+      <div class="port-status"></div>
+    </div>
+    <div class="port-item">
+      <div class="port-name">e0m · node02</div>
+      <div class="port-vlan">MGMT VLAN</div>
+      <div class="port-status"></div>
+    </div>
+    <div class="port-item">
+      <div class="port-name">e0a · node01</div>
+      <div class="port-vlan">Cluster Interconnect</div>
+      <div class="port-status"></div>
+    </div>
+    <div class="port-item">
+      <div class="port-name">e0a · node02</div>
+      <div class="port-vlan">Cluster Interconnect</div>
+      <div class="port-status"></div>
+    </div>
+  </div>
+  </div>
+
+  <div id="s8b">
+  <h3>Broadcast Domain CLI Reference</h3>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">ONTAP CLI</span><div class="code-dots"><span class="dot-red"></span><span class="dot-ylw"></span><span class="dot-grn"></span></div></div>
+    <div class="code-body"><span class="comment"># View all broadcast domains</span>
+<span class="prompt">cluster1::></span> <span class="cmd">network port broadcast-domain show</span>
+
+<span class="comment"># View which broadcast domain each port belongs to</span>
+<span class="prompt">cluster1::></span> <span class="cmd">network port show</span>
+
+<span class="comment"># Create a broadcast domain for CIFS ports</span>
+<span class="prompt">cluster1::></span> <span class="cmd">network port broadcast-domain create</span> \
+  <span class="param">-broadcast-domain</span> <span class="value">bd_cifs</span> <span class="param">-mtu</span> <span class="value">1500</span> \
+  <span class="param">-ipspace</span> <span class="value">Default</span> \
+  <span class="param">-ports</span> <span class="value">node01:e0g,node02:e0g,node03:e0g,node04:e0g</span>
+
+<span class="comment"># Remove a port from its current broadcast domain</span>
+<span class="prompt">cluster1::></span> <span class="cmd">network port broadcast-domain remove-ports</span> \
+  <span class="param">-broadcast-domain</span> <span class="value">Default</span> \
+  <span class="param">-ports</span> <span class="value">node01:e0f,node02:e0f</span>
+
+<span class="comment"># Add ports to an existing broadcast domain</span>
+<span class="prompt">cluster1::></span> <span class="cmd">network port broadcast-domain add-ports</span> \
+  <span class="param">-broadcast-domain</span> <span class="value">bd_nfs</span> \
+  <span class="param">-ports</span> <span class="value">node01:e0f,node02:e0f</span>
+
+<span class="comment"># Merge two broadcast domains (combine bd_nfs into bd_cifs)</span>
+<span class="prompt">cluster1::></span> <span class="cmd">network port broadcast-domain merge</span> \
+  <span class="param">-broadcast-domain</span> <span class="value">bd_nfs</span> \
+  <span class="param">-into-broadcast-domain</span> <span class="value">bd_cifs</span> \
+  <span class="param">-ipspace</span> <span class="value">Default</span>
+
+<span class="comment"># Split a broadcast domain (extract e0f ports into new bd_nfs)</span>
+<span class="prompt">cluster1::></span> <span class="cmd">network port broadcast-domain split</span> \
+  <span class="param">-broadcast-domain</span> <span class="value">bd_cifs</span> \
+  <span class="param">-new-broadcast-domain</span> <span class="value">bd_nfs</span> \
+  <span class="param">-ports</span> <span class="value">node01:e0f,node02:e0f</span> \
+  <span class="param">-ipspace</span> <span class="value">Default</span>
+
+<span class="comment"># Manually migrate a LIF to another port</span>
+<span class="prompt">cluster1::></span> <span class="cmd">network interface migrate</span> \
+  <span class="param">-vserver</span> <span class="value">svm_prod</span> \
+  <span class="param">-lif</span> <span class="value">lif_cifs_01</span> \
+  <span class="param">-destination-node</span> <span class="value">node02</span> \
+  <span class="param">-destination-port</span> <span class="value">e0g</span></div>
+  </div>
+
+  <h3>MTU — Choosing 1500 or 9000</h3>
+  <table class="spec-table">
+    <thead><tr><th>MTU Value</th><th>Name</th><th>When to Use</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-blue">1500</span></td><td>Standard frame</td><td>Default for most environments. Use when upstream switches are configured at 1500.</td></tr>
+      <tr><td><span class="badge badge-teal">9000</span></td><td>Jumbo frame</td><td>High-throughput environments (VMware, large NFS workloads). Must match the switch MTU end-to-end.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warning">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-content">
+      <div class="callout-title">Design These Before Provisioning SVMs</div>
+      <div class="callout-text">IPspace and broadcast domain assignments should be finalized during cluster setup. Changing them after LIFs are configured is disruptive — it may require LIF migrations, brief downtime, and careful coordination. Build the network plan before you build the storage.</div>
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- SECTION 9 — Interview Q&A -->
+<!-- ══════════════════════════════════════════════════════ -->
+<section class="section" id="s9">
+  <div class="section-header">
+    <div class="section-icon icon-purple">🎯</div>
+    <div class="section-title-wrap">
+      <div class="section-num">SECTION 09</div>
+      <h2>Interview Q&amp;A — Scenario Based</h2>
+    </div>
+  </div>
+
+  <div class="quiz-card">
+    <div class="quiz-q">Q1. A developer team requests a copy of the production Oracle database volume for performance testing. The production volume is 500 GB but they only have 50 GB of free space in the aggregate. What is the recommended approach?</div>
+    <button class="quiz-btn" onclick="this.nextElementSibling.style.display='block';this.style.display='none'">Reveal Answer</button>
+    <div class="quiz-a">Create a FlexClone from a freshly created manual snapshot. A thin clone starts as pointer images only and will initially consume less than 1 GB. The team can do their testing, and the clone will grow only as they modify data. Since splitting is not feasible due to space constraints, monitor snapshot growth carefully. When testing is complete, delete the clone to release the locked snapshot and reclaim space.</div>
+  </div>
+
+  <div class="quiz-card">
+    <div class="quiz-q">Q2. You notice a snapshot on a volume shows <code>busy: true</code> and has owners listed. You try to delete it but receive an error. What is causing this and how do you resolve it?</div>
+    <button class="quiz-btn" onclick="this.nextElementSibling.style.display='block';this.style.display='none'">Reveal Answer</button>
+    <div class="quiz-a">A FlexClone is referencing the snapshot. ONTAP locks the parent snapshot to maintain the clone's data integrity. To resolve: either delete the FlexClone (which frees the snapshot automatically), or split the clone (which copies all data to the clone and releases the snapshot). In older ONTAP versions, you could force-delete with <code>-ignore-owners true</code> in advanced mode, but this risks breaking the clone. The clean solution is always to address the clone first.</div>
+  </div>
+
+  <div class="quiz-card">
+    <div class="quiz-q">Q3. Two enterprise clients of a managed storage provider are both using the IP range 192.168.20.x internally. How do you configure the NetApp cluster to serve both clients from the same cluster without conflict?</div>
+    <button class="quiz-btn" onclick="this.nextElementSibling.style.display='block';this.style.display='none'">Reveal Answer</button>
+    <div class="quiz-a">Create two separate IPspaces — one per client. Assign dedicated physical ports and a broadcast domain to each IPspace. Create one SVM per client and place each SVM in the corresponding IPspace. Because the two IPspaces are logically isolated, both clients can use the same IP range without conflict. ONTAP routes traffic through the correct physical ports and keeps the two network namespaces completely separate.</div>
+  </div>
+
+  <div class="quiz-card">
+    <div class="quiz-q">Q4. A CIFS LIF on node01-e0g fails over to node01-e0f automatically. Users report that the CIFS share is now inaccessible. What is the likely cause and how do you prevent this in future?</div>
+    <button class="quiz-btn" onclick="this.nextElementSibling.style.display='block';this.style.display='none'">Reveal Answer</button>
+    <div class="quiz-a">The ports e0g and e0f belong to different VLANs and different broadcast domains. When the CIFS LIF moved to e0f, it landed on the wrong VLAN — the IP address is no longer reachable by CIFS clients on VLAN 100. Prevention: create a dedicated broadcast domain for CIFS ports (all e0g ports across all nodes) and a separate one for NFS ports (all e0f ports). ONTAP will then only permit CIFS LIFs to fail over to other e0g ports — always staying on the correct VLAN.</div>
+  </div>
+
+  <div class="quiz-card">
+    <div class="quiz-q">Q5. How do you access the system logs of a NetApp controller without using Linux commands?</div>
+    <button class="quiz-btn" onclick="this.nextElementSibling.style.display='block';this.style.display='none'">Reveal Answer</button>
+    <div class="quiz-a">Use the SPI (Service Processor Interface) web console by navigating to <code>http://&lt;cluster-hostname&gt;/spi</code> in a browser and logging in with cluster admin credentials. From there, you can browse node-level directories, click to download log files (messages, audit, snapmirror logs, coredumps), and open them in a text editor where you can use Ctrl+F to search for specific events. This is the recommended approach for administrators without Linux experience.</div>
+  </div>
+
+  <div class="quiz-card">
+    <div class="quiz-q">Q6. What is the difference between the <code>messages</code> log file and the <code>audit.log</code> file in ONTAP?</div>
+    <button class="quiz-btn" onclick="this.nextElementSibling.style.display='block';this.style.display='none'">Reveal Answer</button>
+    <div class="quiz-a"><strong>messages</strong> — captures hardware and system events: disk failures, port link changes, controller reboots, shelf events. Think of it as the system health log.<br><br><strong>audit.log</strong> — captures every administrative command executed on the cluster, including the username, source IP, timestamp, and the exact command. This is your accountability trail — if a volume was deleted unexpectedly, the audit log shows who ran the command, when, and from which management station.</div>
+  </div>
+</section>
+
+<!-- ═══════════════ AUTHOR ═══════════════ -->
+<section class="section" id="author">
+  <div class="author-card">
+    <div class="author-avatar">👨‍💻</div>
+    <div class="author-name">Mohammed Abdul</div>
+    <div class="author-title">Data Protection Architect · 10+ Years Experience</div>
+    <p class="author-bio">Mohammed Abdul is a Data Protection Architect with more than 10 years of experience in Hybrid Cloud, having worked with global clients across various industries. With extensive expertise in enterprise backup, recovery, and storage solutions, Mohammed specializes in designing and implementing robust data protection strategies for organizations of all sizes.</p>
+    <div class="tech-badges">
+      <span class="tech-badge">AWS</span>
+      <span class="tech-badge">Azure</span>
+      <span class="tech-badge">GCP</span>
+      <span class="tech-badge">NetApp ONTAP</span>
+      <span class="tech-badge">Commvault</span>
+      <span class="tech-badge">Veeam</span>
+      <span class="tech-badge">NetBackup</span>
+    </div>
+    <a class="contact-link" href="mailto:abdul.md.20000102@gmail.com">✉️ abdul.md.20000102@gmail.com</a>
+    <div class="callout warning" style="margin-top:24px;margin-bottom:0;">
+      <div class="callout-icon">📌</div>
+      <div class="callout-content">
+        <div class="callout-title">Disclaimer</div>
+        <div class="callout-text">This content is for educational purposes only. Always refer to official NetApp documentation and follow your organization's procedures for production implementations. I am not affiliated with or endorsed by NetApp, Inc. NetApp® and ONTAP® are registered trademarks of NetApp, Inc. All references are made purely for learning and knowledge sharing.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /content-area -->
+</div><!-- /main-content -->
+
+<script>
+// Reading progress bar
+window.addEventListener('scroll', () => {
+  const el = document.getElementById('reading-progress');
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  el.style.transform = `scaleX(${scrollTop / docHeight})`;
+});
+
+// Active TOC link
+const sections = document.querySelectorAll('.section');
+const links = document.querySelectorAll('.toc-link');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const id = e.target.id;
+      const active = document.querySelector(`.toc-link[href="#${id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { threshold: 0.25 });
+sections.forEach(s => observer.observe(s));
+
+// Mermaid init
+mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: {
+  primaryColor: '#1c2333', primaryTextColor: '#e6edf3', primaryBorderColor: '#39d3c3',
+  lineColor: '#58a6ff', secondaryColor: '#161b22', tertiaryColor: '#0d1117',
+  edgeLabelBackground: '#1c2333', fontSize: '13px'
+}});
+</script>
+</body>
+</html>
